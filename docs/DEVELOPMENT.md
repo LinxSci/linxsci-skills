@@ -9,12 +9,17 @@ Python 3.9+，运行时只依赖标准库。源码开发：
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+python3 -m pip install --upgrade pip setuptools wheel
 python3 -m pip install -e .
 linxsci-scholar --version
 linxsci-scholar setup
 ```
 
 Windows 激活使用 `.venv\Scripts\activate`。不安装包也可运行 `python3 skills/linxsci-scholar/scripts/scholar.py`。
+
+旧版 Python 自带的 pip 可能不支持只有 `pyproject.toml` 的可编辑安装，因此首次安装先升级当前虚拟环境的构建工具。项目使用 PEP 660 可编辑安装，要求 pip 21.3+、setuptools 64+。如果报缺少 setup.py/setup.cfg，先检查 `python3 -m pip --version` 是否指向当前虚拟环境，再执行上述升级；无需补写 setup.py。参见 [pip 21.3 发行说明](https://pip.pypa.io/en/stable/news/#v21-3) 和 [setuptools 64 发行说明](https://setuptools.pypa.io/en/latest/history.html#v64-0-0)。
+
+`-m` 后跟模块名：正确命令是 `python3 -m pip install -e .`，或者 `.venv/bin/python -m pip install -e .`；不要写成 `python -m python3 -m pip ...`。多个虚拟环境不要混用，终端和编辑器统一选择项目的 `.venv`。
 
 代码的唯一实现位于 Skill 的 `scripts`；setuptools 将完整 Skill 映射成 `linxsci_scholar` 包，wheel 包含脚本、SKILL.md、参考文档、agents 元数据和 service.json。根目录 `scholar.py`、`scholar_client.py` 保留 0.1 兼容导入。
 
@@ -106,12 +111,14 @@ linxsci-scholar --json-errors search 'graph neural networks'
 
 ## 验证
 
+本地连接远程测试服务、确认助手使用最新源码、固定验收题及逐轮调优方法见 [测试环境验收与 Skill 调优](TESTING.md)。
+
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
 测试使用临时配置目录和本地 HTTP 模拟服务，不使用真实 Key。覆盖路由、鉴权、编码、上传、配置优先级、凭据不输出、诊断、安装更新和失败回滚。CI 在 Linux、macOS、Windows 上运行测试与发行包安装检查。
 
-真实联调需要在本机配置真实 Key、正确本地端口后执行 `doctor` 和 `search`，从响应选择真实 ID 再测试目录/章节；PDF 上传使用获准发送的文件，并检查实际返回的任务状态。若缺少上游模型，不应编造参数或声称该流程已通过真实服务验证。
+真实联调需要在本机配置真实 Key、测试服务地址后验证连接并执行 `search`，从响应选择真实 ID 再测试目录/章节；`setup` 已验证连接成功时无需紧接着重复调用 `doctor`。PDF 上传使用获准发送的文件，并检查实际返回的任务状态。若缺少上游模型，不应编造参数或声称该流程已通过真实服务验证。
 
 更新接口文档时同步根文档与 `skills/linxsci-scholar/references/api.md`，并维护 SDK 路由列表。版本同时更新 pyproject、包 __version__、CLI VERSION 和安装标记；发布检查工具会检查一致性。

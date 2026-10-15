@@ -15,7 +15,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+      - run: python -m pip install --upgrade pip setuptools wheel
       - run: python -m pip install build twine
+      - run: python -m pip install -e .
+      - run: linxsci-scholar --version
       - run: python -m unittest discover -s tests -v
       - run: python tools/build_release.py
       - run: python tools/check_release.py dist
