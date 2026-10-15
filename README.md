@@ -49,5 +49,3 @@ linxsci-scholar search 'graph neural networks'
 python3 -m unittest discover -s tests -v
 python3 tools/build_release.py --bundle-only
 ```
-
-参考 [DeepXiv SDK](https://github.com/DeepXiv/deepxiv_sdk) 的 Skill、CLI、SDK 组织方式和按章节阅读流程实现。本项目直接连接 Scholar，不使用 DeepXiv 服务或 Key。
