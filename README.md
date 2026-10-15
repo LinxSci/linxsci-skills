@@ -25,12 +25,108 @@
 
 ```bash
 linxsci-scholar install-skill
-linxsci-scholar setup --online
-linxsci-scholar doctor
+linxsci-scholar setup --base-url http://101.126.93.213:28888
 linxsci-scholar search 'graph neural networks'
 ```
 
 `setup` 一次保存配置，后续 CLI、SDK 和本地 Skill 共用。不需要每次 export 环境变量。`config` 查看配置状态，不显示 Key；`config --clear` 清除保存的地址和 Key。更新包后运行 `install-skill --update` 更新助手使用的脚本，旧 Skill 保留备份。
+
+## 从本地源码开始测试
+
+在项目根目录执行。首次创建环境并安装开发版；已有 `.venv` 时可跳过创建：
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install --upgrade pip setuptools wheel
+python3 -m pip install -e .
+
+linxsci-scholar --version
+linxsci-scholar setup --base-url http://101.126.93.213:28888
+```
+
+Windows 激活命令为 `.venv\Scripts\activate`。统一使用同一个虚拟环境，不要混用 `.venv` 和 `.venv-1`。旧 pip 可能提示找不到 setup.py/setup.cfg，先执行上述升级命令；指定解释器安装时使用 `.venv/bin/python -m pip install -e .`，不要写成 `python -m python3 -m pip ...`。
+
+按向导输入已有 API Key，输入时不会显示。`setup` 会检查一次连接，成功后即可检索；之后需要单独检查连接时运行 `linxsci-scholar doctor --json`，确认 `ok` 为 true 且 `base_url` 是测试服务地址。检查连接也会实际调用接口，无需反复执行。
+
+## 论文检索和阅读示例
+
+以下命令在已经激活虚拟环境、完成 Key 配置后执行。CLI 会输出服务返回的数据，整理和比较论文可以交给安装了 Skill 的助手。
+
+### 1. 按英文或中文主题检索
+
+```bash
+linxsci-scholar search "graph neural networks"
+linxsci-scholar search "大语言模型智能体"
+```
+
+将引号中的文字替换为自己的研究主题。检查返回论文的标题、摘要和主题是否相关，记录实际返回的论文 ID；未检索到结果时不应编造论文。
+
+### 2. 保存搜索结果
+
+```bash
+linxsci-scholar --output search.json search "graph neural networks"
+```
+
+响应原始内容保存到当前目录的 `search.json`，可用编辑器打开核查。`--output` 是全局参数，必须放在 `search`、`paper` 等子命令之前。
+
+### 3. 查看论文详情、目录和相关章节
+
+先从搜索响应选择一篇论文，再从其目录选择章节。下列中文占位参数必须替换为真实返回值后执行：
+
+```bash
+linxsci-scholar paper "实际论文ID"
+linxsci-scholar paper "实际论文ID" --resource toc
+linxsci-scholar paper "实际论文ID" --resource sections --item-id "实际章节ID"
+```
+
+论文 ID 保留 `local:`、`arxiv:`、`openalex:`、`s2:` 或 `doi:` 来源前缀，不要用论文标题代替 ID。便捷命令接收未编码的 ID，并负责 URL 编码；章节 ID 必须来自接口响应，不能根据章节名称猜测。
+
+测试通过的标准是：详情对应所选论文，目录能定位真实章节，读取的章节内容与所选 ID 一致。不要仅凭接口未报错就判断内容正确。
+
+## 在助手中测试 Skill
+
+源码安装只提供 CLI/SDK。需要通过 `$linxsci-scholar` 使用时，再安装 Skill；首次执行：
+
+```bash
+linxsci-scholar install-skill
+```
+
+已由本工具安装过，或修改源码后要同步到安装副本，执行：
+
+```bash
+linxsci-scholar install-skill --update
+```
+
+在支持本地 Skill 和脚本执行的助手中新建对话，分别尝试：
+
+**检索与筛选**
+
+> 使用 $linxsci-scholar 检索图神经网络相关论文，选择最多三篇最相关的，说明相关性，并附实际返回的论文 ID 和来源。结果不足三篇时请如实说明。
+
+**按章节阅读**
+
+> 使用 $linxsci-scholar 阅读论文“实际论文ID”，先查看目录，再读取方法相关章节，解释主要方法，并标明章节依据。
+
+**比较两篇论文**
+
+> 使用 $linxsci-scholar 比较论文“实际论文ID一”和“实际论文ID二”的方法和实验结论，逐项列出来源。未找到证据的数据请明确说明，不要补写。
+
+将提示中的论文 ID 替换为实际检索结果。检查助手是否真正调用服务、引用是否能对应响应、数值是否有章节证据，以及是否存在重复检索或无目的读取全文。
+
+开发时也可在新对话中直接指定当前仓库 `skills/linxsci-scholar/SKILL.md` 的绝对路径，要求助手读取该文件并执行同目录下的脚本，从而直接测试当前源码。复制安装的 Skill 不会随源码自动更新，修改后要先同步，避免误测旧版本。
+
+## 测试样例与验收重点
+
+| 测试样例 | 验收重点 |
+| --- | --- |
+| 英文、中文关键词检索 | 执行真实搜索，返回相关论文；空结果如实说明 |
+| 保存搜索结果 | `search.json` 存在，保留服务原始响应 |
+| 论文详情与目录 | 使用真实且带来源前缀的 ID，内容与论文对应 |
+| 读取指定章节 | 使用目录返回的实际章节 ID，证据能定位到正文 |
+| 助手筛选和比较 | 有真实调用记录，论文来源和结论可核查，不编造数值 |
+
+本地修改可直接连接测试环境验证，无需每次先 push Git 或重新打包。调优前后固定提示词和模型设置，记录结果准确性、调用次数、耗时以及需要人工纠正的地方。完整的 8 个验收场景、故障处理及记录模板见 [测试环境验收与 Skill 调优](docs/TESTING.md)。
 
 ## 能力与范围
 
@@ -41,6 +137,7 @@ linxsci-scholar search 'graph neural networks'
 ## 开发与发布
 
 - [开发者指南：CLI、SDK、配置与测试](docs/DEVELOPMENT.md)
+- [测试环境验收与 Skill 调优](docs/TESTING.md)
 - [发布指南：构建、验证与分发](docs/RELEASING.md)
 - [Skill 指令](skills/linxsci-scholar/SKILL.md)
 - [原始接口文档](Scholar-OpenAPI-v2-使用文档.md)
