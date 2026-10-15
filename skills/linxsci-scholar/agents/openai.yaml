@@ -1,0 +1,4 @@
+interface:
+  display_name: "LinxSci Scholar"
+  short_description: "通过 Scholar API 搜索论文、按章节读取证据并查询引用及 PDF 解析任务"
+  default_prompt: "使用 $linxsci-scholar 检索指定主题的论文，阅读相关章节并给出有来源依据的总结。"
