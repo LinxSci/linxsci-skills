@@ -291,6 +291,8 @@ print(client.pdf_task(task_id, result=True).json())
 
 便捷方法之外的接口统一使用 `request()`，可调用当前项目支持的全部 34 条路由。方法和路径见 [接口文档](../Scholar-OpenAPI-v2-使用文档.md)。
 
+不需要为 34 个接口逐一新增 SDK 方法或 CLI 子命令：SDK 的 `request()` 和 CLI 的 `linxsci scholar request` 已接入全部方法与路径；PDF 文件上传使用 `upload_pdf()` / `linxsci scholar upload`。当前接口分布为服务与健康 4 个、搜索与解析 6 个、论文详情与引用 11 个、推荐 2 个、学术实体 7 个、PDF 解析 4 个。仅调用目标接口即可，不要求先完成其他研究工作流。
+
 ### 6.1 GET 请求
 
 例如查询用量：
@@ -414,6 +416,8 @@ print("HTTP 状态：", response.status)
 ## 8. 使用 CLI
 
 CLI 与 SDK 共用配置和请求实现。以下是终端调用方式；在 Python 程序里则使用前面的 SDK 方法。
+
+全部 34 个接口对应的 CLI 命令见 [Scholar 全接口 CLI 使用指南](CLI_GUIDE.md)。
 
 命令格式为 `linxsci scholar [组内选项] <动作> [动作参数]`。`linxsci --help` 列出当前能力，`linxsci scholar --help` 列出论文相关动作。安装包名称仍为 `linxsci-scholar-sdk`，Python 中继续导入 `linxsci_scholar`。
 
