@@ -64,25 +64,27 @@ def check(directory):
             venv.EnvBuilder(with_pip=True).create(root / "venv")
             python = root / "venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
             run([str(python), "-m", "pip", "install", "--no-index", "--no-deps", str(wheel.resolve())])
-            cli = [str(python), "-m", "linxsci_scholar.scripts.scholar"]
+            executable = root / "venv" / ("Scripts/linxsci.exe" if os.name == "nt" else "bin/linxsci")
+            assert run([str(executable), "--version"]).strip() == version
+            cli = [str(executable), "scholar"]
             run(cli + ["setup", "--api-key-stdin", "--base-url", base_url], "release-smoke-key\n")
             assert json.loads(run(cli + ["doctor", "--json"]))["ok"]
             assert json.loads(run(cli + ["search", "test topic"]))["data"][0]["query"] == "test topic"
             run(cli + ["install-skill", "--skills-dir", str(root / "wheel-skills")])
-            installed = root / "wheel-skills/linxsci-scholar/scripts/scholar.py"
-            run([str(python), str(installed), "doctor"])
+            installed = root / "wheel-skills/linxsci-scholar/scripts/cli.py"
+            run([str(python), str(installed), "scholar", "doctor"])
             run([str(python), "-c", "from linxsci_scholar import ScholarClient; from scholar_client import ScholarClient as Legacy; assert Legacy is ScholarClient; print(ScholarClient().request('GET','/meta').status)"])
             with zipfile.ZipFile(bundle) as archive:
                 archive.extractall(root / "bundle")
             unpacked = next((root / "bundle").iterdir())
             run([str(python), str(unpacked / "install.py"), "--no-config", "--skills-dir", str(root / "zip-skills")])
-            installed = root / "zip-skills/linxsci-scholar/scripts/scholar.py"
-            assert len(json.loads(run([str(python), str(installed), "routes"]))) == 34
-            run([str(python), str(installed), "doctor"])
-            run([str(python), str(installed), "paper", "doi:10.1000/example", "--resource", "toc"])
+            installed = root / "zip-skills/linxsci-scholar/scripts/cli.py"
+            assert len(json.loads(run([str(python), str(installed), "scholar", "routes"]))) == 34
+            run([str(python), str(installed), "scholar", "doctor"])
+            run([str(python), str(installed), "scholar", "paper", "doi:10.1000/example", "--resource", "toc"])
             run([str(python), str(unpacked / "install.py"), "--no-config", "--update", "--skills-dir", str(root / "zip-skills")])
             assert list((root / "linxsci-skill-backups").iterdir())
-            run([str(python), str(installed), "config", "--clear"])
+            run([str(python), str(installed), "scholar", "config", "--clear"])
             assert not (root / "config.json").exists()
     finally:
         server.shutdown()

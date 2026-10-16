@@ -79,7 +79,7 @@ def resolve_settings(base_url=None, api_key=None):
     base_url = base_url or saved.get("base_url") or service_defaults()["base_url"]
     api_key = api_key or saved.get("api_key")
     if not api_key:
-        raise ConfigError("尚未配置 API Key。请运行 linxsci-scholar setup，或安装包内的 install.py。")
+        raise ConfigError("尚未配置 API Key。请运行 linxsci scholar setup，或安装包内的 install.py。")
     return validate_url(base_url), validate_key(api_key)
 
 

@@ -24,6 +24,8 @@ py -3 install.py
 
 看到“连接成功”后即可提问。如果服务暂时不可用，Skill 和配置仍已保存，修复服务后重新检查即可。安装器不要求安装 Python SDK，也不修改助手的其他设置。
 
+在助手中使用的名称仍是 `$linxsci-scholar`。终端的统一 CLI 命令为 `linxsci scholar …`，需要单独安装 CLI/SDK Python 包后才可使用；ZIP 安装不会注册该命令。下面的 ZIP 操作直接运行包内脚本，无需安装 CLI。
+
 ## 在助手中提问
 
 新建对话，输入以下任意请求：
@@ -45,12 +47,14 @@ PDF 路径替换成你的实际文件路径。上传会将该文件发送到你�
 在解压目录运行：
 
 ```bash
-python3 skills/linxsci-scholar/scripts/scholar.py setup --base-url http://101.126.93.213:28888
-python3 skills/linxsci-scholar/scripts/scholar.py setup --online
-python3 skills/linxsci-scholar/scripts/scholar.py doctor
-python3 skills/linxsci-scholar/scripts/scholar.py config
-python3 skills/linxsci-scholar/scripts/scholar.py config --clear
+python3 skills/linxsci-scholar/scripts/cli.py scholar setup --base-url http://101.126.93.213:28888
+python3 skills/linxsci-scholar/scripts/cli.py scholar setup --online
+python3 skills/linxsci-scholar/scripts/cli.py scholar doctor
+python3 skills/linxsci-scholar/scripts/cli.py scholar config
+python3 skills/linxsci-scholar/scripts/cli.py scholar config --clear
 ```
+
+以上操作按需选择一条执行。Windows 将命令开头的 `python3` 替换为 `py -3`。如果已通过 wheel 或源码安装 CLI，可把 `python3 skills/linxsci-scholar/scripts/cli.py scholar` 替换为 `linxsci scholar`，例如 `linxsci scholar config`。两种方式共用同一份配置。
 
 也可让助手运行 `doctor`，它通过 `/meta` 检查连接，不上传论文，但同样受接口用量与计费策略约束，避免反复运行。修改配置时留空 Key 可保留原 Key；清除本地配置不会撤销服务端 Key。
 
@@ -75,6 +79,7 @@ python3 install.py --update
 | 提示 | 处理方法 |
 | --- | --- |
 | 找不到 Python | 安装 Python 3.9+；Windows 可使用 `py -3` |
+| 找不到 `linxsci` 命令 | ZIP 用户使用上文的包内脚本；CLI 用户激活安装该包的虚拟环境，更新源码后重新执行 `python -m pip install -e .` |
 | API Key 无效或过期 | 运行 `setup` 重新输入 Key |
 | 账号无权调用 | 检查账号权限 |
 | 连接失败 | 检查服务地址、端口、网络；本地模式需要启动服务 |

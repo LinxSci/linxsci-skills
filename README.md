@@ -4,32 +4,45 @@
 
 你需要一个已有的 Scholar API Key，以及能够执行本地 Python 脚本的 AI 助手。运行环境需要 **Python 3.9+**；本工具不需要额外 Python 运行依赖。
 
+## 命令和 Skill 如何命名
+
+| 层级 | 当前名称或用法 |
+| --- | --- |
+| 统一 CLI 命令 | `linxsci` |
+| 论文能力命令组 | `linxsci scholar`，例如 `linxsci scholar search "graph neural networks"` |
+| AI Skill 名称 | `linxsci-scholar`，在助手中使用 `$linxsci-scholar` |
+| Python 安装包 / 导入 | `linxsci-scholar-sdk` / `from linxsci_scholar import ScholarClient` |
+
+后续能力采用 `linxsci <能力名> <动作>`，对应 Skill 采用 `linxsci-<能力名>`。例如未来专利能力可命名为 `linxsci patents search` 和 `linxsci-patents`；这是命名示例，当前只实现 `scholar`。多个能力共享一个 CLI 入口，分别维护各自的 Skill 指令和实现。
+
+本文的终端命令统一使用 `linxsci scholar …`。Skill 名称、Python 包名、导入名和配置目录保持表中各自的名称，配置仍可复用。新增能力的开发步骤见 [开发者指南](docs/DEVELOPMENT.md#91-新增其他-skill-的命名与入口)。
+
 ## 普通用户：安装、配置、提问
 
-1. 下载发布方提供的 `linxsci-scholar-0.2.2.zip`，解压。
+1. 下载发布方提供的 `linxsci-scholar-0.3.0.zip`，解压。
 2. macOS 双击 `Install.command`；Windows 双击 `Install.bat`。也可以在解压目录运行 `python3 install.py`（Windows 用 `py -3 install.py`）。
 3. 在向导中确认服务地址，输入你的 API Key。输入时 Key 不会显示。向导保存配置并检查连接。
 4. 在助手中输入：
 
 > 使用 $linxsci-scholar 搜索图神经网络相关论文，阅读方法章节，比较主要方法并附上来源。
 
-默认使用测试服务 **http://101.126.93.213:28888**，地址可在向导中修改，无需在用户电脑部署 Scholar。线上地址仍为 **https://linxsci.com**，可运行 `python3 install.py --online` 切换。已有本地配置或环境变量优先于默认值；修改已有配置可运行 `linxsci-scholar setup --base-url http://101.126.93.213:28888`。
+默认使用测试服务 **http://101.126.93.213:28888**，地址可在向导中修改，无需在用户电脑部署 Scholar。线上地址仍为 **https://linxsci.com**，可运行 `python3 install.py --online` 切换。已有本地配置或环境变量优先于默认值；ZIP 用户修改设置时，在解压目录运行 `python3 skills/linxsci-scholar/scripts/cli.py scholar setup`。
 
 安装器默认将 Skill 放到 `~/.agents/skills/linxsci-scholar`，见 [官方本地 Skill 说明](https://learn.chatgpt.com/docs/build-skills)。客户端未发现 Skill 时重启助手；其他加载位置可通过 `--skills-dir` 指定。旧版客户端使用 `~/.codex/skills` 时，也可显式指定该目录。
 
-完整图文无关的操作步骤、更新和故障处理见 [普通用户指南](docs/USER_GUIDE.md)。本项目不包含 AI 助手或 Scholar 服务器，也不负责注册账号或发放 Key。
+ZIP 安装后即可在助手中使用 Skill；安装器不注册终端的 `linxsci` 命令。需要该命令时，按下面的 wheel 或源码安装流程操作。完整操作步骤、更新和故障处理见 [普通用户指南](docs/USER_GUIDE.md)。本项目不包含 AI 助手或 Scholar 服务器，也不负责注册账号或发放 Key。
 
 ## 已安装 CLI 的用户
 
 当前发布文件可本地安装；尚未上传到 PyPI。安装 wheel 后执行：
 
 ```bash
-linxsci-scholar install-skill
-linxsci-scholar setup --base-url http://101.126.93.213:28888
-linxsci-scholar search 'graph neural networks'
+linxsci scholar install-skill
+linxsci scholar setup --base-url http://101.126.93.213:28888
+linxsci scholar search 'graph neural networks'
 ```
 
-`setup` 一次保存配置，后续 CLI、SDK 和本地 Skill 共用。不需要每次 export 环境变量。`config` 查看配置状态，不显示 Key；`config --clear` 清除保存的地址和 Key。更新包后运行 `install-skill --update` 更新助手使用的脚本，旧 Skill 保留备份。
+`linxsci scholar setup` 一次保存配置，后续 CLI、SDK 和本地 Skill 共用。不需要每次 export 环境变量。`linxsci scholar config` 查看配置状态，不显示 Key；`linxsci scholar config --clear` 清除保存的地址和 Key。更新包后运行 `linxsci scholar install-skill --update` 更新助手使用的脚本，旧 Skill 保留备份。
 
 ## 从本地源码开始测试
 
@@ -41,13 +54,15 @@ source .venv/bin/activate
 python3 -m pip install --upgrade pip setuptools wheel
 python3 -m pip install -e .
 
-linxsci-scholar --version
-linxsci-scholar setup --base-url http://101.126.93.213:28888
+linxsci --version
+linxsci scholar setup --base-url http://101.126.93.213:28888
 ```
 
 Windows 激活命令为 `.venv\Scripts\activate`。统一使用同一个虚拟环境，不要混用 `.venv` 和 `.venv-1`。旧 pip 可能提示找不到 setup.py/setup.cfg，先执行上述升级命令；指定解释器安装时使用 `.venv/bin/python -m pip install -e .`，不要写成 `python -m python3 -m pip ...`。
 
-按向导输入已有 API Key，输入时不会显示。`setup` 会检查一次连接，成功后即可检索；之后需要单独检查连接时运行 `linxsci-scholar doctor --json`，确认 `ok` 为 true 且 `base_url` 是测试服务地址。检查连接也会实际调用接口，无需反复执行。
+从已有开发版本更新到 0.3.0 时，拉取代码后在原虚拟环境重新运行 `python3 -m pip install -e .`，以注册新的 `linxsci` 入口，再用 `linxsci --version` 和 `linxsci scholar --help` 确认。已有 Key 无需重新输入；已安装到助手的 Skill 还需执行 `linxsci scholar install-skill --update` 同步。
+
+按向导输入已有 API Key，输入时不会显示。`setup` 会检查一次连接，成功后即可检索；之后需要单独检查连接时运行 `linxsci scholar doctor --json`，确认 `ok` 为 true 且 `base_url` 是测试服务地址。检查连接也会实际调用接口，无需反复执行。
 
 ## 论文检索和阅读示例
 
@@ -56,8 +71,8 @@ Windows 激活命令为 `.venv\Scripts\activate`。统一使用同一个虚拟�
 ### 1. 按英文或中文主题检索
 
 ```bash
-linxsci-scholar search "graph neural networks"
-linxsci-scholar search "大语言模型智能体"
+linxsci scholar search "graph neural networks"
+linxsci scholar search "大语言模型智能体"
 ```
 
 将引号中的文字替换为自己的研究主题。检查返回论文的标题、摘要和主题是否相关，记录实际返回的论文 ID；未检索到结果时不应编造论文。
@@ -65,19 +80,19 @@ linxsci-scholar search "大语言模型智能体"
 ### 2. 保存搜索结果
 
 ```bash
-linxsci-scholar --output search.json search "graph neural networks"
+linxsci scholar --output search.json search "graph neural networks"
 ```
 
-响应原始内容保存到当前目录的 `search.json`，可用编辑器打开核查。`--output` 是全局参数，必须放在 `search`、`paper` 等子命令之前。
+响应原始内容保存到当前目录的 `search.json`，可用编辑器打开核查。`--output` 属于 Scholar 组，放在 `scholar` 之后、`search` 或 `paper` 等具体动作之前。
 
 ### 3. 查看论文详情、目录和相关章节
 
 先从搜索响应选择一篇论文，再从其目录选择章节。下列中文占位参数必须替换为真实返回值后执行：
 
 ```bash
-linxsci-scholar paper "实际论文ID"
-linxsci-scholar paper "实际论文ID" --resource toc
-linxsci-scholar paper "实际论文ID" --resource sections --item-id "实际章节ID"
+linxsci scholar paper "实际论文ID"
+linxsci scholar paper "实际论文ID" --resource toc
+linxsci scholar paper "实际论文ID" --resource sections --item-id "实际章节ID"
 ```
 
 论文 ID 保留 `local:`、`arxiv:`、`openalex:`、`s2:` 或 `doi:` 来源前缀，不要用论文标题代替 ID。便捷命令接收未编码的 ID，并负责 URL 编码；章节 ID 必须来自接口响应，不能根据章节名称猜测。
@@ -89,13 +104,13 @@ linxsci-scholar paper "实际论文ID" --resource sections --item-id "实际章�
 源码安装只提供 CLI/SDK。需要通过 `$linxsci-scholar` 使用时，再安装 Skill；首次执行：
 
 ```bash
-linxsci-scholar install-skill
+linxsci scholar install-skill
 ```
 
 已由本工具安装过，或修改源码后要同步到安装副本，执行：
 
 ```bash
-linxsci-scholar install-skill --update
+linxsci scholar install-skill --update
 ```
 
 在支持本地 Skill 和脚本执行的助手中新建对话，分别尝试：

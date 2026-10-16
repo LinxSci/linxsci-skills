@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Verify release contents, checksums, versions and package metadata."""
 import hashlib
+import configparser
 import re
 import subprocess
 import sys
@@ -24,6 +25,7 @@ def check(directory):
         'SKILL.md', 'service.json', 'agents/openai.yaml', 'references/api.md',
         '__init__.py', 'scripts/__init__.py', 'scripts/scholar.py',
         'scripts/scholar_client.py', 'scripts/scholar_config.py', 'scripts/scholar_install.py',
+        'scripts/cli.py',
     }
     wheel = directory / ('linxsci_scholar_sdk-' + version + '-py3-none-any.whl')
     sdist = directory / ('linxsci_scholar_sdk-' + version + '.tar.gz')
@@ -36,6 +38,9 @@ def check(directory):
         pkg_metadata = archive.read('linxsci_scholar_sdk-' + version + '.dist-info/METADATA').decode()
         assert 'Requires-Dist:' not in pkg_metadata, 'Runtime dependencies are expected to be empty'
         assert 'Version: ' + version in pkg_metadata
+        entries = configparser.ConfigParser()
+        entries.read_string(archive.read('linxsci_scholar_sdk-' + version + '.dist-info/entry_points.txt').decode())
+        assert entries['console_scripts']['linxsci'] == 'linxsci_scholar.scripts.cli:main'
     with tarfile.open(sdist) as archive:
         assert any(name.endswith('/tools/build_release.py') for name in archive.getnames())
     with zipfile.ZipFile(bundle) as archive:

@@ -13,26 +13,31 @@ python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install --upgrade pip setuptools wheel
 python3 -m pip install -e .
-linxsci-scholar setup --base-url http://101.126.93.213:28888
+linxsci --version
+linxsci --help
+linxsci scholar --help
+linxsci scholar setup --base-url http://101.126.93.213:28888
 ```
 
 Windows 激活使用 `.venv\Scripts\activate`，其余命令在对应 Python 环境中执行。Key 在向导中隐藏输入，不能发到聊天或写入 Git。`setup` 默认完成一次 `/meta` 连接检查；看到成功后，不必紧接着再运行 `doctor`。
 
+版本与两级帮助命令不访问远程服务：确认版本为当前代码版本，根帮助包含 `scholar`，组帮助包含 `search`、`paper` 等动作。已有开发环境拉取新版代码后也需重新执行可编辑安装，才能注册新的命令入口。
+
 如果安装提示找不到 setup.py/setup.cfg，通常是当前 pip 太旧；先执行上面的升级命令。用 `python3 -m pip --version` 确认它属于 `.venv`。指定解释器的正确格式为 `.venv/bin/python -m pip install -e .`，不要在 `-m` 后写 `python3`。
 
-需要单独复查时运行 `linxsci-scholar doctor --json`，确认 `ok` 为 true，且输出的 `base_url` 为测试地址。`doctor` 会实际调用接口，也受用量和计费策略约束。通过 `/meta` 不代表搜索、章节、上传等 action 都已经启用。
+需要单独复查时运行 `linxsci scholar doctor --json`，确认 `ok` 为 true，且输出的 `base_url` 为测试地址。`doctor` 会实际调用接口，也受用量和计费策略约束。通过 `/meta` 不代表搜索、章节、上传等 action 都已经启用。
 
-如果实际地址不对，运行 `linxsci-scholar config` 检查环境变量覆盖状态。它不会显示 Key。`SCHOLAR_BASE_URL` 和 `SCHOLAR_OPENAPI_KEY` 优先于向导保存的设置；清除不需要的覆盖后再配置。
+如果实际地址不对，运行 `linxsci scholar config` 检查环境变量覆盖状态。它不会显示 Key。`SCHOLAR_BASE_URL` 和 `SCHOLAR_OPENAPI_KEY` 优先于向导保存的设置；清除不需要的覆盖后再配置。
 
 ## 2. 先验证真实接口，再验证助手
 
 第一次接入可用同一主题完成一条最小链路：
 
 ```bash
-linxsci-scholar search 'graph neural networks'
-linxsci-scholar paper '从搜索响应中选取的实际论文ID'
-linxsci-scholar paper '同一个实际论文ID' --resource toc
-linxsci-scholar paper '同一个实际论文ID' --resource sections --item-id '目录返回的实际章节ID'
+linxsci scholar search 'graph neural networks'
+linxsci scholar paper '从搜索响应中选取的实际论文ID'
+linxsci scholar paper '同一个实际论文ID' --resource toc
+linxsci scholar paper '同一个实际论文ID' --resource sections --item-id '目录返回的实际章节ID'
 ```
 
 替换中文占位参数后执行；不要直接把占位文本当作 ID。便捷命令需要带来源前缀的论文 ID（例如 `arxiv:` 或 `doi:`）。章节 ID 必须取自响应，不要用猜测的章节标题替代。
@@ -54,20 +59,20 @@ linxsci-scholar paper '同一个实际论文ID' --resource sections --item-id '�
 
 开发调优时可以不安装 Skill，直接在一个新对话中指定当前源码文件。把下面的路径替换成自己的绝对路径：
 
-> 请读取 /你的仓库路径/skills/linxsci-scholar/SKILL.md，按它的说明执行本次任务，只调用该目录下 scripts/scholar.py。请搜索 graph neural networks，选出最多三篇相关论文，说明每篇与主题的关系，并提供实际返回的论文 ID 和来源。没有检索到的内容不要补写。
+> 请读取 /你的仓库路径/skills/linxsci-scholar/SKILL.md，按它的说明执行本次任务，只调用该目录下 scripts/cli.py scholar。请搜索 graph neural networks，选出最多三篇相关论文，说明每篇与主题的关系，并提供实际返回的论文 ID 和来源。没有检索到的内容不要补写。
 
 这种方式适合快速修改和复测，验证的是“按指定 Skill 执行”的效果。它不证明助手能自动发现或选择 Skill。
 
 测试正式的安装和发现流程时，在当前开发虚拟环境里执行：
 
 ```bash
-linxsci-scholar install-skill
+linxsci scholar install-skill
 ```
 
 如果已经由本安装工具安装过，更新副本：
 
 ```bash
-linxsci-scholar install-skill --update
+linxsci scholar install-skill --update
 ```
 
 新对话中再用 `$linxsci-scholar` 提问。如果需要验证自动选择，不要在提示词中点名 Skill。检查助手工具记录中实际读取的 SKILL.md 和脚本绝对路径，避免测试到另一个目录里的同名旧副本。复制安装后，源码修改不会自动同步到副本，下一轮要先更新。不要同时安装多个会被扫描到的同名版本。
@@ -127,6 +132,7 @@ A8 会把文件发送到测试服务，只使用适合该测试的文件。真�
 | --- | --- |
 | 不会选 Skill、流程不合适、答案缺来源、读取大量无关全文 | `skills/linxsci-scholar/SKILL.md` 的 description、工作流和证据要求，并结合模型的实际执行记录判断 |
 | URL、编码、请求体、上传或错误解析有问题 | `skills/linxsci-scholar/scripts/scholar_client.py` |
+| `linxsci` 下能力列表或命令转发有问题 | `skills/linxsci-scholar/scripts/cli.py` 的 `CAPABILITIES` 和分派逻辑；入口注册检查 `pyproject.toml` |
 | 配置、命令参数或提示不易使用 | `skills/linxsci-scholar/scripts/scholar.py`、`scholar_config.py` |
 | 测到旧代码或安装失败 | `scholar_install.py` 与助手实际读取路径 |
 | 服务端 action、member、上游失败 | 服务端配置/服务日志，不能通过改提示词修复 |
