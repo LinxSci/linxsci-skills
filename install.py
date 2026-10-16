@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "skills/linxsci-scholar/scripts"))
-from scholar import main
+from cli import main
 
 
 def install(argv=None):
@@ -16,7 +16,7 @@ def install(argv=None):
     parser.add_argument("--online", action="store_true", help="向导默认使用线上地址")
     parser.add_argument("--base-url", help="向导默认的服务根地址")
     args = parser.parse_args(argv)
-    command = ["install-skill"]
+    command = ["scholar", "install-skill"]
     if args.skills_dir:
         command += ["--skills-dir", args.skills_dir]
     if args.update:
@@ -24,7 +24,7 @@ def install(argv=None):
     status = main(command)
     if status or args.no_config:
         return status
-    command = ["setup"]
+    command = ["scholar", "setup"]
     if args.online:
         command += ["--online"]
     if args.base_url:

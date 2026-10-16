@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LinxSci Scholar：搜索论文、按章节阅读和解析 PDF；首次使用请运行 setup。"""
+"""LinxSci Scholar：搜索论文、按章节阅读和解析 PDF；首次使用请运行 linxsci scholar setup。"""
 import argparse
 import getpass
 import json
@@ -16,13 +16,13 @@ else:
     from scholar_config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
     from scholar_install import install_skill
 
-VERSION = "0.2.2"
+VERSION = "0.3.0"
 
 
 def error_info(error):
     code = error.error_code
     hints = {
-        401: "API Key 无效或已过期，请运行 setup 重新配置。",
+        401: "API Key 无效或已过期，请运行 linxsci scholar setup 重新配置。",
         403: "账号无权调用此接口，请检查账号权限。",
         404: "服务未提供此接口，请核对服务根地址和部署版本。",
         429: "请求过于频繁或额度不足，请稍后重试或检查账号用量。",
@@ -111,7 +111,7 @@ def setup(args):
     if os.environ.get("SCHOLAR_BASE_URL") or os.environ.get("SCHOLAR_OPENAPI_KEY"):
         print("提示：后续调用时，已有环境变量优先于本地配置。")
     if args.no_check:
-        print("已跳过连接检查。稍后运行 doctor 检查连接。")
+        print("已跳过连接检查。稍后运行 linxsci scholar doctor 检查连接。")
         return 0
     return doctor(ScholarClient(base_url, key, timeout=args.timeout, framework_request_id=args.framework_request_id))
 
@@ -126,8 +126,8 @@ def pairs(values):
     return result
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+def main(argv=None, *, prog=None):
+    parser = argparse.ArgumentParser(prog=prog, description=__doc__)
     parser.add_argument("--version", action="version", version=VERSION)
     parser.add_argument("--json-errors", action="store_true", help="Output structured errors on stderr")
     parser.add_argument("--timeout", type=float, default=60)
