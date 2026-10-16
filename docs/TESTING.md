@@ -139,4 +139,6 @@ A8 会把文件发送到测试服务，只使用适合该测试的文件。真�
 
 每次围绕一个已观察到的问题做最小改动，复跑原失败题及相关正常题。改 Python 逻辑后运行 `python3 -m unittest discover -s tests -v`；只改 Skill 文字时优先复测真实助手行为，文字改了并不代表行为必然改善。
 
+全接口覆盖由 `tests/test_framework_errors.py` 对照原始接口文档检查方法/路径，再由 `tests/test_api_coverage.py` 逐条运行 Skill 的独立脚本，向本机模拟服务发送全部 34 个接口请求。后者检查认证、动态 ID 编码、重复查询参数、JSON、multipart 上传、PDF 可选请求头及响应文件内容。这些测试验证调用链，不验证真实服务的业务参数、权限或响应数据。发布冒烟测试还会从新安装的 wheel 和 ZIP 各调用一遍全部接口。
+
 本地测试满意后再提交和推送 Git。需要交付安装包时，按发布指南重新构建并运行 `tools/check_release.py` 和 `tools/smoke_release.py`。无需每个调优回合都重新发版。

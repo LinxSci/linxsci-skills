@@ -1,11 +1,27 @@
 ---
 name: linxsci-scholar
-description: 使用 LinxSci Scholar OpenAPI v2 搜索学术论文、读取章节和引用、查询作者机构期刊以及上传 PDF 并获取解析结果。当用户需要基于 Scholar 的文献检索或论文证据分析时使用。
+description: 调用 LinxSci Scholar OpenAPI v2，支持文献检索、论文内容与引用、推荐、学术实体和 PDF 解析。用于 Scholar 研究任务、指定接口调用，以及服务健康和用量查询。
 ---
 
 # LinxSci Scholar
 
 使用本 Skill 的统一入口 `scripts/cli.py scholar`。所有示例中的 `<skill-dir>` 都替换为本文件所在目录的绝对路径；脚本仅依赖 Python 3.9+ 标准库，无需安装 SDK。
+
+## 接口调用入口
+
+本 Skill 可调用 [接口文档](references/api.md) 中的全部 34 个接口，覆盖服务信息与健康、各来源搜索和标识解析、论文详情与引用、推荐、作者/机构/期刊及 PDF 解析。`search`、`paper`、`upload`、`task` 等是便捷命令，其余使用 `request`，无需为每个接口单独编写命令。
+
+用户指定接口或操作时，按目标路由、参数和响应直接执行；例如查询用量不需要先检索论文，调用推荐接口不需要先走章节阅读流程。按任务需要读取接口文档，使用 `routes` 查看支持的方法与路径（不联网）。
+
+```bash
+python3 <skill-dir>/scripts/cli.py scholar request GET /health/ready
+python3 <skill-dir>/scripts/cli.py scholar request GET /usage
+python3 <skill-dir>/scripts/cli.py scholar request POST /search/openalex --body @search.json
+python3 <skill-dir>/scripts/cli.py scholar request POST /recommendations --body @recommendations.json
+python3 <skill-dir>/scripts/cli.py scholar request POST /entities:resolve --body @entities.json
+```
+
+示例中的 JSON 文件须先按部署环境的 Agent API 契约或用户提供的参数准备。通用路径省略 `/openapi/v2` 前缀；POST JSON 使用 `--body @file.json`，PDF 上传接口 `/pdf/parse/upload` 使用 `upload /absolute/path/paper.pdf`，由脚本构造 multipart 的 `file` 字段。接口调用不要求助手额外完成综述或研究分析。
 
 ## 配置与发现
 
@@ -26,7 +42,7 @@ python3 <skill-dir>/scripts/cli.py scholar meta
 python3 <skill-dir>/scripts/cli.py scholar routes
 ```
 
-首次接入可用 `doctor`（调用 `/meta`）验证连接；它也经过用量检查和计费流程，已有有效连接结果时不重复探测。根据 [接口文档](references/api.md) 核对目标路由；对于未定义的业务请求模型，读取部署环境的上游契约或用户提供的请求 JSON。`meta` 不保证返回完整 schema；缺少契约时先完成已知搜索/阅读操作，明确指出缺失字段信息，不猜测字段和分页。
+首次接入可用 `doctor`（调用 `/meta`）验证连接；它也经过用量检查和计费流程，已有有效连接结果时不重复探测。根据 [接口文档](references/api.md) 核对目标路由；对于未定义的业务请求模型，读取部署环境的上游契约或用户提供的请求 JSON。`meta` 不保证返回完整 schema；缺少目标接口必需的业务参数时，说明需要补充的契约或请求 JSON，不猜测字段和分页，也不擅自改为其他接口任务。
 
 ## 文献工作流
 
@@ -52,7 +68,7 @@ python3 <skill-dir>/scripts/cli.py scholar task '<returned-task-id>' --result
 python3 <skill-dir>/scripts/cli.py scholar --output /absolute/path/asset.bin paper 'arxiv:2301.07041' --resource assets --item-id '<returned-asset-id>'
 ```
 
-Scholar 组的可选参数 `--framework-request-id <id>`（放在 `scholar` 之后、具体动作之前）发送 `X-ANYTHINGRIGHT-REQ-ID`，对应 Scholar 自身错误的 `extra.request-id`；`request --request-id <id>` 发送独立的 `X-Request-ID`。两者用途不同。通用 `request` 的路径相对于 `/openapi/v2`，每个动态 ID 独立 URL 编码（包括 DOI 中的斜杠）；查询参数用重复的 `--param key=value`。JSON 通过 `--body @file.json` 原样传入。PDF 可传 `--field key=value`，仅在上游契约要求时设置 `SCHOLAR_MINERU_API_KEY`。
+Scholar 组的可选参数 `--framework-request-id <id>`（放在 `scholar` 之后、具体动作之前）发送 `X-ANYTHINGRIGHT-REQ-ID`，对应 Scholar 自身错误的 `extra.request-id`；`request --request-id <id>` 发送独立的 `X-Request-ID`。两者用途不同。通用 `request` 的路径相对于 `/openapi/v2`，每个动态 ID 独立 URL 编码（包括 DOI 中的斜杠）；查询参数用重复的 `--param key=value`。JSON 通过 `--body @file.json` 原样传入。`upload` 可传 `--field key=value`；上游契约需要 `X-MinerU-API-Key` 时，在本机设置 `SCHOLAR_MINERU_API_KEY`，上传和通用 PDF `request` 会读取它；查询任务的便捷 `task` 不附加该头，需要时使用通用 PDF `request`。
 
 上传会发送本地文件到配置服务，仅在用户请求解析该文件时执行。任务状态结构未定义，使用实际返回的标识和状态；不自动无限轮询或重复创建任务，确认完成后获取结果。
 

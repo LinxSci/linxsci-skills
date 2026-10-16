@@ -40,6 +40,18 @@ py -3 install.py
 
 PDF 路径替换成你的实际文件路径。上传会将该文件发送到你配置的 Scholar 服务。助手使用你提供的 Key 执行接口请求；用量以服务返回的信息为准。
 
+也可以直接调用 OpenAPI 中的指定接口，例如：
+
+> 使用 $linxsci-scholar 调用 GET /usage，查询我的接口用量。
+
+> 使用 $linxsci-scholar 调用 GET /recommendations/mobile-cards，返回接口结果。
+
+> 使用 $linxsci-scholar 调用 POST /entities:resolve，请求 JSON 读取我指定的 /实际路径/entities-request.json，返回结果即可。
+
+本 Skill 接入文档中的全部 34 个接口，调用某个接口无需先完成论文检索或分析。POST 请求文件需按实际服务的业务参数要求准备；不要在请求文件中写入 API Key，认证自动读取本机配置。
+
+需要在终端逐个调用接口时，查看 [全接口 CLI 使用指南](CLI_GUIDE.md)，其中也说明了 ZIP 用户如何运行包内脚本。
+
 没有找到 Skill 时，重启助手并确认安装输出的路径。当前默认位置为 `~/.agents/skills`；可为需要其他位置的客户端指定 `python3 install.py --skills-dir /path/to/skills`。见 [官方 Skill 安装位置说明](https://learn.chatgpt.com/docs/build-skills)。不要把同一个 Skill 安装到多个会被同时扫描的位置。
 
 ## 修改设置、检查连接和清除 Key

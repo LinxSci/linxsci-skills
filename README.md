@@ -44,6 +44,8 @@ linxsci scholar search 'graph neural networks'
 
 `linxsci scholar setup` 一次保存配置，后续 CLI、SDK 和本地 Skill 共用。不需要每次 export 环境变量。`linxsci scholar config` 查看配置状态，不显示 Key；`linxsci scholar config --clear` 清除保存的地址和 Key。更新包后运行 `linxsci scholar install-skill --update` 更新助手使用的脚本，旧 Skill 保留备份。
 
+逐个接口的完整命令、请求文件、ID 编码及 PDF 上传方式见 [全部 34 个接口的 CLI 使用指南](docs/CLI_GUIDE.md)。
+
 ## 从本地源码开始测试
 
 在项目根目录执行。首次创建环境并安装开发版；已有 `.venv` 时可跳过创建：
@@ -147,11 +149,30 @@ linxsci scholar install-skill --update
 
 已适配新版数字框架错误码、请求追踪和计费异常诊断。覆盖接口文档中的 34 条路由：服务信息和健康、论文搜索和标识解析、详情/内容/目录/章节/图表资源/引用、推荐、作者/机构/期刊、PDF 解析任务。便捷命令包括 `search`、`paper`、`upload` 和 `task`，其他路由通过 `request` 原样调用。
 
+| 接口分类 | 数量 | 调用入口 |
+| --- | --- | --- |
+| 服务信息与健康检查 | 4 | `meta`、`usage`、`health` 或 `request` |
+| 论文搜索与解析 | 6 | 综合搜索用 `search`；各来源搜索、解析和批量获取用 `request` |
+| 论文详情与引用 | 11 | `paper` 或 `request` |
+| 论文推荐 | 2 | `request` |
+| 作者、机构与期刊 | 7 | `request` |
+| PDF 解析 | 4 | JSON 创建任务用 `request`，文件上传用 `upload`，任务/结果用 `task` 或 `request` |
+
+只需调用指定接口时，可以直接使用通用命令。例如：
+
+```bash
+linxsci scholar request GET /recommendations/mobile-cards
+linxsci scholar request POST /search/openalex --body @openalex-request.json
+```
+
+`openalex-request.json` 需先按实际 Agent API 契约准备。路径省略 `/openapi/v2` 前缀；所有 JSON POST 都可通过 `--body @文件路径` 传入请求。PDF 上传为 multipart，使用 `linxsci scholar upload /实际路径/paper.pdf`。在助手中也可直接提出“使用 $linxsci-scholar 调用指定接口”，并提供接口路径及必要参数。
+
 研究比较和总结由助手根据实际读取的内容完成。目前接口文档未定义多数 POST 的业务字段、分页和 PDF 状态模型；这些高级接口应按部署版本的上游契约使用，不能假定空 JSON 有效。所有路由可调用不代表每条接口都已有专用表单或经过真实生产验证。
 
 ## 开发与发布
 
 - [开发者指南：CLI、SDK、配置与测试](docs/DEVELOPMENT.md)
+- [CLI 使用指南：全部 34 个接口逐一调用](docs/CLI_GUIDE.md)
 - [测试环境验收与 Skill 调优](docs/TESTING.md)
 - [发布指南：构建、验证与分发](docs/RELEASING.md)
 - [Skill 指令](skills/linxsci-scholar/SKILL.md)
