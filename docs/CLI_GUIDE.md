@@ -17,7 +17,9 @@
 
 ### 从项目源码安装 CLI
 
-在项目根目录执行；已有虚拟环境时只需激活并安装：
+在项目根目录执行；已有虚拟环境时只需激活并安装。
+
+**macOS / Linux：**
 
 ```bash
 python3 -m venv .venv
@@ -28,7 +30,18 @@ linxsci --version
 linxsci scholar --help
 ```
 
-Windows CMD 使用 `.venv\Scripts\activate` 激活，Python 命令可使用 `python`。后续调用均在安装了本项目的同一个虚拟环境中执行。
+**Windows CMD：**
+
+```bat
+py -3 -m venv .venv
+.venv\Scripts\activate.bat
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -e .
+linxsci --version
+linxsci scholar --help
+```
+
+后续调用均在安装了本项目的同一个虚拟环境中执行。
 
 如果拿到的是 wheel，在自己的虚拟环境中安装它：
 
@@ -502,4 +515,4 @@ linxsci scholar request --help
 linxsci scholar upload --help
 ```
 
-以上三条命令不调用远程服务。SDK 开发见 [开发者指南](DEVELOPMENT.md)，测试和联调见 [测试指南](TESTING.md)。
+以上三条命令不调用远程服务。Python SDK 的安装、配置、方法签名及全接口对照见 [SDK 开发者指南](DEVELOPMENT.md)，测试和联调见 [测试指南](TESTING.md)。

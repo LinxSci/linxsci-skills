@@ -1,4 +1,4 @@
-# 开发者指南
+# 开发者指南（Python SDK）
 
 本文面向在 Python 程序中调用 Scholar 的开发者，按当前项目的安装方式、SDK 入口和接口行为编写。首次使用按第 1 节、第 2.1 节和第 3 节操作，即可完成一次论文检索；其他章节按需阅读。
 
@@ -16,6 +16,8 @@ SDK 的公共入口为 `linxsci_scholar`，命令行入口为 `linxsci`，论文
 8. [使用 CLI](#8-使用-cli)
 9. [本地开发与验证](#9-本地开发与验证)
 10. [常见问题](#10-常见问题)
+
+需要逐个接口调用时，直接查看 [全部 34 个接口的 SDK 对照表](#66-全部-34-个接口的-sdk-对照表)；方法签名见 [SDK 方法与参数速查](#65-sdk-方法与参数速查)。终端命令另见 [CLI 使用指南](CLI_GUIDE.md)。
 
 ## 1. 安装项目
 
@@ -341,6 +343,104 @@ print(client.request("GET", path).json())
 ```
 
 GET 查询参数可使用 `query={字段名: 值}`；多个同名值可使用列表。PDF 路径可通过 `mineru_key` 显式附加 `X-MinerU-API-Key`。SDK 不接受在非 PDF 路径上发送该头。
+
+### 6.4 从 JSON 文件调用 POST
+
+CLI 的 `--body @文件.json` 在 SDK 中对应“读取 JSON → 传给 `payload`”。以下示例调用推荐接口，运行前按实际上游契约准备请求文件：
+
+```python
+import json
+from pathlib import Path
+from linxsci_scholar import ScholarClient
+
+client = ScholarClient()
+request_file = input("推荐接口请求 JSON 文件路径：").strip()
+recommendations_body = json.loads(Path(request_file).read_text(encoding="utf-8"))
+
+response = client.request("POST", "/recommendations", payload=recommendations_body)
+print(response.json())
+```
+
+其他 JSON POST 可使用相同的读取方式，替换目标路径和对应业务请求文件即可。SDK 的 `payload` 接收解析后的 Python JSON 值，不能直接传 `"@request.json"` 代替文件读取。
+
+### 6.5 SDK 方法与参数速查
+
+当前公开调用签名如下；方法返回 `Response`，构造客户端本身不发起网络请求：
+
+```text
+ScholarClient(base_url=None, api_key=None, timeout=60, *, framework_request_id=None)
+client.search(query, **options)
+client.paper(paper_id, resource=None, *, item_id=None, query=None)
+client.upload_pdf(file, *, fields=None, mineru_key=None)
+client.pdf_task(task_id, *, result=False)
+client.request(method, path, *, query=None, payload=None, file=None,
+               fields=None, mineru_key=None, request_id=None, framework_request_id=None)
+```
+
+`timeout` 单位为秒，须为正的有限数值。`search()` 的 `options` 按上游契约传入，最终检索词使用 `query` 参数。`paper()` 和 `pdf_task()` 对原始 ID 编码；`request()` 接收已编码的动态路径。
+
+| `request()` 参数 | 用法与约束 |
+| --- | --- |
+| `method` / `path` | 方法为 `GET` 或 `POST`，路径省略 `/openapi/v2`；仅允许当前文档中的路由 |
+| `query` | 查询参数字典，同名多值使用列表，SDK 自动编码 |
+| `payload` | JSON 请求值，由 SDK 序列化；GET 不接受请求体 |
+| `file` | 本地文件路径，仅用于 `POST /pdf/parse/upload`，不能同时传 `payload` |
+| `fields` | multipart 附加表单字段字典，仅与文件上传一起使用，字段名按上游契约 |
+| `mineru_key` | PDF 接口可选的 `X-MinerU-API-Key`；SDK 需要调用方显式传入 |
+| `request_id` | 可选的 `X-Request-ID`，未传时 SDK 自动生成 |
+| `framework_request_id` | 可选的 `X-ANYTHINGRIGHT-REQ-ID`，覆盖客户端构造时的同名参数 |
+
+### 6.6 全部 34 个接口的 SDK 对照表
+
+下表每一行都是一次独立调用，返回 `Response`，不要将整张表当作必须顺序执行的流程。先创建已配置的 `client = ScholarClient()`，再按需准备所选接口使用的变量：
+
+| 变量 | 准备方式 |
+| --- | --- |
+| `paper_id`、`section_id`、`asset_id`、`task_id` | 接口实际返回的原始 ID，不提前编码；`paper_id` 保留来源前缀 |
+| `author_id_encoded`、`institution_id_encoded`、`venue_id_encoded` | 对对应原始 ID 使用 `quote(raw_id, safe=":")`；需 `from urllib.parse import quote`，见第 6.3 节 |
+| `*_body` | 所选 POST 接口自己的请求数据，按上游契约填写或从 JSON 文件读取；不同接口分别准备 |
+| `pdf_path` | 实际存在的本地 PDF 路径 |
+| `pdf_fields` | 上传接口需要的附加表单字段字典，不需要时设为 `None` |
+| `mineru_key` | 上游要求时显式提供；可使用 `os.environ.get("SCHOLAR_MINERU_API_KEY")` 读取，不需要时设为 `None` |
+
+| HTTP 方法与完整路径 | SDK 调用 |
+| --- | --- |
+| `GET /openapi/v2/meta` | `client.request("GET", "/meta")` |
+| `GET /openapi/v2/usage` | `client.request("GET", "/usage")` |
+| `GET /openapi/v2/health/live` | `client.request("GET", "/health/live")` |
+| `GET /openapi/v2/health/ready` | `client.request("GET", "/health/ready")` |
+| `POST /openapi/v2/papers/search` | `client.search("graph neural networks")` |
+| `POST /openapi/v2/search/openalex` | `client.request("POST", "/search/openalex", payload=openalex_body)` |
+| `POST /openapi/v2/search/semantic-scholar` | `client.request("POST", "/search/semantic-scholar", payload=semantic_scholar_body)` |
+| `POST /openapi/v2/search/google-scholar` | `client.request("POST", "/search/google-scholar", payload=google_scholar_body)` |
+| `POST /openapi/v2/papers/resolve` | `client.request("POST", "/papers/resolve", payload=papers_resolve_body)` |
+| `POST /openapi/v2/papers:batchGet` | `client.request("POST", "/papers:batchGet", payload=papers_batch_get_body)` |
+| `GET /openapi/v2/papers/{paper_id}` | `client.paper(paper_id)` |
+| `GET /openapi/v2/papers/{paper_id}/content` | `client.paper(paper_id, "content")` |
+| `GET /openapi/v2/papers/{paper_id}/toc` | `client.paper(paper_id, "toc")` |
+| `GET /openapi/v2/papers/{paper_id}/sections/{section_id}` | `client.paper(paper_id, "sections", item_id=section_id)` |
+| `GET /openapi/v2/papers/{paper_id}/figures` | `client.paper(paper_id, "figures")` |
+| `GET /openapi/v2/papers/{paper_id}/assets/{asset_id}` | `client.paper(paper_id, "assets", item_id=asset_id)` |
+| `GET /openapi/v2/papers/{paper_id}/references` | `client.paper(paper_id, "references")` |
+| `GET /openapi/v2/papers/{paper_id}/citations` | `client.paper(paper_id, "citations")` |
+| `GET /openapi/v2/papers/{paper_id}/related` | `client.paper(paper_id, "related")` |
+| `GET /openapi/v2/papers/{paper_id}/graph` | `client.paper(paper_id, "graph")` |
+| `GET /openapi/v2/papers/{paper_id}/citation` | `client.paper(paper_id, "citation")` |
+| `POST /openapi/v2/recommendations` | `client.request("POST", "/recommendations", payload=recommendations_body)` |
+| `GET /openapi/v2/recommendations/mobile-cards` | `client.request("GET", "/recommendations/mobile-cards")` |
+| `GET /openapi/v2/authors/{author_id}` | `client.request("GET", f"/authors/{author_id_encoded}")` |
+| `GET /openapi/v2/authors/{author_id}/papers` | `client.request("GET", f"/authors/{author_id_encoded}/papers")` |
+| `GET /openapi/v2/institutions/{institution_id}` | `client.request("GET", f"/institutions/{institution_id_encoded}")` |
+| `GET /openapi/v2/institutions/{institution_id}/papers` | `client.request("GET", f"/institutions/{institution_id_encoded}/papers")` |
+| `GET /openapi/v2/venues/{venue_id}` | `client.request("GET", f"/venues/{venue_id_encoded}")` |
+| `GET /openapi/v2/venues/{venue_id}/papers` | `client.request("GET", f"/venues/{venue_id_encoded}/papers")` |
+| `POST /openapi/v2/entities:resolve` | `client.request("POST", "/entities:resolve", payload=entities_resolve_body)` |
+| `POST /openapi/v2/pdf/parse` | `client.request("POST", "/pdf/parse", payload=pdf_parse_body, mineru_key=mineru_key)` |
+| `POST /openapi/v2/pdf/parse/upload` | `client.upload_pdf(pdf_path, fields=pdf_fields, mineru_key=mineru_key)` |
+| `GET /openapi/v2/pdf/parse/{task_id}` | `client.pdf_task(task_id)` |
+| `GET /openapi/v2/pdf/parse/{task_id}/result` | `client.pdf_task(task_id, result=True)` |
+
+PDF 的 `pdf_task()` 便捷方法不接收 `mineru_key`。若任务查询或结果接口需要该头，改用 `client.request("GET", path, mineru_key=mineru_key)`，其中 `path` 为带已编码任务 ID 的对应 PDF 路径。二进制响应使用 `response.body`，其他响应按实际类型决定是否调用 `response.json()`；不要假定所有接口使用统一的列表或任务状态字段。
 
 ## 7. 处理响应和错误
 
