@@ -171,7 +171,7 @@ linxsci scholar request POST /search/openalex --body @openalex-request.json
 
 ## 开发与发布
 
-- [开发者指南：CLI、SDK、配置与测试](docs/DEVELOPMENT.md)
+- [SDK 开发者指南：安装、配置、方法签名与全部 34 个接口](docs/DEVELOPMENT.md)
 - [CLI 使用指南：全部 34 个接口逐一调用](docs/CLI_GUIDE.md)
 - [测试环境验收与 Skill 调优](docs/TESTING.md)
 - [发布指南：构建、验证与分发](docs/RELEASING.md)
