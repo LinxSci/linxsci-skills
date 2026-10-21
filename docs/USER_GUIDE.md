@@ -8,6 +8,25 @@
 
 ## 安装与首次配置
 
+官方分发路线为 GitHub 维护完整 Skill，ZIP 提供直接下载。官方 GitHub Skill 仓库的完整地址尚待确定，目前不要把账号首页或数据集仓库作为安装源。
+
+官方仓库上线后，可通过支持 GitHub Skill 的安装器安装。以下为命令模板，先把仓库地址替换为实际地址，再选择目标助手和安装范围：
+
+```text
+npx skills add "<官方 Skill 仓库完整地址>" --skill linxsci-scholar
+```
+
+该方式需要 Node.js / npx；具体参数见 [skills 安装器官方命令说明](https://github.com/vercel-labs/skills/blob/main/docs/commands.md)。安装来源应包含 `skills/linxsci-scholar/` 的完整脚本、参考资料和配置资源。只下载单个 `SKILL.md` 无法执行接口调用。
+
+如果已安装本项目 CLI，也可使用现有命令安装同一版本随包携带的 Skill：
+
+```bash
+linxsci scholar install-skill
+linxsci scholar setup
+```
+
+两种安装渠道按目标目录选择一种管理方式。`linxsci scholar install-skill --update` 只更新本工具托管的副本，外部安装器管理的 Skill 使用其对应更新方式。直接下载 ZIP 的完整流程如下。
+
 下载发布方提供的 ZIP，完整解压，不要直接在压缩包中执行。macOS 双击 `Install.command`，Windows 双击 `Install.bat`。向导会安装 Skill，然后提示输入服务地址和 Key，并检查连接。
 
 如果双击不运行，打开终端进入解压目录，执行：

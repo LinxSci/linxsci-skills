@@ -141,4 +141,6 @@ A8 会把文件发送到测试服务，只使用适合该测试的文件。真�
 
 全接口覆盖由 `tests/test_framework_errors.py` 对照原始接口文档检查方法/路径，再由 `tests/test_api_coverage.py` 逐条运行 Skill 的独立脚本，向本机模拟服务发送全部 34 个接口请求。后者检查认证、动态 ID 编码、重复查询参数、JSON、multipart 上传、PDF 可选请求头及响应文件内容。这些测试验证调用链，不验证真实服务的业务参数、权限或响应数据。发布冒烟测试还会从新安装的 wheel 和 ZIP 各调用一遍全部接口。
 
+验证 uv 工具安装时运行 `python tools/smoke_release.py dist --uv uv`。它使用临时工具目录、命令目录和缓存，通过本地 wheel 离线安装，覆盖全部 34 个接口、随包 Skill 安装与更新及工具卸载，不修改当前用户的 uv 工具环境。CI 已包含这项检查；这不等于包已发布到 PyPI。
+
 本地测试满意后再提交和推送 Git。需要交付安装包时，按发布指南重新构建并运行 `tools/check_release.py` 和 `tools/smoke_release.py`。无需每个调优回合都重新发版。
