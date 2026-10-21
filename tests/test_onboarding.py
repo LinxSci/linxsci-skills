@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-SCRIPTS = Path(__file__).resolve().parents[1] / "skills/linxsci-scholar/scripts"
+SCRIPTS = Path(__file__).resolve().parents[1] / "skills/linxsci-skills/scripts"
 sys.path.insert(0, str(SCRIPTS))
 from scholar import main, doctor, error_info
 from scholar_client import ScholarClient, ScholarError, Response
@@ -37,7 +37,7 @@ class OnboardingTests(unittest.TestCase):
         self.assertEqual(status, 0, err)
         self.assertNotIn("test-secret", out + err)
         client = ScholarClient()  # A fresh process need not inherit terminal exports.
-        self.assertEqual(client.base_url, "http://101.126.93.213:28888")
+        self.assertEqual(client.base_url, "https://linxsci.com")
         self.assertEqual(client.api_key, "test-secret")
         if os.name != "nt":
             self.assertEqual(stat.S_IMODE(config_path().stat().st_mode), 0o600)
@@ -120,13 +120,57 @@ class OnboardingTests(unittest.TestCase):
 
     def test_install_refuses_unmanaged_directory(self):
         parent = self.root / "skills"
-        destination = parent / "linxsci-scholar"
+        destination = parent / "linxsci-skills"
         destination.mkdir(parents=True)
         user_file = destination / "SKILL.md"
         user_file.write_text("user content")
         with self.assertRaises(ValueError):
             install_skill(parent, update=True)
         self.assertEqual(user_file.read_text(), "user content")
+
+    def legacy_skill(self, parent):
+        destination, _ = install_skill(parent)
+        legacy = parent / "linxsci-scholar"
+        destination.rename(legacy)
+        (legacy / ".linxsci-install.json").write_text(json.dumps({"name": "linxsci-scholar", "version": "0.3.0"}))
+        (legacy / "custom-note.txt").write_text("keep legacy note")
+        return legacy
+
+    def test_legacy_skill_migration_and_backup(self):
+        parent = self.root / "agent/skills"
+        legacy = self.legacy_skill(parent)
+        with self.assertRaises(ValueError):
+            install_skill(parent)
+        destination, backup = install_skill(parent, update=True)
+        self.assertEqual(destination.name, "linxsci-skills")
+        self.assertFalse(legacy.exists())
+        self.assertEqual((backup / "custom-note.txt").read_text(), "keep legacy note")
+        self.assertNotEqual(backup.parent, parent)
+        self.assertEqual(json.loads((destination / ".linxsci-install.json").read_text())["name"], "linxsci-skills")
+
+    def test_legacy_skill_migration_rollback(self):
+        parent = self.root / "agent/skills"
+        legacy = self.legacy_skill(parent)
+        real_replace = os.replace
+        def replace(source, target):
+            if Path(source).name.startswith(".linxsci-stage-"):
+                raise OSError("simulated migration failure")
+            return real_replace(source, target)
+        with patch("scholar_install.os.replace", side_effect=replace), self.assertRaises(OSError):
+            install_skill(parent, update=True)
+        self.assertEqual((legacy / "custom-note.txt").read_text(), "keep legacy note")
+        self.assertFalse((parent / "linxsci-skills").exists())
+
+    def test_legacy_skill_migration_refuses_unmanaged_directory(self):
+        parent = self.root / "agent/skills"
+        legacy = parent / "linxsci-scholar"
+        legacy.mkdir(parents=True)
+        note = legacy / "SKILL.md"
+        note.write_text("user content")
+        with self.assertRaises(ValueError):
+            install_skill(parent, update=True)
+        self.assertEqual(note.read_text(), "user content")
+        self.assertFalse((parent / "linxsci-skills").exists())
 
     def test_installer_rollback(self):
         parent = self.root / "agent/skills"

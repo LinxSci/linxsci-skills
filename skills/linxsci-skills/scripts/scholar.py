@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LinxSci Scholar：搜索论文、按章节阅读和解析 PDF；首次使用请运行 linxsci scholar setup。"""
+"""LinxSci Scholar：搜索论文、按章节阅读和解析 PDF；首次使用请运行 linxsci setup。"""
 import argparse
 import getpass
 import json
@@ -8,21 +8,36 @@ import sys
 import warnings
 from pathlib import Path
 if __package__:
-    from .scholar_client import ROUTES, ScholarClient, ScholarError
+    from .scholar_client import ROUTES, ScholarClient, ScholarError, paper_path, segment
     from .scholar_config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
     from .scholar_install import install_skill
 else:
-    from scholar_client import ROUTES, ScholarClient, ScholarError
+    from scholar_client import ROUTES, ScholarClient, ScholarError, paper_path, segment
     from scholar_config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
     from scholar_install import install_skill
 
 VERSION = "0.3.0"
 
+SEARCH_COMMANDS = {
+    "search": ("/papers/search", "综合论文搜索"),
+    "search-openalex": ("/search/openalex", "OpenAlex 搜索"),
+    "search-semantic-scholar": ("/search/semantic-scholar", "Semantic Scholar 搜索"),
+    "search-google-scholar": ("/search/google-scholar", "Google Scholar 搜索"),
+}
+JSON_COMMANDS = {
+    "resolve": ("/papers/resolve", "解析论文标识"),
+    "batch-get": ("/papers:batchGet", "批量获取论文"),
+    "recommend": ("/recommendations", "推荐论文"),
+    "resolve-entities": ("/entities:resolve", "解析作者、机构或期刊标识"),
+    "parse-pdf": ("/pdf/parse", "按 JSON 请求创建 PDF 解析任务"),
+}
+ENTITY_COMMANDS = {"author": "authors", "institution": "institutions", "venue": "venues"}
+
 
 def error_info(error):
     code = error.error_code
     hints = {
-        401: "API Key 无效或已过期，请运行 linxsci scholar setup 重新配置。",
+        401: "API Key 无效或已过期，请运行 linxsci setup 重新配置。",
         403: "账号无权调用此接口，请检查账号权限。",
         404: "服务未提供此接口，请核对服务根地址和部署版本。",
         429: "请求过于频繁或额度不足，请稍后重试或检查账号用量。",
@@ -111,7 +126,7 @@ def setup(args):
     if os.environ.get("SCHOLAR_BASE_URL") or os.environ.get("SCHOLAR_OPENAPI_KEY"):
         print("提示：后续调用时，已有环境变量优先于本地配置。")
     if args.no_check:
-        print("已跳过连接检查。稍后运行 linxsci scholar doctor 检查连接。")
+        print("已跳过连接检查。稍后运行 linxsci doctor 检查连接。")
         return 0
     return doctor(ScholarClient(base_url, key, timeout=args.timeout, framework_request_id=args.framework_request_id))
 
@@ -126,7 +141,7 @@ def pairs(values):
     return result
 
 
-def main(argv=None, *, prog=None):
+def build_parser(*, prog=None):
     parser = argparse.ArgumentParser(prog=prog, description=__doc__)
     parser.add_argument("--version", action="version", version=VERSION)
     parser.add_argument("--json-errors", action="store_true", help="Output structured errors on stderr")
@@ -146,31 +161,48 @@ def main(argv=None, *, prog=None):
     installer = sub.add_parser("install-skill", help="安装自包含 Skill，无需联网")
     installer.add_argument("--skills-dir", help="Parent directory for the Skill (default: ~/.agents/skills)")
     installer.add_argument("--update", action="store_true", help="Update a managed installation and retain a backup")
-    for name in ("meta", "usage"):
-        sub.add_parser(name)
-    health = sub.add_parser("health")
+    def api_command(name, help):
+        command = sub.add_parser(name, help=help, description=help)
+        command.add_argument("--param", action="append", help="查询参数 key=value，可重复；字段按上游契约")
+        command.add_argument("--request-id", help="上游/代理 X-Request-ID")
+        return command
+
+    for name, help in (("meta", "接口元信息"), ("usage", "用量信息"),
+                       ("mobile-cards", "移动端推荐卡片")):
+        api_command(name, help)
+    health = api_command("health", "存活或就绪检查")
     health.add_argument("check", choices=("live", "ready"))
-    search = sub.add_parser("search", help="搜索论文")
-    search.add_argument("query")
-    search.add_argument("--body", help="Additional JSON object or @file, fields from upstream contract")
-    paper = sub.add_parser("paper", help="读取论文详情、目录或章节")
+    for name, (_, help) in JSON_COMMANDS.items():
+        command = api_command(name, help)
+        command.add_argument("--body", required=True, help="JSON 或 @文件.json，字段按上游契约")
+    for name in ENTITY_COMMANDS:
+        entity = api_command(name, {"author": "作者详情或论文", "institution": "机构详情或论文", "venue": "期刊/会议详情或论文"}[name])
+        entity.add_argument("entity_id", help="响应中的原始 ID，无需 URL 编码")
+        entity.add_argument("--papers", action="store_true", help="获取该实体的论文")
+    for name, (_, help) in SEARCH_COMMANDS.items():
+        search = api_command(name, help)
+        search.add_argument("query", help="检索词")
+        search.add_argument("--body", help="可选附加参数，JSON 对象或 @文件.json；字段按上游契约")
+    paper = api_command("paper", "读取论文详情、内容、目录、章节或引用等资源")
     paper.add_argument("paper_id")
     paper.add_argument("--resource", choices=("content", "toc", "sections", "figures", "assets", "references", "citations", "related", "graph", "citation"))
     paper.add_argument("--item-id")
-    paper.add_argument("--param", action="append")
-    upload = sub.add_parser("upload", help="上传 PDF 并创建解析任务")
+    upload = api_command("upload", "上传 PDF 并创建解析任务")
     upload.add_argument("file")
     upload.add_argument("--field", action="append")
-    task = sub.add_parser("task", help="查询 PDF 任务或结果")
+    task = api_command("task", "查询 PDF 任务或结果")
     task.add_argument("task_id")
     task.add_argument("--result", action="store_true")
-    request = sub.add_parser("request", help="按上游请求模型调用指定接口")
+    request = api_command("request", "通用接口调试入口；日常调用使用便捷命令")
     request.add_argument("method", choices=("GET", "POST"))
     request.add_argument("path", help="Encoded path relative to /openapi/v2")
     request.add_argument("--body", help="JSON or @file; required for JSON POST")
-    request.add_argument("--param", action="append")
-    request.add_argument("--request-id")
     parser.add_argument("--output", help="Write response bytes to a file (also supports binary assets)")
+    return parser
+
+
+def main(argv=None, *, prog=None):
+    parser = build_parser(prog=prog)
     args = parser.parse_args(argv)
     try:
         if args.command == "setup":
@@ -193,7 +225,7 @@ def main(argv=None, *, prog=None):
             print("Skill 已安装：" + str(destination))
             if backup:
                 print("旧版本备份：" + str(backup))
-            print("现在可在助手中使用 $linxsci-scholar；如果没有显示，请重启助手。")
+            print("现在可在助手中使用 $linxsci-skills；如果没有显示，请重启助手。")
             return 0
         if args.command == "routes":
             print(json.dumps(ROUTES, ensure_ascii=False, indent=2))
@@ -202,32 +234,43 @@ def main(argv=None, *, prog=None):
         if args.command == "doctor":
             return doctor(client, args.json)
         def body(value):
-            return json.loads(Path(value[1:]).read_text() if value.startswith("@") else value)
+            return json.loads(Path(value[1:]).read_text(encoding="utf-8") if value.startswith("@") else value)
+        def invoke(method, path, **options):
+            return client.request(method, path, query=pairs(args.param), request_id=args.request_id,
+                                  mineru_key=os.environ.get("SCHOLAR_MINERU_API_KEY") if path.startswith("/pdf/parse") else None,
+                                  **options)
         if args.command in ("meta", "usage"):
-            response = client.request("GET", "/" + args.command)
+            response = invoke("GET", "/" + args.command)
+        elif args.command == "mobile-cards":
+            response = invoke("GET", "/recommendations/mobile-cards")
+        elif args.command in JSON_COMMANDS:
+            response = invoke("POST", JSON_COMMANDS[args.command][0], payload=body(args.body))
+        elif args.command in ENTITY_COMMANDS:
+            path = "/" + ENTITY_COMMANDS[args.command] + "/" + segment(args.entity_id)
+            response = invoke("GET", path + ("/papers" if args.papers else ""))
         elif args.command == "health":
-            response = client.request("GET", "/health/" + args.check)
-        elif args.command == "search":
+            response = invoke("GET", "/health/" + args.check)
+        elif args.command in SEARCH_COMMANDS:
             options = body(args.body) if args.body else {}
             if not isinstance(options, dict):
                 raise ValueError("Search body must be a JSON object")
             options.pop("query", None)
-            response = client.search(args.query, **options)
+            response = invoke("POST", SEARCH_COMMANDS[args.command][0], payload={**options, "query": args.query})
         elif args.command == "paper":
-            response = client.paper(args.paper_id, args.resource, item_id=args.item_id, query=pairs(args.param))
+            response = invoke("GET", paper_path(args.paper_id, args.resource, args.item_id))
         elif args.command == "upload":
             values = pairs(args.field)
             if any(len(v) != 1 for v in values.values()):
                 raise ValueError("Form field names must be unique")
-            response = client.upload_pdf(args.file, fields={k: v[0] for k, v in values.items()}, mineru_key=os.environ.get("SCHOLAR_MINERU_API_KEY"))
+            response = invoke("POST", "/pdf/parse/upload", file=args.file, fields={k: v[0] for k, v in values.items()})
         elif args.command == "task":
-            response = client.pdf_task(args.task_id, result=args.result)
+            if args.task_id == "upload":
+                raise ValueError("task_id cannot be upload")
+            response = invoke("GET", "/pdf/parse/" + segment(args.task_id) + ("/result" if args.result else ""))
         else:
             if args.method == "POST" and not args.body:
                 raise ValueError("JSON POST requires --body with the upstream request schema; use upload for files")
-            response = client.request(args.method, args.path, payload=body(args.body) if args.body else None,
-                                      query=pairs(args.param), request_id=args.request_id,
-                                      mineru_key=os.environ.get("SCHOLAR_MINERU_API_KEY") if args.path.startswith("/pdf/parse") else None)
+            response = invoke(args.method, args.path, payload=body(args.body) if args.body else None)
         if args.output:
             Path(args.output).write_bytes(response.body)
         else:

@@ -100,6 +100,21 @@ def paper_segment(value):
     return segment(value)
 
 
+def paper_path(paper_id, resource=None, item_id=None):
+    path = "/papers/" + paper_segment(paper_id)
+    if resource:
+        if resource not in ("content", "toc", "sections", "figures", "assets", "references", "citations", "related", "graph", "citation"):
+            raise ValueError("Unknown paper resource")
+        path += "/" + resource
+        if resource in ("sections", "assets"):
+            path += "/" + segment(item_id if item_id is not None else "")
+        elif item_id is not None:
+            raise ValueError("item_id is only supported for sections or assets")
+    elif item_id is not None:
+        raise ValueError("item_id requires sections or assets")
+    return path
+
+
 def request_header(value, name):
     if not isinstance(value, str) or not value or any(ord(c) < 32 or ord(c) > 126 for c in value):
         raise ValueError(name + " must be a nonempty printable ASCII value")
@@ -185,14 +200,7 @@ class ScholarClient:
         return self.request("POST", "/papers/search", payload={**options, "query": query})
 
     def paper(self, paper_id, resource=None, *, item_id=None, query=None):
-        path = "/papers/" + paper_segment(paper_id)
-        if resource:
-            if resource not in ("content", "toc", "sections", "figures", "assets", "references", "citations", "related", "graph", "citation"):
-                raise ValueError("Unknown paper resource")
-            path += "/" + resource
-            if resource in ("sections", "assets"):
-                path += "/" + segment(item_id if item_id is not None else "")
-        return self.request("GET", path, query=query)
+        return self.request("GET", paper_path(paper_id, resource, item_id), query=query)
 
     def upload_pdf(self, file, *, fields=None, mineru_key=None):
         return self.request("POST", "/pdf/parse/upload", file=file, fields=fields, mineru_key=mineru_key)
