@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Exercise wheel and ZIP in isolated directories against a local fake API."""
+import argparse
 import json
 import os
 import re
@@ -39,7 +40,7 @@ class API(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(body).encode())
 
 
-def check(directory):
+def check(directory, uv=None):
     root = Path(__file__).resolve().parents[1]
     version = re.search(r'^version = "([^"]+)"', (root / "pyproject.toml").read_text(), re.MULTILINE).group(1)
     document = (root / "Scholar-OpenAPI-v2-使用文档.md").read_text(encoding="utf-8")
@@ -110,6 +111,20 @@ def check(directory):
             run([str(python), str(installed), "scholar", "paper", "doi:10.1000/example", "--resource", "toc"])
             run([str(python), str(unpacked / "install.py"), "--no-config", "--update", "--skills-dir", str(root / "zip-skills")])
             assert list((root / "linxsci-skill-backups").iterdir())
+            if uv:
+                env.update(UV_TOOL_DIR=str(root / "uv-tools"), UV_TOOL_BIN_DIR=str(root / "uv-bin"),
+                           UV_CACHE_DIR=str(root / "uv-cache"), UV_PYTHON_DOWNLOADS="never")
+                run([uv, "tool", "install", "--offline", "--python", str(python), str(wheel.resolve())])
+                uv_executable = root / "uv-bin" / ("linxsci.exe" if os.name == "nt" else "linxsci")
+                assert run([str(uv_executable), "--version"]).strip() == version
+                uv_cli = [str(uv_executable), "scholar"]
+                check_all_routes(uv_cli)
+                run(uv_cli + ["install-skill", "--skills-dir", str(root / "uv-skills")])
+                uv_skill = root / "uv-skills/linxsci-scholar/scripts/cli.py"
+                assert json.loads(run([str(python), str(uv_skill), "scholar", "search", "uv topic"]))["data"][0]["query"] == "uv topic"
+                run(uv_cli + ["install-skill", "--skills-dir", str(root / "uv-skills"), "--update"])
+                run([uv, "tool", "uninstall", "linxsci-scholar-sdk"])
+                assert not uv_executable.exists()
             run([str(python), str(installed), "scholar", "config", "--clear"])
             assert not (root / "config.json").exists()
     finally:
@@ -117,7 +132,13 @@ def check(directory):
         thread.join()
         server.server_close()
     print("Fresh wheel and ZIP: all 34 routes each, install, configure, connect, SDK, update and clear passed.")
+    if uv:
+        print("uv tool install: all 34 routes, bundled Skill install/update and tool uninstall passed in isolated directories.")
 
 
 if __name__ == "__main__":
-    check(Path(sys.argv[1] if len(sys.argv) > 1 else "dist").resolve())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("directory", nargs="?", default="dist", type=Path)
+    parser.add_argument("--uv", metavar="EXECUTABLE", help="Also verify an isolated uv tool installation using this executable")
+    args = parser.parse_args()
+    check(args.directory.resolve(), uv=args.uv)

@@ -16,13 +16,13 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: python -m pip install --upgrade pip setuptools wheel
-      - run: python -m pip install build twine
+      - run: python -m pip install build twine uv
       - run: python -m pip install -e .
       - run: linxsci --version
       - run: python -m unittest discover -s tests -v
       - run: python tools/build_release.py
       - run: python tools/check_release.py dist
-      - run: python tools/smoke_release.py dist
+      - run: python tools/smoke_release.py dist --uv uv
       - run: python -m pip install --no-deps dist/linxsci_scholar_sdk-0.3.0-py3-none-any.whl
       - run: linxsci --version
       - run: linxsci scholar install-skill --skills-dir smoke/skills

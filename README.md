@@ -17,6 +17,22 @@
 
 本文的终端命令统一使用 `linxsci scholar …`。Skill 名称、Python 包名、导入名和配置目录保持表中各自的名称，配置仍可复用。新增能力的开发步骤见 [开发者指南](docs/DEVELOPMENT.md#91-新增其他-skill-的命名与入口)。
 
+## 对外发布路线
+
+计划通过 **PyPI 发布 CLI / SDK，通过官方 GitHub 仓库维护和分发 Skill**。当前工程已完成打包和本地安装验证，尚未完成 PyPI 发布及官方 GitHub Skill 仓库接入。以下包名安装命令仅在 PyPI 发布成功后适用；发布前仍可使用本地 wheel 或 ZIP。
+
+CLI 的推荐安装与使用方式：
+
+```bash
+uv tool install linxsci-scholar-sdk
+linxsci scholar setup
+linxsci scholar search "graph neural networks"
+```
+
+升级使用 `uv tool upgrade linxsci-scholar-sdk`；找不到命令时按 [uv 官方工具指南](https://docs.astral.sh/uv/guides/tools/) 使用 `uv tool update-shell`，然后重新打开终端。SDK 用户应在自己的 Python 项目环境中执行 `python -m pip install linxsci-scholar-sdk`；`uv tool install` 的隔离环境不会把 SDK 安装到当前 Python 项目。
+
+Skill 官方仓库发布后可使用支持 GitHub Skill 的安装器；仓库完整地址待确定。已安装本 CLI 的用户现在就可以运行 `linxsci scholar install-skill` 安装随包携带的完整 Skill，无需另行下载。具体渠道和官网接入步骤见 [官网接入说明](docs/WEBSITE_PUBLISHING.md) 与 [发布指南](docs/RELEASING.md)。
+
 ## 普通用户：安装、配置、提问
 
 1. 下载发布方提供的 `linxsci-scholar-0.3.0.zip`，解压。
@@ -175,6 +191,7 @@ linxsci scholar request POST /search/openalex --body @openalex-request.json
 - [CLI 使用指南：全部 34 个接口逐一调用](docs/CLI_GUIDE.md)
 - [测试环境验收与 Skill 调优](docs/TESTING.md)
 - [发布指南：构建、验证与分发](docs/RELEASING.md)
+- [官网接入说明：下载入口、三类文档与发布文件](docs/WEBSITE_PUBLISHING.md)
 - [Skill 指令](skills/linxsci-scholar/SKILL.md)
 - [原始接口文档](Scholar-OpenAPI-v2-使用文档.md)
 

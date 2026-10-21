@@ -15,6 +15,35 @@
 
 ## 安装和配置
 
+### PyPI 发布后的推荐安装
+
+当前尚未完成 PyPI 发布。下面是发布成功后官网采用的主安装流程；发布前请使用本地 wheel 或源码安装。没有 uv 时先按 [uv 官方安装说明](https://docs.astral.sh/uv/getting-started/installation/) 安装。
+
+```bash
+uv tool install linxsci-scholar-sdk
+linxsci --version
+linxsci scholar setup
+```
+
+uv 会将 CLI 安装到独立工具环境并提供 `linxsci` 命令，无需手动创建虚拟环境。若命令不在 PATH 中，运行 `uv tool update-shell` 后重新打开终端。工具安装在助手实际运行命令的环境中；安装到另一台电脑或容器不代表当前助手可以调用。使用方式见 [uv 官方工具指南](https://docs.astral.sh/uv/guides/tools/)。
+
+发布后的升级和卸载命令：
+
+```bash
+uv tool upgrade linxsci-scholar-sdk
+uv tool uninstall linxsci-scholar-sdk
+```
+
+如果已复制安装 Skill，升级 CLI 后再执行 `linxsci scholar install-skill --update` 更新该副本。已有 pipx 的用户可使用 `pipx install linxsci-scholar-sdk` 作为备选，升级使用 `pipx upgrade linxsci-scholar-sdk`，详见 [pipx 官方说明](https://pipx.pypa.io/stable/)。
+
+固定版本临时试用命令（该版本发布到 PyPI 后可用）：
+
+```bash
+uvx --from "linxsci-scholar-sdk==0.3.0" linxsci --help
+```
+
+包名是 `linxsci-scholar-sdk`，终端命令是 `linxsci`。`uv tool install` 面向 CLI；在 Python 项目中导入 SDK 时，仍需将该包安装到项目环境，见 [SDK 开发者指南](DEVELOPMENT.md)。
+
 ### 从项目源码安装 CLI
 
 在项目根目录执行；已有虚拟环境时只需激活并安装。
@@ -47,6 +76,12 @@ linxsci scholar --help
 
 ```bash
 python -m pip install /实际路径/linxsci_scholar_sdk-0.3.0-py3-none-any.whl
+```
+
+CLI 用户也可以直接用 uv 安装下载好的 wheel，无需等待 PyPI 上线：
+
+```bash
+uv tool install "/实际路径/linxsci_scholar_sdk-0.3.0-py3-none-any.whl"
 ```
 
 当前尚未上传 PyPI，不能假定 `pip install linxsci` 可以安装本项目。命令名为 `linxsci`，Python 包名为 `linxsci-scholar-sdk`。

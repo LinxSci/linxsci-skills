@@ -21,6 +21,23 @@ SDK 的公共入口为 `linxsci_scholar`，命令行入口为 `linxsci`，论文
 
 ## 1. 安装项目
 
+### PyPI 发布后的项目安装
+
+当前尚未完成 PyPI 发布；下面的包名安装命令供正式发布后的官网用户使用。发布前使用本节后面的源码安装，或安装发布方提供的本地 wheel。
+
+在自己的 Python 项目中创建并激活虚拟环境，然后安装 SDK：
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install linxsci-scholar-sdk
+linxsci scholar setup
+```
+
+Windows CMD 使用 `py -3 -m venv .venv` 创建环境，使用 `.venv\Scripts\activate.bat` 激活。已有 uv 项目的用户也可使用 `uv add linxsci-scholar-sdk`，通过 `uv run` 执行项目中的程序或配置命令。
+
+`uv tool install linxsci-scholar-sdk` 是 CLI 的独立安装方式，不会让当前项目解释器自动获得 `linxsci_scholar` 模块。SDK 用户需要上面的项目依赖安装；安装后可直接运行第 3.2 节示例，不要求克隆源码仓库。只有从源码安装的用户才拥有第 3.1 节的 `examples/research.py` 文件。
+
 ### 1.1 获取源码
 
 需要 Python 3.9 或以上版本，以及仓库访问权限。如果已经有源码，直接进入项目根目录；尚未拉取时执行：
