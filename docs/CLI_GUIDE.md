@@ -1,6 +1,6 @@
 # Scholar 全接口 CLI 使用指南
 
-本文逐一列出当前 [Scholar OpenAPI v2 接口文档](../Scholar-OpenAPI-v2-使用文档.md) 中的 **34 个接口**及其 CLI 调用命令。先完成安装和配置，再选择需要的接口执行。
+本文逐一列出当前 [Scholar OpenAPI v2 接口文档](../Scholar-OpenAPI-v2-使用文档.md) 中的 **34 个接口**及其 CLI 调用命令。全部接口都有便捷命令，无需填写 `request`、`GET`、`POST` 或接口路径。先完成安装和配置，再选择需要的接口执行。
 
 接口按以下类别排列：
 
@@ -20,9 +20,9 @@
 当前尚未完成 PyPI 发布。下面是发布成功后官网采用的主安装流程；发布前请使用本地 wheel 或源码安装。没有 uv 时先按 [uv 官方安装说明](https://docs.astral.sh/uv/getting-started/installation/) 安装。
 
 ```bash
-uv tool install linxsci-scholar-sdk
+uv tool install linxsci-sdk
 linxsci --version
-linxsci scholar setup
+linxsci setup
 ```
 
 uv 会将 CLI 安装到独立工具环境并提供 `linxsci` 命令，无需手动创建虚拟环境。若命令不在 PATH 中，运行 `uv tool update-shell` 后重新打开终端。工具安装在助手实际运行命令的环境中；安装到另一台电脑或容器不代表当前助手可以调用。使用方式见 [uv 官方工具指南](https://docs.astral.sh/uv/guides/tools/)。
@@ -30,19 +30,21 @@ uv 会将 CLI 安装到独立工具环境并提供 `linxsci` 命令，无需手�
 发布后的升级和卸载命令：
 
 ```bash
-uv tool upgrade linxsci-scholar-sdk
-uv tool uninstall linxsci-scholar-sdk
+uv tool upgrade linxsci-sdk
+uv tool uninstall linxsci-sdk
 ```
 
-如果已复制安装 Skill，升级 CLI 后再执行 `linxsci scholar install-skill --update` 更新该副本。已有 pipx 的用户可使用 `pipx install linxsci-scholar-sdk` 作为备选，升级使用 `pipx upgrade linxsci-scholar-sdk`，详见 [pipx 官方说明](https://pipx.pypa.io/stable/)。
+如果已复制安装 Skill，升级 CLI 后再执行 `linxsci install-skill --update` 更新该副本。已有 pipx 的用户可使用 `pipx install linxsci-sdk` 作为备选，升级使用 `pipx upgrade linxsci-sdk`，详见 [pipx 官方说明](https://pipx.pypa.io/stable/)。
 
 固定版本临时试用命令（该版本发布到 PyPI 后可用）：
 
 ```bash
-uvx --from "linxsci-scholar-sdk==0.3.0" linxsci --help
+uvx --from "linxsci-sdk==0.3.0" linxsci --help
 ```
 
-包名是 `linxsci-scholar-sdk`，终端命令是 `linxsci`。`uv tool install` 面向 CLI；在 Python 项目中导入 SDK 时，仍需将该包安装到项目环境，见 [SDK 开发者指南](DEVELOPMENT.md)。
+包名是 `linxsci-sdk`，终端命令是 `linxsci`。`uv tool install` 面向 CLI；在 Python 项目中导入 SDK 时，仍需将该包安装到项目环境，见 [SDK 开发者指南](DEVELOPMENT.md)。
+
+安装过旧名称包的用户先按 [名称迁移说明](DEVELOPMENT.md#14-从旧名称迁移) 卸载旧包，再安装新包。本文所有示例使用直接命令，不需要中间的能力分组。
 
 ### 从项目源码安装 CLI
 
@@ -56,7 +58,7 @@ source .venv/bin/activate
 python3 -m pip install --upgrade pip setuptools wheel
 python3 -m pip install -e .
 linxsci --version
-linxsci scholar --help
+linxsci --help
 ```
 
 **Windows CMD：**
@@ -67,7 +69,7 @@ py -3 -m venv .venv
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install -e .
 linxsci --version
-linxsci scholar --help
+linxsci --help
 ```
 
 后续调用均在安装了本项目的同一个虚拟环境中执行。
@@ -75,87 +77,90 @@ linxsci scholar --help
 如果拿到的是 wheel，在自己的虚拟环境中安装它：
 
 ```bash
-python -m pip install /实际路径/linxsci_scholar_sdk-0.3.0-py3-none-any.whl
+python -m pip install /实际路径/linxsci_sdk-0.3.0-py3-none-any.whl
 ```
 
 CLI 用户也可以直接用 uv 安装下载好的 wheel，无需等待 PyPI 上线：
 
 ```bash
-uv tool install "/实际路径/linxsci_scholar_sdk-0.3.0-py3-none-any.whl"
+uv tool install "/实际路径/linxsci_sdk-0.3.0-py3-none-any.whl"
 ```
 
-当前尚未上传 PyPI，不能假定 `pip install linxsci` 可以安装本项目。命令名为 `linxsci`，Python 包名为 `linxsci-scholar-sdk`。
+当前尚未上传 PyPI，不能假定 `pip install linxsci` 可以安装本项目。命令名为 `linxsci`，Python 包名为 `linxsci-sdk`。
 
 ### 配置服务地址和 Key
 
 ```bash
-linxsci scholar setup --base-url http://101.126.93.213:28888
+linxsci setup --base-url https://linxsci.com
 ```
 
 按提示输入自己的 Scholar API Key，输入不会显示。地址只填服务根地址，不附加 `/openapi/v2`；所有接口，包括健康检查，都自动携带 `Authorization: Bearer ...`。`setup` 默认执行一次连接检查，成功后即可调用其他接口。
 
-已有配置时无需再次输入 Key。检查实际配置状态可运行 `linxsci scholar config`，不会显示 Key；`SCHOLAR_BASE_URL` 和 `SCHOLAR_OPENAPI_KEY` 环境变量优先于保存的配置。保存位置及配置优先级见 [开发者指南](DEVELOPMENT.md#2-配置服务地址和-api-key)。
+默认地址为正式服务 `https://linxsci.com`。已有配置时无需再次输入 Key，升级也不会自动替换保存的地址；原先使用测试环境的用户可运行 `linxsci setup --online` 切换。检查实际配置状态可运行 `linxsci config`，不会显示 Key；`SCHOLAR_BASE_URL` 和 `SCHOLAR_OPENAPI_KEY` 环境变量优先于保存的配置。保存位置及配置优先级见 [开发者指南](DEVELOPMENT.md#2-配置服务地址和-api-key)，连接测试服务见 [测试指南](TESTING.md)。
 
 ### 只使用 ZIP 时
 
-ZIP 安装器不注册 `linxsci` 命令。在解压目录中，把下文所有命令开头的 `linxsci scholar` 替换为：
+ZIP 安装器不注册 `linxsci` 命令。在解压目录中，把下文所有命令开头的 `linxsci` 替换为：
 
 ```bash
-python3 skills/linxsci-scholar/scripts/cli.py scholar
+python3 skills/linxsci-skills/scripts/cli.py
 ```
 
 例如：
 
 ```bash
-python3 skills/linxsci-scholar/scripts/cli.py scholar request GET /usage
+python3 skills/linxsci-skills/scripts/cli.py usage
 ```
 
 Windows 使用 `py -3` 替换 `python3`。完整安装流程见 [普通用户指南](USER_GUIDE.md)。
 
 ## 调用前的参数准备
 
-### 通用语法
+### 便捷命令语法
 
 ```text
-linxsci scholar [组选项] request GET  <接口路径> [--param 字段=值]
-linxsci scholar [组选项] request POST <接口路径> --body @请求文件.json
-linxsci scholar [组选项] upload <本地PDF路径> [--field 字段=值]
+linxsci [全局选项] <动作> [ID或检索词] [动作选项]
+linxsci [全局选项] <动作> --body @请求文件.json
 ```
 
-下文通用命令中的路径均省略 `/openapi/v2`，CLI 会自动添加。尖括号内容均为占位参数，须替换为真实值后执行，不要保留尖括号。
+例如 `linxsci meta`、`linxsci health live`、`linxsci author "作者ID" --papers`。用 `<动作> --help` 查看参数。健康检查使用 `health live` / `health ready`，没有 `--live` / `--ready` 选项。
 
-### 动态 ID 与 URL 编码
+所有 34 个接口的便捷命令都支持 `--param 字段=值` 和 `--request-id 请求ID`。这些选项放在动作后面；全局选项放在动作前面。
+
+### 动态 ID
+
+下文尖括号内容是占位参数，执行前替换为真实 ID。便捷命令接收**未经 URL 编码的原始 ID**，CLI 自动编码，包括 DOI 中的 `/`、空格与中文。不要预先编码，也不要把论文标题当成 ID。
 
 | 占位参数 | 替换值来源 |
 | --- | --- |
-| `<paper-id-encoded>` | 搜索、解析或其他响应返回的论文 ID，按单个路径段编码 |
-| `<section-id-encoded>` | 论文目录返回的真实章节 ID，按单个路径段编码 |
-| `<asset-id-encoded>` | 接口响应返回的真实资源 ID，按单个路径段编码 |
-| `<author-id-encoded>` | 接口响应或部署契约提供的作者 ID，按单个路径段编码 |
-| `<institution-id-encoded>` | 接口响应或部署契约提供的机构 ID，按单个路径段编码 |
-| `<venue-id-encoded>` | 接口响应或部署契约提供的期刊/会议 ID，按单个路径段编码 |
-| `<task-id-encoded>` | PDF 创建/上传响应中的真实任务 ID，按单个路径段编码 |
-
-`paper_id` 保留 `local:`、`arxiv:`、`openalex:`、`s2:` 或 `doi:` 来源前缀。通用 `request` 接收已编码路径，只编码各个 ID，不要编码整个接口路径，也不要对已编码 ID 再编码。
-
-可用以下命令编码单个原始 ID；运行后粘贴 ID 并按回车：
+| `<paper-id>` | 搜索、解析等响应中的论文 ID，保留 `local:`、`arxiv:`、`openalex:`、`s2:` 或 `doi:` 前缀 |
+| `<section-id>` | 目录返回的章节 ID |
+| `<asset-id>` | 资源响应中的资源 ID |
+| `<author-id>`、`<institution-id>`、`<venue-id>` | 响应或部署契约提供的作者、机构、期刊/会议 ID |
+| `<task-id>` | PDF 创建/上传响应中的任务 ID |
 
 ```bash
-python3 -c "from urllib.parse import quote; print(quote(input('原始 ID: '), safe=':'))"
-```
-
-仅作编码演示：`doi:10.1000/example` 会变为 `doi:10.1000%2Fexample`，该示例不代表真实可用论文。`paper` 便捷命令接收原始 ID 并自动编码：
-
-```bash
-linxsci scholar paper "实际论文ID"
-linxsci scholar paper "实际论文ID" --resource sections --item-id "实际章节ID"
+linxsci paper "实际论文ID"
+linxsci paper "实际论文ID" --resource sections --item-id "实际章节ID"
 ```
 
 ### JSON 请求文件
 
 `--body @文件名.json` 从当前工作目录读取请求文件；也可以使用绝对路径，例如 `--body "@/实际路径/request.json"`。文件使用 UTF-8 编码。
 
-当前项目的综合论文搜索支持以下最小请求，保存为 `papers-search.json`：
+四个搜索命令（`search`、`search-openalex`、`search-semantic-scholar`、`search-google-scholar`）都将位置参数作为 JSON 的 `query` 发送，无需准备文件：
+
+```bash
+linxsci search-openalex "large language models"
+```
+
+需要附加参数时，可用 `--body` 传入 JSON 对象或文件；检索词始终以位置参数为准，覆盖附加 JSON 中的 `query`：
+
+```bash
+linxsci search-openalex "large language models" --body @openalex-search.json
+```
+
+对应的最小 JSON 请求如下（综合搜索可保存为 `papers-search.json`）：
 
 ```json
 {
@@ -163,14 +168,14 @@ linxsci scholar paper "实际论文ID" --resource sections --item-id "实际章�
 }
 ```
 
-其他 POST 接口的具体业务字段未在当前代理接口文档中展开，需要依照实际部署的 Agent API 契约准备下列文件。文件名由本文约定，方便区分不同接口；CLI 不会自动生成这些文件。
+其他 POST 接口及搜索附加参数的具体业务字段未在当前代理接口文档中展开，需要依照实际部署的 Agent API 契约准备下列文件。文件名由本文约定，方便区分不同接口；CLI 不会自动生成这些文件。
 
 | 请求文件 | 用于接口 | 内容要求 |
 | --- | --- | --- |
 | `papers-search.json` | 综合论文搜索 | 可使用上方 `query` 示例，其他选项按上游契约添加 |
-| `openalex-search.json` | OpenAlex 搜索 | 按 OpenAlex 搜索接口的上游请求模型填写 |
-| `semantic-scholar-search.json` | Semantic Scholar 搜索 | 按对应上游请求模型填写 |
-| `google-scholar-search.json` | Google Scholar 搜索 | 按对应上游请求模型填写 |
+| `openalex-search.json`（可选） | OpenAlex 搜索 | 按 OpenAlex 搜索接口的上游请求模型填写 |
+| `semantic-scholar-search.json`（可选） | Semantic Scholar 搜索 | 按对应上游请求模型填写 |
+| `google-scholar-search.json`（可选） | Google Scholar 搜索 | 按对应上游请求模型填写 |
 | `papers-resolve.json` | 论文标识解析 | 按对应上游请求模型填写 |
 | `papers-batch-get.json` | 批量获取论文 | 按对应上游请求模型填写 |
 | `recommendations.json` | 论文推荐 | 按对应上游请求模型填写 |
@@ -186,40 +191,34 @@ linxsci scholar paper "实际论文ID" --resource sections --item-id "实际章�
 **接口：** `GET /openapi/v2/meta`
 
 ```bash
-linxsci scholar request GET /meta
+linxsci meta
 ```
 
-便捷命令为 `linxsci scholar meta`。返回内容以服务实际响应为准，不保证包含完整请求 schema。
+返回内容以服务实际响应为准，不保证包含完整请求 schema。
 
 ### 02. 用量信息
 
 **接口：** `GET /openapi/v2/usage`
 
 ```bash
-linxsci scholar request GET /usage
+linxsci usage
 ```
-
-便捷命令为 `linxsci scholar usage`。
 
 ### 03. 存活检查
 
 **接口：** `GET /openapi/v2/health/live`
 
 ```bash
-linxsci scholar request GET /health/live
+linxsci health live
 ```
-
-便捷命令为 `linxsci scholar health live`。
 
 ### 04. 就绪检查
 
 **接口：** `GET /openapi/v2/health/ready`
 
 ```bash
-linxsci scholar request GET /health/ready
+linxsci health ready
 ```
-
-便捷命令为 `linxsci scholar health ready`。
 
 ## 论文搜索与解析
 
@@ -227,20 +226,20 @@ linxsci scholar request GET /health/ready
 
 **接口：** `POST /openapi/v2/papers/search`
 
-先按上文准备 `papers-search.json`：
+直接输入检索词：
 
 ```bash
-linxsci scholar request POST /papers/search --body @papers-search.json
+linxsci search "large language models"
 ```
 
-只传检索词时也可以运行 `linxsci scholar search "graph neural networks"`。从响应中选择真实论文 ID，用于后续详情和阅读接口。
+如需其他业务参数，使用 `linxsci search "large language models" --body @papers-search.json`；检索词始终以命令行位置参数为准。从响应中选择真实论文 ID，用于后续详情和阅读接口。
 
 ### 06. OpenAlex 搜索
 
 **接口：** `POST /openapi/v2/search/openalex`
 
 ```bash
-linxsci scholar request POST /search/openalex --body @openalex-search.json
+linxsci search-openalex "large language models"
 ```
 
 ### 07. Semantic Scholar 搜索
@@ -248,7 +247,7 @@ linxsci scholar request POST /search/openalex --body @openalex-search.json
 **接口：** `POST /openapi/v2/search/semantic-scholar`
 
 ```bash
-linxsci scholar request POST /search/semantic-scholar --body @semantic-scholar-search.json
+linxsci search-semantic-scholar "large language models"
 ```
 
 ### 08. Google Scholar 搜索
@@ -256,7 +255,7 @@ linxsci scholar request POST /search/semantic-scholar --body @semantic-scholar-s
 **接口：** `POST /openapi/v2/search/google-scholar`
 
 ```bash
-linxsci scholar request POST /search/google-scholar --body @google-scholar-search.json
+linxsci search-google-scholar "large language models"
 ```
 
 ### 09. 论文标识解析
@@ -264,7 +263,7 @@ linxsci scholar request POST /search/google-scholar --body @google-scholar-searc
 **接口：** `POST /openapi/v2/papers/resolve`
 
 ```bash
-linxsci scholar request POST /papers/resolve --body @papers-resolve.json
+linxsci resolve --body @papers-resolve.json
 ```
 
 ### 10. 批量获取论文
@@ -272,21 +271,21 @@ linxsci scholar request POST /papers/resolve --body @papers-resolve.json
 **接口：** `POST /openapi/v2/papers:batchGet`
 
 ```bash
-linxsci scholar request POST /papers:batchGet --body @papers-batch-get.json
+linxsci batch-get --body @papers-batch-get.json
 ```
 
-路径中的冒号和 `batchGet` 大小写须保持原样。
+CLI 自动映射到批量获取接口，无需填写路径。
 
 ## 论文详情与引用
 
-以下命令使用真实且已编码的论文 ID；章节和资源 ID 分别从目录或资源响应中取得。
+以下命令使用真实且未经编码的论文 ID；章节和资源 ID 分别从目录或资源响应中取得。
 
 ### 11. 论文详情
 
 **接口：** `GET /openapi/v2/papers/{paper_id}`
 
 ```bash
-linxsci scholar request GET "/papers/<paper-id-encoded>"
+linxsci paper "<paper-id>"
 ```
 
 ### 12. 论文内容
@@ -294,7 +293,7 @@ linxsci scholar request GET "/papers/<paper-id-encoded>"
 **接口：** `GET /openapi/v2/papers/{paper_id}/content`
 
 ```bash
-linxsci scholar request GET "/papers/<paper-id-encoded>/content"
+linxsci paper "<paper-id>" --resource content
 ```
 
 ### 13. 论文目录
@@ -302,7 +301,7 @@ linxsci scholar request GET "/papers/<paper-id-encoded>/content"
 **接口：** `GET /openapi/v2/papers/{paper_id}/toc`
 
 ```bash
-linxsci scholar request GET "/papers/<paper-id-encoded>/toc"
+linxsci paper "<paper-id>" --resource toc
 ```
 
 ### 14. 论文章节
@@ -310,7 +309,7 @@ linxsci scholar request GET "/papers/<paper-id-encoded>/toc"
 **接口：** `GET /openapi/v2/papers/{paper_id}/sections/{section_id}`
 
 ```bash
-linxsci scholar request GET "/papers/<paper-id-encoded>/sections/<section-id-encoded>"
+linxsci paper "<paper-id>" --resource sections --item-id "<section-id>"
 ```
 
 ### 15. 论文图表
@@ -318,7 +317,7 @@ linxsci scholar request GET "/papers/<paper-id-encoded>/sections/<section-id-enc
 **接口：** `GET /openapi/v2/papers/{paper_id}/figures`
 
 ```bash
-linxsci scholar request GET "/papers/<paper-id-encoded>/figures"
+linxsci paper "<paper-id>" --resource figures
 ```
 
 ### 16. 论文资源
@@ -326,7 +325,7 @@ linxsci scholar request GET "/papers/<paper-id-encoded>/figures"
 **接口：** `GET /openapi/v2/papers/{paper_id}/assets/{asset_id}`
 
 ```bash
-linxsci scholar --output asset.bin request GET "/papers/<paper-id-encoded>/assets/<asset-id-encoded>"
+linxsci --output asset.bin paper "<paper-id>" --resource assets --item-id "<asset-id>"
 ```
 
 响应原始字节保存到当前目录的 `asset.bin`。实际文件格式取决于返回资源，可按真实格式选择文件名和扩展名。
@@ -336,7 +335,7 @@ linxsci scholar --output asset.bin request GET "/papers/<paper-id-encoded>/asset
 **接口：** `GET /openapi/v2/papers/{paper_id}/references`
 
 ```bash
-linxsci scholar request GET "/papers/<paper-id-encoded>/references"
+linxsci paper "<paper-id>" --resource references
 ```
 
 ### 18. 被引论文
@@ -344,7 +343,7 @@ linxsci scholar request GET "/papers/<paper-id-encoded>/references"
 **接口：** `GET /openapi/v2/papers/{paper_id}/citations`
 
 ```bash
-linxsci scholar request GET "/papers/<paper-id-encoded>/citations"
+linxsci paper "<paper-id>" --resource citations
 ```
 
 ### 19. 相关论文
@@ -352,7 +351,7 @@ linxsci scholar request GET "/papers/<paper-id-encoded>/citations"
 **接口：** `GET /openapi/v2/papers/{paper_id}/related`
 
 ```bash
-linxsci scholar request GET "/papers/<paper-id-encoded>/related"
+linxsci paper "<paper-id>" --resource related
 ```
 
 ### 20. 引用图谱
@@ -360,7 +359,7 @@ linxsci scholar request GET "/papers/<paper-id-encoded>/related"
 **接口：** `GET /openapi/v2/papers/{paper_id}/graph`
 
 ```bash
-linxsci scholar request GET "/papers/<paper-id-encoded>/graph"
+linxsci paper "<paper-id>" --resource graph
 ```
 
 ### 21. 论文引用格式
@@ -368,7 +367,7 @@ linxsci scholar request GET "/papers/<paper-id-encoded>/graph"
 **接口：** `GET /openapi/v2/papers/{paper_id}/citation`
 
 ```bash
-linxsci scholar request GET "/papers/<paper-id-encoded>/citation"
+linxsci paper "<paper-id>" --resource citation
 ```
 
 若需要指定格式等查询条件，按实际契约使用 `--param 字段名=值`，不要猜测参数名称。
@@ -380,7 +379,7 @@ linxsci scholar request GET "/papers/<paper-id-encoded>/citation"
 **接口：** `POST /openapi/v2/recommendations`
 
 ```bash
-linxsci scholar request POST /recommendations --body @recommendations.json
+linxsci recommend --body @recommendations.json
 ```
 
 ### 23. 移动端推荐卡片
@@ -388,7 +387,7 @@ linxsci scholar request POST /recommendations --body @recommendations.json
 **接口：** `GET /openapi/v2/recommendations/mobile-cards`
 
 ```bash
-linxsci scholar request GET /recommendations/mobile-cards
+linxsci mobile-cards
 ```
 
 ## 作者、机构与期刊
@@ -398,7 +397,7 @@ linxsci scholar request GET /recommendations/mobile-cards
 **接口：** `GET /openapi/v2/authors/{author_id}`
 
 ```bash
-linxsci scholar request GET "/authors/<author-id-encoded>"
+linxsci author "<author-id>"
 ```
 
 ### 25. 作者论文
@@ -406,7 +405,7 @@ linxsci scholar request GET "/authors/<author-id-encoded>"
 **接口：** `GET /openapi/v2/authors/{author_id}/papers`
 
 ```bash
-linxsci scholar request GET "/authors/<author-id-encoded>/papers"
+linxsci author "<author-id>" --papers
 ```
 
 ### 26. 机构详情
@@ -414,7 +413,7 @@ linxsci scholar request GET "/authors/<author-id-encoded>/papers"
 **接口：** `GET /openapi/v2/institutions/{institution_id}`
 
 ```bash
-linxsci scholar request GET "/institutions/<institution-id-encoded>"
+linxsci institution "<institution-id>"
 ```
 
 ### 27. 机构论文
@@ -422,7 +421,7 @@ linxsci scholar request GET "/institutions/<institution-id-encoded>"
 **接口：** `GET /openapi/v2/institutions/{institution_id}/papers`
 
 ```bash
-linxsci scholar request GET "/institutions/<institution-id-encoded>/papers"
+linxsci institution "<institution-id>" --papers
 ```
 
 ### 28. 期刊或会议详情
@@ -430,7 +429,7 @@ linxsci scholar request GET "/institutions/<institution-id-encoded>/papers"
 **接口：** `GET /openapi/v2/venues/{venue_id}`
 
 ```bash
-linxsci scholar request GET "/venues/<venue-id-encoded>"
+linxsci venue "<venue-id>"
 ```
 
 ### 29. 期刊或会议论文
@@ -438,7 +437,7 @@ linxsci scholar request GET "/venues/<venue-id-encoded>"
 **接口：** `GET /openapi/v2/venues/{venue_id}/papers`
 
 ```bash
-linxsci scholar request GET "/venues/<venue-id-encoded>/papers"
+linxsci venue "<venue-id>" --papers
 ```
 
 ### 30. 实体标识解析
@@ -446,7 +445,7 @@ linxsci scholar request GET "/venues/<venue-id-encoded>/papers"
 **接口：** `POST /openapi/v2/entities:resolve`
 
 ```bash
-linxsci scholar request POST /entities:resolve --body @entities-resolve.json
+linxsci resolve-entities --body @entities-resolve.json
 ```
 
 ## PDF 解析
@@ -458,7 +457,7 @@ linxsci scholar request POST /entities:resolve --body @entities-resolve.json
 先按实际契约准备 `pdf-parse.json`：
 
 ```bash
-linxsci scholar request POST /pdf/parse --body @pdf-parse.json
+linxsci parse-pdf --body @pdf-parse.json
 ```
 
 记录响应中的真实任务 ID。不要自行假定 JSON 中的 PDF 地址字段或任务 ID 的响应字段名。
@@ -468,13 +467,13 @@ linxsci scholar request POST /pdf/parse --body @pdf-parse.json
 **接口：** `POST /openapi/v2/pdf/parse/upload`
 
 ```bash
-linxsci scholar upload "/实际路径/paper.pdf"
+linxsci upload "/实际路径/paper.pdf"
 ```
 
 这是文件上传接口，使用 `upload` 而不是 JSON `request POST`。CLI 自动构造 `multipart/form-data` 的 `file` 字段，无需手动填写 Content-Type。其他表单字段仅在上游要求时添加，例如：
 
 ```bash
-linxsci scholar upload "/实际路径/paper.pdf" --field "实际字段名=实际字段值"
+linxsci upload "/实际路径/paper.pdf" --field "实际字段名=实际字段值"
 ```
 
 每个字段名只能出现一次。文件大小限制以服务配置为准；调用会上传文件并创建任务，避免对同一个文件无意重复提交。
@@ -484,10 +483,10 @@ linxsci scholar upload "/实际路径/paper.pdf" --field "实际字段名=实际
 **接口：** `GET /openapi/v2/pdf/parse/{task_id}`
 
 ```bash
-linxsci scholar request GET "/pdf/parse/<task-id-encoded>"
+linxsci task "<task-id>"
 ```
 
-便捷命令为 `linxsci scholar task "实际任务ID"`，由 CLI 编码原始 ID。任务状态以实际响应为准，不假定状态字段名和终态值。
+由 CLI 编码原始 ID。任务状态以实际响应为准，不假定状态字段名和终态值。
 
 ### 34. 获取 PDF 解析结果
 
@@ -496,39 +495,39 @@ linxsci scholar request GET "/pdf/parse/<task-id-encoded>"
 确认任务完成后执行：
 
 ```bash
-linxsci scholar request GET "/pdf/parse/<task-id-encoded>/result"
+linxsci task "<task-id>" --result
 ```
 
-便捷命令为 `linxsci scholar task "实际任务ID" --result`。如果接口返回文件，使用 `linxsci scholar --output result.bin request GET "/pdf/parse/<task-id-encoded>/result"` 保存原始数据。
+如果接口返回文件，使用 `linxsci --output result.bin task "<task-id>" --result` 保存原始数据。
 
-PDF 接口按需使用 `X-MinerU-API-Key`。在运行 CLI 的本机环境中设置 `SCHOLAR_MINERU_API_KEY` 后，`upload` 和通用 PDF `request` 会自动附带该头；`task` 便捷命令不会附带，需要时使用上文通用命令。无需向 CLI 提供服务端 `AGENT_PUBLIC_API_KEY`。
+PDF 接口按需使用 `X-MinerU-API-Key`。在运行 CLI 的本机环境中设置 `SCHOLAR_MINERU_API_KEY` 后，`parse-pdf`、`upload`、`task`（含 `--result`）和通用 PDF `request` 都会自动附带该头。无需向 CLI 提供服务端 `AGENT_PUBLIC_API_KEY`。
 
 ## 通用选项与输出
 
 ### 查询参数
 
-`request` 和 `paper` 通过 `--param 字段名=值` 传递查询参数，同名参数可以重复。字段名和值以实际接口契约为准；CLI 自动编码查询参数，无需预先 URL 编码：
+所有接口便捷命令和 `request` 都通过 `--param 字段名=值` 传递查询参数，同名参数可以重复。字段名和值以实际接口契约为准；CLI 自动编码查询参数，无需预先 URL 编码：
 
 ```bash
-linxsci scholar request GET "/authors/<author-id-encoded>/papers" --param "实际字段名=实际值"
+linxsci author "<author-id>" --papers --param "实际字段名=实际值"
 ```
 
 当前文档未定义通用分页模型，不能假定所有列表接口都使用相同的分页字段。
 
 ### 保存响应、超时和请求追踪
 
-`--output`、`--timeout`、`--json-errors` 和 `--framework-request-id` 是 Scholar 组选项，放在 `scholar` 之后、具体动作之前：
+`--output`、`--timeout`、`--json-errors` 和 `--framework-request-id` 是全局选项，放在 `linxsci` 之后、具体动作之前：
 
 ```bash
-linxsci scholar --output search-result.json request POST /papers/search --body @papers-search.json
-linxsci scholar --timeout 90 request GET /meta
-linxsci scholar --framework-request-id scholar-trace-001 request GET /meta --request-id upstream-trace-001
-linxsci scholar --json-errors request GET /usage
+linxsci --output search-result.json search "large language models" --body @papers-search.json
+linxsci --timeout 90 meta
+linxsci --framework-request-id scholar-trace-001 meta --request-id upstream-trace-001
+linxsci --json-errors usage
 ```
 
 `--timeout` 单位为秒，默认 60；`--output` 保存响应原始字节，并覆盖同名文件，父目录须已存在。未指定输出文件时，JSON 格式化输出到终端，其他内容原样输出。请求文件与响应文件请使用不同文件名。
 
-`--request-id` 是 `request` 动作的参数，对应 `X-Request-ID`；不传时自动生成。`--framework-request-id` 对应 Scholar 框架的 `X-ANYTHINGRIGHT-REQ-ID`。CLI 不提供任意请求头参数，认证头自动添加。
+`--request-id` 是所有接口便捷命令和 `request` 的参数，对应 `X-Request-ID`；不传时自动生成。`--framework-request-id` 对应 Scholar 框架的 `X-ANYTHINGRIGHT-REQ-ID`。CLI 不提供任意请求头参数，认证头自动添加。
 
 ### 错误与退出码
 
@@ -542,12 +541,23 @@ linxsci scholar --json-errors request GET /usage
 
 本指南的命令已核对当前 CLI 的参数和路由。接口调用会经过服务端权限、用量及业务参数校验；全部路径可调用不代表所有接口已在你的部署中启用。
 
+### 通用调试入口
+
+普通调用使用上面的便捷命令即可。开发调试仍可使用：
+
+```bash
+linxsci request GET /meta
+linxsci request POST /papers/resolve --body @papers-resolve.json
+```
+
+只有 `request` 需要指定方法及相对于 `/openapi/v2` 的路径。动态 ID 要按单个路径段 URL 编码；例如原始 `doi:10.1000/example` 编码为 `doi:10.1000%2Fexample`（仅作编码演示）。便捷命令不需要这一步。
+
 ### 查看完整路由和帮助
 
 ```bash
-linxsci scholar routes
-linxsci scholar request --help
-linxsci scholar upload --help
+linxsci routes
+linxsci author --help
+linxsci upload --help
 ```
 
 以上三条命令不调用远程服务。Python SDK 的安装、配置、方法签名及全接口对照见 [SDK 开发者指南](DEVELOPMENT.md)，测试和联调见 [测试指南](TESTING.md)。

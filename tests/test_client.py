@@ -6,7 +6,7 @@ import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'skills/linxsci-scholar/scripts'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'skills/linxsci-skills/scripts'))
 from scholar_client import ScholarClient, ScholarError, ROUTES
 from scholar import main
 

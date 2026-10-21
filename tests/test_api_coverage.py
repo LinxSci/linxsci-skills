@@ -11,6 +11,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlsplit
 
+from cli_cases import shortcut_cases
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -52,6 +54,12 @@ class SkillAPICoverageTests(unittest.TestCase):
         cls.server.server_close()
 
     def test_all_documented_routes_through_skill_script(self):
+        self.check_routes(convenient=False)
+
+    def test_all_documented_routes_through_shortcuts(self):
+        self.check_routes(convenient=True)
+
+    def check_routes(self, convenient):
         document = (ROOT / "Scholar-OpenAPI-v2-使用文档.md").read_text(encoding="utf-8")
         routes = re.findall(r"\| (GET|POST) \| `/openapi/v2([^`]+)` \|", document)
         self.assertEqual(len(routes), 34)
@@ -73,15 +81,22 @@ class SkillAPICoverageTests(unittest.TestCase):
                                SCHOLAR_CONFIG_FILE=str(directory / "unused.json"),
                                SCHOLAR_MINERU_API_KEY="coverage-mineru-key",
                                NO_PROXY="127.0.0.1,localhost")
+            cases = shortcut_cases(identifiers, body_file, source)
+            self.assertEqual(set(cases), set(routes))
             for index, (method, template) in enumerate(routes):
                 path = template.format(**encoded)
                 is_upload = path == "/pdf/parse/upload"
                 with self.subTest(method=method, path=template):
                     output_file = directory / (str(index) + ".response")
-                    command = [sys.executable, str(ROOT / "skills/linxsci-scholar/scripts/cli.py"),
-                               "scholar", "--framework-request-id", "coverage-framework",
+                    command = [sys.executable, str(ROOT / "skills/linxsci-skills/scripts/cli.py"),
+                               "--framework-request-id", "coverage-framework",
                                "--output", str(output_file)]
-                    if is_upload:
+                    if convenient:
+                        command += cases[(method, template)] + ["--request-id", "coverage-upstream",
+                                    "--param", "opaque=中文 空格", "--param", "opaque=a/b"]
+                        if is_upload:
+                            command += ["--field", "opaque=中文"]
+                    elif is_upload:
                         command += ["upload", str(source), "--field", "opaque=中文"]
                     else:
                         command += ["request", method, path, "--request-id", "coverage-upstream",
@@ -105,6 +120,9 @@ class SkillAPICoverageTests(unittest.TestCase):
                     self.assertNotIn("x-api-key", headers)
                     self.assertEqual(headers.get("x-mineru-api-key"),
                                      "coverage-mineru-key" if path.startswith("/pdf/parse") else None)
+                    if convenient:
+                        self.assertEqual(headers["x-request-id"], "coverage-upstream")
+                        self.assertEqual(parse_qs(urlsplit(url).query), {"opaque": ["中文 空格", "a/b"]})
                     if is_upload:
                         self.assertTrue(headers["content-type"].startswith("multipart/form-data; boundary="))
                         self.assertIn(b'name="file"', raw)
@@ -115,7 +133,9 @@ class SkillAPICoverageTests(unittest.TestCase):
                         self.assertEqual(parse_qs(urlsplit(url).query), {"opaque": ["中文 空格", "a/b"]})
                         if method == "POST":
                             self.assertEqual(headers["content-type"], "application/json")
-                            self.assertEqual(json.loads(raw), payload)
+                            self.assertEqual(json.loads(raw), {**payload, "query": "release coverage"}
+                                             if convenient and path in ("/papers/search", "/search/openalex",
+                                                                        "/search/semantic-scholar", "/search/google-scholar") else payload)
                         else:
                             self.assertEqual(raw, b"")
 

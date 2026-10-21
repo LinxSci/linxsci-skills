@@ -13,7 +13,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "skills/linxsci-scholar/scripts"))
+sys.path.insert(0, str(ROOT / "skills/linxsci-skills/scripts"))
 from scholar import error_info, main
 from scholar_client import ROUTES, ScholarClient, ScholarError
 
@@ -72,7 +72,7 @@ class FrameworkContractTests(unittest.TestCase):
         self.assertEqual(len(documented), 34)
         self.assertEqual(set(ROUTES), set(documented))
         self.assertEqual((ROOT / "Scholar-OpenAPI-v2-使用文档.md").read_bytes(),
-                         (ROOT / "skills/linxsci-scholar/references/api.md").read_bytes())
+                         (ROOT / "skills/linxsci-skills/references/api.md").read_bytes())
 
     def test_numeric_errors_and_two_distinct_ids(self):
         client = ScholarClient(self.base_url, "test-key", framework_request_id="framework-client")

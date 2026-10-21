@@ -1,7 +1,7 @@
 """Run from the repository root after installing the package and configuring setup."""
 import json
 import sys
-from linxsci_scholar import ScholarClient, ScholarError
+from linxsci import ScholarClient, ScholarError
 
 
 def main():

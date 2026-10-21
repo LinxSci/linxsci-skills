@@ -11,12 +11,12 @@
 | 入口 | 面向用户 | 主分发与安装方式 | 使用文档来源 |
 | --- | --- | --- | --- |
 | Skill | 在支持本地 Skill 的 AI 助手中提问的用户 | 官方 GitHub 仓库完整 Skill；ZIP 作为直接下载 | [普通用户指南](USER_GUIDE.md) |
-| CLI | 在终端调用接口的用户 | PyPI：`uv tool install linxsci-scholar-sdk` | [全接口 CLI 使用指南](CLI_GUIDE.md) |
-| Python SDK | 在 Python 程序中集成接口的开发者 | PyPI：在项目环境执行 `python -m pip install linxsci-scholar-sdk` | [SDK 开发者指南](DEVELOPMENT.md) |
+| CLI | 在终端调用接口的用户 | PyPI：`uv tool install linxsci-sdk` | [全接口 CLI 使用指南](CLI_GUIDE.md) |
+| Python SDK | 在 Python 程序中集成接口的开发者 | PyPI：在项目环境执行 `python -m pip install linxsci-sdk` | [SDK 开发者指南](DEVELOPMENT.md) |
 
-CLI 和 SDK 来自同一个 Python 包，包名是 `linxsci-scholar-sdk`，命令名为 `linxsci`，导入名为 `linxsci_scholar`。官网分别展示安装命令和对应文档；手动下载时共用同一份 wheel。`uv tool install` 为 CLI 创建独立环境，SDK 则安装到使用它的 Python 项目环境。Skill ZIP 包含自包含脚本及安装器，不注册终端命令。以上使用方式均需要 Python 3.9+。
+CLI 和 SDK 来自同一个 Python 包，包名是 `linxsci-sdk`，命令名为 `linxsci`，导入名为 `linxsci`。官网分别展示安装命令和对应文档；手动下载时共用同一份 wheel。`uv tool install` 为 CLI 创建独立环境，SDK 则安装到使用它的 Python 项目环境。Skill ZIP 包含自包含脚本及安装器，不注册终端命令。以上使用方式均需要 Python 3.9+。
 
-当前 PyPI 发布和官方 GitHub Skill 仓库接入尚未完成。官网仅在对应渠道可用后启用包名安装命令与仓库安装链接；此前提供本地 wheel / ZIP，并明确当前阶段。源码发行包 `.tar.gz` 可作为开发者的可选下载项。
+官方 Skill 源码已上传至 [LinxSci/linxsci-skills](https://github.com/LinxSci/linxsci-skills)，官网可以展示该仓库链接。PyPI 首次发布仍在准备中，包名安装命令在发布及安装验收完成后启用；此前使用本地 wheel / ZIP 或源码安装。源码发行包 `.tar.gz` 可作为开发者的可选下载项。
 
 ## 2. 页面与文件路径建议
 
@@ -40,28 +40,28 @@ CLI 和 SDK 来自同一个 Python 包，包名是 `linxsci-scholar-sdk`，命�
 PyPI 发布成功后，CLI 用户的主流程为：
 
 ```bash
-uv tool install linxsci-scholar-sdk
+uv tool install linxsci-sdk
 linxsci --version
-linxsci scholar setup
-linxsci scholar search "graph neural networks"
+linxsci setup
+linxsci search "graph neural networks"
 ```
 
-CLI 升级使用 `uv tool upgrade linxsci-scholar-sdk`；PATH 未配置时使用 `uv tool update-shell` 后重新打开终端。已有 pipx 的用户可使用 `pipx install linxsci-scholar-sdk` 作为备选。相关行为以 [uv 官方工具指南](https://docs.astral.sh/uv/guides/tools/) 为准。
+CLI 升级使用 `uv tool upgrade linxsci-sdk`；PATH 未配置时使用 `uv tool update-shell` 后重新打开终端。已有 pipx 的用户可使用 `pipx install linxsci-sdk` 作为备选。相关行为以 [uv 官方工具指南](https://docs.astral.sh/uv/guides/tools/) 为准。
 
-SDK 用户在自己的项目中创建并激活虚拟环境，然后执行 `python -m pip install linxsci-scholar-sdk`；已有 uv 项目可使用 `uv add linxsci-scholar-sdk`。不要将 `uv tool install` 当成 SDK 项目依赖安装。
+SDK 用户在自己的项目中创建并激活虚拟环境，然后执行 `python -m pip install linxsci-sdk`；已有 uv 项目可使用 `uv add linxsci-sdk`。不要将 `uv tool install` 当成 SDK 项目依赖安装。
 
-`setup` 在本机隐藏输入用户已有的 Scholar API Key，无需在官网文档页输入 Key。安装命令使用包名 `linxsci-scholar-sdk`，不使用 `pip install linxsci`。
+`setup` 在本机隐藏输入用户已有的 Scholar API Key，无需在官网文档页输入 Key。安装命令使用包名 `linxsci-sdk`，不使用 `pip install linxsci`。
 
 CLI 页接着展示：
 
 ```bash
-linxsci scholar search "graph neural networks"
+linxsci search "graph neural networks"
 ```
 
 SDK 页接着展示可直接保存运行的 Python 示例：
 
 ```python
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient()
 response = client.search("graph neural networks")
@@ -70,9 +70,9 @@ print(response.json())
 
 SDK 页可将源码专属的 `examples/research.py` 运行方式和维护者扩展章节移至“源码开发”栏目；从 PyPI 或 wheel 安装的用户不拥有源码示例目录。保留第 3.2 节中可自行保存的 Python 示例和第 6 节的全接口对照表。
 
-Skill 页在官方 GitHub 仓库上线后展示完整仓库链接和安装器命令，保留 ZIP 安装流程作为备选。已安装本 CLI 的用户可执行现有的 `linxsci scholar install-skill`；这是安装随包 Skill 的入口，不需要新建 `linxsci skills install --agent ...` 等尚未实现的命令。使用说明以 [普通用户指南](USER_GUIDE.md) 为准；`SKILL.md` 是助手执行指令，不作为官网普通用户的安装指南。
+Skill 页展示 [官方 GitHub 仓库](https://github.com/LinxSci/linxsci-skills) 和安装器命令 `npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-skills`，保留 ZIP 安装流程作为备选。已安装本 CLI 的用户可执行现有的 `linxsci install-skill` 安装随包 Skill。使用说明以 [普通用户指南](USER_GUIDE.md) 为准；`SKILL.md` 是助手执行指令，不作为官网普通用户的安装指南。
 
-官方仓库需维护完整 `skills/linxsci-scholar/`，GitHub 与 wheel 使用同一份 Skill 源文件，随发行版本记录兼容关系。具体仓库地址尚未提供，不把 `https://github.com/LinxSci` 账号首页当作安装源。
+官方仓库维护完整 `skills/linxsci-skills/`，GitHub 与 wheel 使用同一份 Skill 源文件，随发行版本记录兼容关系。官网应链接到 `https://github.com/LinxSci/linxsci-skills`，不使用账号首页代替安装源。
 
 将仓库相对 Markdown 链接映射到官网页面，例如 `CLI_GUIDE.md` → `/open-api?tab=cli`、`DEVELOPMENT.md` → `/open-api?tab=sdk`、`USER_GUIDE.md` → `/open-api?tab=skill`。保留使用中的章节锚点；不对外展示不存在的本地文件或私有仓库链接。
 
@@ -84,31 +84,31 @@ Skill 页在官方 GitHub 仓库上线后展示完整仓库链接和安装器命
 
 ```bash
 python -m pip install twine
-uv build --no-sources --out-dir dist/website/0.3.0 --no-create-gitignore
-python tools/build_release.py --bundle-only --output dist/website/0.3.0
-python tools/check_release.py dist/website/0.3.0
-python tools/smoke_release.py dist/website/0.3.0 --uv uv
+uv build --no-sources --out-dir dist/website/linxsci-sdk/0.3.0 --no-create-gitignore
+python tools/build_release.py --bundle-only --output dist/website/linxsci-sdk/0.3.0
+python tools/check_release.py dist/website/linxsci-sdk/0.3.0
+python tools/smoke_release.py dist/website/linxsci-sdk/0.3.0 --uv uv
 ```
 
 执行后交付以下四个文件：
 
 ```text
-dist/website/0.3.0/
-  linxsci-scholar-0.3.0.zip
-  linxsci_scholar_sdk-0.3.0-py3-none-any.whl
-  linxsci_scholar_sdk-0.3.0.tar.gz
+dist/website/linxsci-sdk/0.3.0/
+  linxsci-skills-0.3.0.zip
+  linxsci_sdk-0.3.0-py3-none-any.whl
+  linxsci_sdk-0.3.0.tar.gz
   SHA256SUMS
 ```
 
 构建前需要安装 uv。按 [发布指南](RELEASING.md) 将 wheel / sdist 发布到 PyPI；在官方 GitHub Skill 仓库同步对应版本。官网可另外托管这四个文件作为备用下载，或链接到同版本的 GitHub Release 附件。不要把整个开发目录、虚拟环境或用户配置文件上传到下载区。`dist/` 不受 Git 跟踪，推送源码不会自动上传 PyPI 或官网。
 
-版本下载链接示例：`/downloads/scholar/0.3.0/linxsci-scholar-0.3.0.zip`。实际部署后才会可访问。官网三个入口的版本、文件名、文档和校验和必须对应同一版本；已经对外发布的版本文件保持不变，有更新时发布新版本。
+版本下载链接示例：`/downloads/scholar/0.3.0/linxsci-skills-0.3.0.zip`。实际部署后才会可访问。官网三个入口的版本、文件名、文档和校验和必须对应同一版本；已经对外发布的版本文件保持不变，有更新时发布新版本。
 
 ## 5. 发布前确认服务环境
 
-当前 `skills/linxsci-scholar/service.json` 默认地址仍为测试服务 `http://101.126.93.213:28888`，线上地址选项为 `https://linxsci.com`。本交付不擅自修改现有默认地址。
+正式 API 根地址已确认为 `https://linxsci.com`。`skills/linxsci-skills/service.json` 的默认地址和线上地址选项均使用该地址，客户端会自动补齐 `/openapi/v2`。官网的 Skill、CLI、SDK 使用示例统一指向正式服务。
 
-如果官网先提供当前测试版，下载页明确标注“测试版”和所连接的测试环境。如果提供正式版，先确认正式 API 根地址及接口可用，再修改默认配置、同步三个使用文档并重新构建安装包；`setup --online` 可以使用现有线上地址选项。
+默认地址变更后需重新构建安装包，旧的本地产物不能直接用于正式发布。已有用户保存的配置和环境变量优先于发行默认值，原先使用测试环境的用户通过 `setup --online` 切换，并检查 `SCHOLAR_BASE_URL` 覆盖情况。测试环境保留在 [测试指南](TESTING.md) 中，通过 `--base-url` 显式选择。
 
 现有自动化验证使用本机模拟服务，覆盖全部 34 个接口的调用链。真实服务还需用实际 Key 和业务参数完成对应接口联调。不要将模拟测试通过写成全部真实接口已验收。
 
@@ -126,6 +126,6 @@ dist/website/0.3.0/
 
 测试站公开模块中的调试信息包含 `/root/suwei/AgentXiv/agentxiv/pages/OpenApiPage.tsx`。这是定位测试机项目目录的线索，不代表当前工作区已取得该目录的访问权限，也不能替代前端仓库地址。
 
-用户提供的 [LinxSci GitHub 账号](https://github.com/LinxSci) 的当前公开仓库列表只包含 [arxiv-paper-insights](https://github.com/LinxSci/arxiv-paper-insights) 数据集，未找到可编辑的官网前端仓库。继续实现需提供官网前端的完整 Git 地址或可访问源码目录。
+已确定的 [LinxSci/linxsci-skills](https://github.com/LinxSci/linxsci-skills) 是 Skill、CLI 和 SDK 的源码仓库。官网前端的完整 Git 地址或可访问源码目录仍需提供，才能实现三个文档页面。
 
-用户已粘贴 [参考共享对话](https://chatgpt.com/share/6ad6daa8-7d98-83e9-bb65-b37b63972f9d) 中的发布要求。本文已采用 PyPI + uv 主安装、官方 GitHub Skill 分发的路线，保留现有包名、命令名及已实现的安装入口。后续需分别提供官网前端仓库、正式 Skill GitHub 仓库地址和 PyPI 发布配置；这些是不同资源。
+本文采用 PyPI + uv 主安装、官方 GitHub Skill 分发的路线，沿用现有包名、命令名及已实现的安装入口。下一步完成 PyPI 上传及安装验收，并取得官网前端源码接入三份使用文档和下载入口。

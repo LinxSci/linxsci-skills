@@ -2,7 +2,7 @@
 
 本文面向在 Python 程序中调用 Scholar 的开发者，按当前项目的安装方式、SDK 入口和接口行为编写。首次使用按第 1 节、第 2.1 节和第 3 节操作，即可完成一次论文检索；其他章节按需阅读。
 
-SDK 的公共入口为 `linxsci_scholar`，命令行入口为 `linxsci`，论文相关动作放在 `scholar` 命令组。SDK 将 Python 方法转换为 Scholar API 请求，自动附带用户的 Scholar API Key。只使用 SDK 时，完成 Python 包安装和 Key 配置即可。
+SDK 的公共入口为 `linxsci`，命令行直接使用 `linxsci <动作>`。SDK 将 Python 方法转换为 Scholar API 请求，自动附带用户的 Scholar API Key。只使用 SDK 时，完成 Python 包安装和 Key 配置即可。
 
 ## 目录
 
@@ -30,13 +30,13 @@ SDK 的公共入口为 `linxsci_scholar`，命令行入口为 `linxsci`，论文
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci-scholar-sdk
-linxsci scholar setup
+python -m pip install linxsci-sdk
+linxsci setup
 ```
 
-Windows CMD 使用 `py -3 -m venv .venv` 创建环境，使用 `.venv\Scripts\activate.bat` 激活。已有 uv 项目的用户也可使用 `uv add linxsci-scholar-sdk`，通过 `uv run` 执行项目中的程序或配置命令。
+Windows CMD 使用 `py -3 -m venv .venv` 创建环境，使用 `.venv\Scripts\activate.bat` 激活。已有 uv 项目的用户也可使用 `uv add linxsci-sdk`，通过 `uv run` 执行项目中的程序或配置命令。
 
-`uv tool install linxsci-scholar-sdk` 是 CLI 的独立安装方式，不会让当前项目解释器自动获得 `linxsci_scholar` 模块。SDK 用户需要上面的项目依赖安装；安装后可直接运行第 3.2 节示例，不要求克隆源码仓库。只有从源码安装的用户才拥有第 3.1 节的 `examples/research.py` 文件。
+`uv tool install linxsci-sdk` 是 CLI 的独立安装方式，不会让当前项目解释器自动获得 `linxsci` 模块。SDK 用户需要上面的项目依赖安装；安装后可直接运行第 3.2 节示例，不要求克隆源码仓库。只有从源码安装的用户才拥有第 3.1 节的 `examples/research.py` 文件。
 
 ### 1.1 获取源码
 
@@ -74,26 +74,44 @@ python -m pip install -e .
 ### 1.3 确认安装成功
 
 ```bash
-python -c "from linxsci_scholar import ScholarClient; print('SDK import OK')"
+python -c "from linxsci import ScholarClient; print('SDK import OK')"
 linxsci --version
 ```
 
 第一条命令应输出 `SDK import OK`，第二条输出当前项目版本。两条命令均不调用远程 API。后续 Python 程序也应使用此 `.venv` 的解释器。
+
+### 1.4 从旧名称迁移
+
+首次使用新包的用户可以跳过本节。PyPI 包名已改为 `linxsci-sdk`，Python 导入改为 `from linxsci import ScholarClient`，Skill 名称改为 `linxsci-skills`。
+
+如果在当前 Python 环境安装过旧包，先卸载旧发行包，再安装新包，避免共用的 `linxsci` 入口被后续卸载操作移除。源码开发者在仓库目录执行：
+
+```bash
+python -m pip uninstall linxsci-scholar-sdk
+python -m pip install -e .
+linxsci --help
+```
+
+使用安装文件时，将第二条替换为 `python -m pip install /实际路径/linxsci_sdk-0.3.0-py3-none-any.whl`。此前通过 uv 安装旧包的用户先执行 `uv tool uninstall linxsci-scholar-sdk`，再通过 `uv tool install /实际路径/linxsci_sdk-0.3.0-py3-none-any.whl` 安装新包。PyPI 发布完成后可以将文件路径换为 `linxsci-sdk`。
+
+现有 `SCHOLAR_*` 环境变量和配置目录 `linxsci-scholar` 保持兼容，不需要重新输入 Key。已有脚本和 Python 程序分别改为 `linxsci <动作>` 和 `from linxsci import ...`；命令不再接受中间的 `scholar` 分组。
+
+需要更新助手中的 Skill 时执行 `linxsci install-skill --update`。本工具会把自己管理的旧 `linxsci-scholar` 副本备份到助手扫描目录之外，再安装为 `linxsci-skills`。手动或外部安装器管理的旧副本需使用原工具迁移；如果新旧目录同时存在，先将不再使用的副本移出扫描目录，避免重复发现。
 
 ## 2. 配置服务地址和 API Key
 
 ### 2.1 首次使用：通过配置向导保存
 
 ```bash
-linxsci scholar setup --base-url http://101.126.93.213:28888
+linxsci setup --base-url https://linxsci.com
 ```
 
-1. 确认服务地址；默认提示为当前测试服务地址。
+1. 确认服务地址为正式服务 `https://linxsci.com`。
 2. 输入已有的 Scholar API Key，输入内容不会显示。
 3. 向导保存配置，并调用 `/meta` 检查连接。
 4. 看到“连接成功”后，进入下一节运行 SDK 示例。
 
-地址只填写服务根地址，末尾不添加 `/openapi/v2`，SDK 会自动补齐该前缀。需要切换到线上服务时，运行 `linxsci scholar setup --online`，地址提示为 `https://linxsci.com`。
+地址只填写服务根地址，末尾不添加 `/openapi/v2`，SDK 会自动补齐该前缀。发行默认地址为 `https://linxsci.com`；已有配置优先于默认值，升级不会自动切换保存的地址。原先使用测试环境的用户可运行 `linxsci setup --online` 切换正式服务，并检查是否仍有 `SCHOLAR_BASE_URL` 环境变量覆盖。开发测试的显式配置见 [测试指南](TESTING.md)。
 
 配置成功后，Python 中直接使用 `ScholarClient()`，SDK 会读取已保存的地址和 Key。配置向导属于配套 CLI，SDK 开发者可以用它完成本机配置；不需要额外安装 Skill。
 
@@ -125,10 +143,10 @@ SDK 按以下顺序解析地址和 Key：
 
 ```python
 import os
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient(
-    base_url="http://101.126.93.213:28888",
+    base_url="https://linxsci.com",
     api_key=os.environ["SCHOLAR_OPENAPI_KEY"],
     timeout=60,
 )
@@ -140,13 +158,13 @@ client = ScholarClient(
 
 ```bash
 # 只查看本地配置状态，不显示 Key，不调用远程接口
-linxsci scholar config
+linxsci config
 
 # 按需检查实际使用的地址和连接状态
-linxsci scholar doctor --json
+linxsci doctor --json
 
 # 需要移除保存的地址和 Key 时执行
-linxsci scholar config --clear
+linxsci config --clear
 ```
 
 `doctor` 输出中的 `base_url` 是实际连接地址，`ok: true` 表示本次 `/meta` 检查成功。`setup` 已检查成功时，无需紧接着重复运行 `doctor`。二者的连接检查都计入接口调用流程；某个接口检查通过，也不代表其他接口 action 已启用。
@@ -171,7 +189,7 @@ python examples/research.py
 
 ```python
 import json
-from linxsci_scholar import ScholarClient, ScholarError
+from linxsci import ScholarClient, ScholarError
 
 try:
     client = ScholarClient(timeout=60)
@@ -200,7 +218,7 @@ except (ValueError, OSError):
 ### 4.1 读取详情和目录
 
 ```python
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient()
 paper_id = input("请输入搜索返回的论文 ID（保留来源前缀）：").strip()
@@ -216,7 +234,7 @@ print("论文目录：", client.paper(paper_id, "toc").json())
 先查看目录，再复制目录中返回的实际章节 ID：
 
 ```python
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient()
 paper_id = input("论文 ID：").strip()
@@ -247,7 +265,7 @@ print(response.json())
 
 ```python
 from pathlib import Path
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient()
 paper_id = input("论文 ID：").strip()
@@ -266,7 +284,7 @@ PDF 解析分为“上传并创建任务 → 查询状态 → 获取结果”。
 
 ```python
 import os
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient()
 pdf_path = input("请输入本地 PDF 文件路径：").strip()
@@ -283,7 +301,7 @@ print(response.json())
 ### 5.2 使用返回的任务 ID 查询状态
 
 ```python
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient()
 task_id = input("创建任务响应中的实际任务 ID：").strip()
@@ -296,7 +314,7 @@ print(client.pdf_task(task_id).json())
 ### 5.3 确认完成后获取结果
 
 ```python
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient()
 task_id = input("已完成任务的实际任务 ID：").strip()
@@ -310,14 +328,14 @@ print(client.pdf_task(task_id, result=True).json())
 
 便捷方法之外的接口统一使用 `request()`，可调用当前项目支持的全部 34 条路由。方法和路径见 [接口文档](../Scholar-OpenAPI-v2-使用文档.md)。
 
-不需要为 34 个接口逐一新增 SDK 方法或 CLI 子命令：SDK 的 `request()` 和 CLI 的 `linxsci scholar request` 已接入全部方法与路径；PDF 文件上传使用 `upload_pdf()` / `linxsci scholar upload`。当前接口分布为服务与健康 4 个、搜索与解析 6 个、论文详情与引用 11 个、推荐 2 个、学术实体 7 个、PDF 解析 4 个。仅调用目标接口即可，不要求先完成其他研究工作流。
+SDK 的 `request()` 已接入全部方法与路径；CLI 的全部 34 个接口均有便捷命令，无需填写 HTTP 方法或路径，详见 [CLI 指南](CLI_GUIDE.md)。PDF 文件上传使用 `upload_pdf()` / `linxsci upload`。当前接口分布为服务与健康 4 个、搜索与解析 6 个、论文详情与引用 11 个、推荐 2 个、学术实体 7 个、PDF 解析 4 个。仅调用目标接口即可，不要求先完成其他研究工作流。
 
 ### 6.1 GET 请求
 
 例如查询用量：
 
 ```python
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient()
 response = client.request("GET", "/usage")
@@ -331,7 +349,7 @@ print(response.json())
 以下请求与 `client.search()` 调用同一个综合搜索接口：
 
 ```python
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient()
 response = client.request(
@@ -350,7 +368,7 @@ print(response.json())
 
 ```python
 from urllib.parse import quote
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient()
 author_id = input("接口返回的作者 ID：").strip()
@@ -368,7 +386,7 @@ CLI 的 `--body @文件.json` 在 SDK 中对应“读取 JSON → 传给 `payloa
 ```python
 import json
 from pathlib import Path
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient()
 request_file = input("推荐接口请求 JSON 文件路径：").strip()
@@ -516,7 +534,7 @@ SDK 和 CLI 都不会自动重试。`Retry-After` 可供应用参考，但遇到
 
 ```python
 import uuid
-from linxsci_scholar import ScholarClient
+from linxsci import ScholarClient
 
 client = ScholarClient()
 response = client.request(
@@ -536,59 +554,59 @@ CLI 与 SDK 共用配置和请求实现。以下是终端调用方式；在 Pyth
 
 全部 34 个接口对应的 CLI 命令见 [Scholar 全接口 CLI 使用指南](CLI_GUIDE.md)。
 
-命令格式为 `linxsci scholar [组内选项] <动作> [动作参数]`。`linxsci --help` 列出当前能力，`linxsci scholar --help` 列出论文相关动作。安装包名称仍为 `linxsci-scholar-sdk`，Python 中继续导入 `linxsci_scholar`。
+命令格式为 `linxsci [全局选项] <动作> [动作参数]`。`linxsci` 或 `linxsci --help` 列出可用动作。安装包名称为 `linxsci-sdk`，Python 中导入 `linxsci`。
 
-从已有开发版本更新时，在安装本项目的虚拟环境重新执行 `python -m pip install -e .`，再运行 `linxsci --version` 确认入口已注册。已有环境变量和 `~/.config/linxsci-scholar/config.json` 等本地配置继续生效。若还需要在助手中使用更新后的 Skill，执行 `linxsci scholar install-skill --update`。
+从旧名称开发版本更新时先完成 [名称迁移](#14-从旧名称迁移)。后续源码更新在同一虚拟环境重新执行 `python -m pip install -e .`，再运行 `linxsci --version` 确认入口。已有环境变量和 `~/.config/linxsci-scholar/config.json` 等本地配置继续生效。若还需要在助手中使用更新后的 Skill，执行 `linxsci install-skill --update`。
 
 ### 8.1 搜索、阅读和保存内容
 
 ```bash
-linxsci scholar search "graph neural networks"
-linxsci scholar --output search.json search "graph neural networks"
+linxsci search "graph neural networks"
+linxsci --output search.json search "graph neural networks"
 ```
 
 从结果中取得 ID 后，替换下列中文占位参数再执行：
 
 ```bash
-linxsci scholar paper "实际论文ID"
-linxsci scholar paper "实际论文ID" --resource toc
-linxsci scholar paper "实际论文ID" --resource sections --item-id "实际章节ID"
+linxsci paper "实际论文ID"
+linxsci paper "实际论文ID" --resource toc
+linxsci paper "实际论文ID" --resource sections --item-id "实际章节ID"
 ```
 
 ### 8.2 通用调用和诊断
 
 ```bash
 # 查看全部支持路由，无需 Key，不调用远程服务
-linxsci scholar routes
+linxsci routes
 
 # 查看帮助
-linxsci scholar --help
+linxsci --help
 
 # 查询用量
-linxsci scholar request GET /usage
+linxsci usage
 
 # 发生错误时，将结构化诊断写到 stderr
-linxsci scholar --json-errors search "graph neural networks"
+linxsci --json-errors search "graph neural networks"
 ```
 
-JSON POST 请求用 `--body @request.json` 从文件读取，或用 `--body` 传入 JSON 文本；请求字段按目标接口契约准备。查询参数用 `--param key=value`，可重复；动态路径与 SDK 的 `request()` 一样需要编码。
+JSON POST 请求用 `--body @request.json` 从文件读取，或用 `--body` 传入 JSON 文本；请求字段按目标接口契约准备。查询参数用 `--param key=value`，可重复；便捷命令接收原始 ID 并自动编码；只有通用 `request` 的动态路径需要与 SDK 的 `request()` 一样自行编码。
 
-### 8.3 PDF 和组选项
+### 8.3 PDF 和全局选项
 
 以下路径和任务 ID 需要替换为实际值；确认任务完成后才执行结果命令：
 
 ```bash
-linxsci scholar upload /实际路径/paper.pdf
-linxsci scholar task "实际任务ID"
-linxsci scholar task "实际任务ID" --result
+linxsci upload /实际路径/paper.pdf
+linxsci task "实际任务ID"
+linxsci task "实际任务ID" --result
 ```
 
-CLI 在 PDF 命令中按其实现读取 `SCHOLAR_MINERU_API_KEY`：`upload` 和通用 PDF `request` 会发送该头，`task` 便捷命令不附加该头；需要时改用通用 `request`。
+CLI 在 PDF 命令中按其实现读取 `SCHOLAR_MINERU_API_KEY`：`parse-pdf`、`upload`、`task`（含 `--result`）及通用 PDF `request` 均会发送该头。SDK 的环境变量读取行为不变，仍需显式传入 `mineru_key`。
 
-`--output`、`--timeout`、`--json-errors`、`--framework-request-id` 属于 Scholar 组，放在 `scholar` 之后、具体动作之前。例如：
+`--output`、`--timeout`、`--json-errors`、`--framework-request-id` 是全局选项，放在 `linxsci` 之后、具体动作之前。例如：
 
 ```bash
-linxsci scholar --timeout 90 --framework-request-id scholar-trace-001 request GET /meta --request-id agent-trace-001
+linxsci --timeout 90 --framework-request-id scholar-trace-001 meta --request-id agent-trace-001
 ```
 
 成功输出为格式化 JSON 或原始数据；`--output` 保存原始响应字节。错误写入 stderr。退出码 `0` 表示成功，`1` 表示 HTTP/网络或连接检查错误，`2` 表示输入、配置或本地文件错误。
@@ -609,7 +627,7 @@ python -m unittest discover -s tests -v
 
 ### 9.1 新增其他 Skill 的命名与入口
 
-统一采用下列结构：
+当前 `linxsci-skills` 提供 Scholar API 能力，常用动作直接位于 `linxsci` 下。新增能力可使用下列扩展结构：
 
 | 内容 | 规则 | 将来新增专利能力的命名示例 |
 | --- | --- | --- |
@@ -618,23 +636,23 @@ python -m unittest discover -s tests -v
 | Skill 目录 | `skills/linxsci-<能力名>/` | `skills/linxsci-patents/SKILL.md` |
 | Python 模块 | 使用合法的 Python 模块名 | `linxsci_patents` |
 
-当前只实现 Scholar。新的能力实现后，在 `skills/linxsci-scholar/scripts/cli.py` 的 `CAPABILITIES` 中注册处理函数，处理函数接收 `argv` 和 `prog`；将对应实现纳入发行包配置，并补充命令与安装测试。由统一入口分派到各能力，不要让多个发行包分别注册并覆盖同一个 `linxsci` 可执行文件。
+新的能力实现后，在 `skills/linxsci-skills/scripts/cli.py` 的 `CAPABILITIES` 中注册处理函数，处理函数接收 `argv` 和 `prog`。注册的能力名应避开 `setup`、`search`、`paper` 等已有动作名。将对应实现纳入发行包配置，并补充命令与安装测试。由统一入口分派到各能力，不要让多个发行包分别注册并覆盖同一个 `linxsci` 可执行文件。
 
 新增能力按以下步骤落地：
 
 1. 在独立的 `skills/linxsci-<能力名>/` 中编写 `SKILL.md` 和所需脚本、参考资料，明确任务范围及使用流程。
 2. 实现命令处理函数并注册能力名，验证 `linxsci <能力名> --help` 和具体动作。
-3. 更新 `pyproject.toml` 的模块和资源配置、`tools/build_release.py` 的 ZIP 白名单，以及 Skill 复制安装逻辑。当前 `linxsci scholar install-skill` 只安装 Scholar，添加命令组不会自动安装新 Skill。
+3. 更新 `pyproject.toml` 的模块和资源配置、`tools/build_release.py` 的 ZIP 白名单，以及 Skill 复制安装逻辑。当前 `linxsci install-skill` 只安装 `linxsci-skills`，添加命令组不会自动安装独立的新 Skill。
 4. 补充测试及 README、用户指南、开发者指南和发布指南，并验证新环境安装的 wheel、ZIP 都包含新能力所需文件。
 
-当前发行包仍叫 `linxsci-scholar-sdk`，ZIP 仍叫 `linxsci-scholar-<版本>.zip`。未来真正发布多能力合集时，再统一决定合集的发行包和 ZIP 名称，并同步调整构建与安装逻辑；新增能力的命名示例不表示当前安装包已包含它。
+发行包名称为 `linxsci-sdk`，ZIP 为 `linxsci-skills-<版本>.zip`。新增能力继续复用统一入口和包名；上述扩展命名示例不表示当前安装包已包含这些能力。
 
 ## 10. 常见问题
 
 | 问题 | 检查和处理 |
 | --- | --- |
 | 可编辑安装提示缺少 setup.py/setup.cfg | 在当前 `.venv` 内升级 pip、setuptools、wheel，再执行 `python -m pip install -e .` |
-| `No module named linxsci_scholar` | 检查编辑器/终端解释器是否属于安装本项目的 `.venv` |
+| `No module named linxsci` | 检查编辑器/终端解释器是否属于安装本项目的 `.venv` |
 | `No module named python3` | `-m` 后应为模块名；使用 `python -m pip ...` |
 | 找不到 `linxsci` 命令 | 激活安装本项目的虚拟环境；更新源码后重新执行 `python -m pip install -e .` 注册入口 |
 | Key 已更新但仍然鉴权失败 | 用 `config` 检查进程环境变量是否覆盖本地配置；SDK 显式参数优先级更高 |
