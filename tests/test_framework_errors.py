@@ -71,7 +71,7 @@ class FrameworkContractTests(unittest.TestCase):
         documented = re.findall(r"\| (GET|POST) \| `/openapi/v2([^`]+)` \|", document)
         self.assertEqual(len(documented), 34)
         self.assertEqual(set(ROUTES), set(documented))
-        self.assertEqual(document.replace("(API.zh-CN.md)", "(api.zh-CN.md)"),
+        self.assertEqual(document.replace("(API.zh-CN.md)", "(api.zh-CN.md)").replace("(CLI_GUIDE.md#", "(cli.md#"),
                          (ROOT / "skills/linxsci-skills/references/api.md").read_text(encoding="utf-8"))
 
     def test_numeric_errors_and_two_distinct_ids(self):

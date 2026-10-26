@@ -16,36 +16,30 @@ SDK 的公共入口为 `linxsci`，命令行直接使用 `linxsci <动作>`。SD
 6. [调用其他接口](#6-调用其他接口)
 7. [处理响应和错误](#7-处理响应和错误)
 8. [使用 CLI](#8-使用-cli)
-9. [本地开发与验证](#9-本地开发与验证)
+9. [验证安装与更新](#9-验证安装与更新)
 10. [常见问题](#10-常见问题)
 
 需要逐个接口调用时，直接查看 [全部 34 个接口的 SDK 对照表](#66-全部-34-个接口的-sdk-对照表)；方法签名见 [SDK 方法与参数速查](#65-sdk-方法与参数速查)。终端命令另见 [CLI 使用指南](CLI_GUIDE.zh-CN.md)。
 
 ## 1. 安装项目
 
-### PyPI 发布后的项目安装
+### 从安装包使用 SDK
 
-当前尚未完成 PyPI 发布；下面的包名安装命令供正式发布后的官网用户使用。发布前使用本节后面的源码安装，或安装发布方提供的本地 wheel。
-
-在自己的 Python 项目中创建并激活虚拟环境，然后安装 SDK：
+在自己的 Python 项目环境中安装本地 wheel：
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install linxsci
+python -m pip install /path/to/linxsci-0.3.0-py3-none-any.whl
 linxsci setup
 ```
 
-Windows CMD 使用 `py -3 -m venv .venv` 创建环境，使用 `.venv\Scripts\activate.bat` 激活。已有 uv 项目的用户也可使用 `uv add linxsci`，通过 `uv run` 执行项目中的程序或配置命令。
-
-`uv tool install linxsci` 是 CLI 的独立安装方式，不会让当前项目解释器自动获得 `linxsci` 模块。SDK 用户需要上面的项目依赖安装；安装后可直接运行第 3.2 节示例，不要求克隆源码仓库。只有从源码安装的用户才拥有第 3.1 节的 `examples/research.py` 文件。
+CLI 与 SDK 的 Python 安装包名为 `linxsci`。SDK 需安装到应用实际使用的解释器中；隔离的 CLI 工具环境不会自动向应用环境提供 SDK。源码安装步骤如下。
 
 ### 1.1 获取源码
 
-需要 Python 3.9 或以上版本，以及仓库访问权限。如果已经有源码，直接进入项目根目录；尚未拉取时执行：
+需要 Python 3.9 或以上版本。已有源码时进入项目根目录；克隆源码时执行：
 
 ```bash
-git clone git@codeup.aliyun.com:67ce5fc9e77e9167fa2fc4ca/AI/linxsci-skills.git
+git clone https://github.com/LinxSci/linxsci-skills.git
 cd linxsci-skills
 ```
 
@@ -82,10 +76,6 @@ linxsci --version
 
 第一条命令应输出 `SDK import OK`，第二条输出当前项目版本。两条命令均不调用远程 API。后续 Python 程序也应使用此 `.venv` 的解释器。
 
-### 1.4 从旧名称迁移
-
-当前项目和 Skill 命名为 `linxsci-skills`，CLI / SDK 的 Python 发行包、命令和导入名为 `linxsci`，客户端类为 `LinxSciClient`，异常类为 `LinxSciError`。从旧版本升级时，使用原包管理器卸载旧发行包，更新代码导入及部署变量为 `LINXSCI_*`，并运行 `linxsci setup` 将 Key 保存到新的配置目录。旧 Skill 副本请用原安装工具移出扫描目录，避免重复发现。当前安装器仅更新由其管理的 `linxsci-skills` 副本。
-
 ## 2. 配置服务地址和 API Key
 
 ### 2.1 首次使用：通过配置向导保存
@@ -99,7 +89,7 @@ linxsci setup --base-url https://linxsci.com
 3. 向导保存配置，并调用 `/meta` 检查连接。
 4. 看到“连接成功”后，进入下一节运行 SDK 示例。
 
-地址只填写服务根地址，末尾不添加 `/openapi/v2`，SDK 会自动补齐该前缀。发行默认地址为 `https://linxsci.com`；已有配置优先于默认值，升级不会自动切换保存的地址。原先使用测试环境的用户可运行 `linxsci setup --online` 切换正式服务，并检查是否仍有 `LINXSCI_BASE_URL` 环境变量覆盖。开发测试的显式配置见 [测试指南](TESTING.zh-CN.md)。
+地址只填写服务根地址，末尾不添加 `/openapi/v2`，SDK 会自动补齐该前缀。发行默认地址为 `https://linxsci.com`；已有配置优先于默认值，升级不会自动切换保存的地址。原先使用测试环境的用户可运行 `linxsci setup --online` 切换正式服务，并检查是否仍有 `LINXSCI_BASE_URL` 环境变量覆盖。其他服务地址可通过 `--base-url` 或环境变量显式配置。
 
 配置成功后，Python 中直接使用 `LinxSciClient()`，SDK 会读取已保存的地址和 Key。配置向导属于配套 CLI，SDK 开发者可以用它完成本机配置；不需要额外安装 Skill。
 
@@ -163,7 +153,7 @@ linxsci config --clear
 
 ### 3.1 运行仓库自带示例
 
-安装并配置成功后，执行：
+源码安装并配置成功后，可运行仓库示例；wheel 用户可直接使用下一节的 Python 示例：
 
 ```bash
 python examples/research.py
@@ -509,12 +499,12 @@ SDK 返回 `Response`，保留服务原始响应：
 | 429 | `-3901` | 每日调用限额已满，额度恢复后再试或联系管理员 |
 | 503 | `-3902` | 上游地址或服务端 Key 未配置，联系管理员 |
 | 502 | `-3903` | 上游连接或传输失败，检查服务与网络；不据此保证业务没有执行 |
-| 502 | `-3904` | member begin 未成功，未转发上游，联系管理员排查 |
-| 502 | `-3905` | 上游已返回，但 member finish 未确认，先核查执行与计费结果，再决定是否重试 |
+| 502 | `-3904` | 请求准备失败，未转发上游，联系管理员排查 |
+| 502 | `-3905` | 上游已返回，但计量完成尚未确认，先核查执行与计费结果，再决定是否重试 |
 
 上游业务错误仍使用自己的格式，例如 `validation_error`、`asset_unavailable`。SDK 保留其原始响应，不将所有错误强行转换为同一种业务结构。
 
-LinxSci 自身框架错误采用 `code/data/error/extra` 结构，其中 `extra.cost` 是耗时（秒），不是扣费金额。包括连接检查和健康检查在内的请求都会经过调用检查；预计调用量为 1，上游 2xx 实际调用量为 1，其余状态或连接失败实际为 0，预占释放由 member finish 结果确认。不能仅凭失败 HTTP 状态保证费用已释放。
+LinxSci 自身框架错误采用 `code/data/error/extra` 结构，其中 `extra.cost` 是耗时（秒），不是扣费金额。包括连接检查和健康检查在内的请求都会经过调用检查；预计调用量为 1，上游 2xx 实际调用量为 1，其余状态或连接失败实际为 0，预占释放由 服务确认计量完成后确定。不能仅凭失败 HTTP 状态保证费用已释放。
 
 SDK 和 CLI 都不会自动重试。`Retry-After` 可供应用参考，但遇到 `-3905` 时，仍要先核查执行和计费结果，尤其不要直接重复上传 PDF 或创建解析任务。
 
@@ -544,7 +534,7 @@ CLI 与 SDK 共用配置和请求实现。以下是终端调用方式；在 Pyth
 
 命令格式为 `linxsci [全局选项] <动作> [动作参数]`。`linxsci` 或 `linxsci --help` 列出可用动作。安装包名称为 `linxsci`，Python 中导入 `linxsci`。
 
-从旧名称开发版本更新时先完成 [名称迁移](#14-从旧名称迁移)。后续源码更新在同一虚拟环境重新执行 `python -m pip install -e .`，再运行 `linxsci --version` 确认入口。已有环境变量和 `~/.config/linxsci-skills/config.json` 等本地配置继续生效。若还需要在助手中使用更新后的 Skill，执行 `linxsci install-skill --update`。
+源码更新在同一虚拟环境重新执行 `python -m pip install -e .`，再运行 `linxsci --version` 确认入口。已有环境变量和 `~/.config/linxsci-skills/config.json` 等本地配置继续生效。若还需要在助手中使用更新后的 Skill，执行 `linxsci install-skill --update`。
 
 ### 8.1 搜索、阅读和保存内容
 
@@ -599,41 +589,18 @@ linxsci --timeout 90 --framework-request-id linxsci-trace-001 meta --request-id 
 
 CLI 成功输出默认为紧凑 JSON，大响应及二进制返回文件引用；`--pretty` 供人工阅读，`--output` 保存原始响应字节。错误默认以结构化 JSON 写入 stderr。退出码 `0` 表示成功，`1` 表示 HTTP/网络或连接检查错误，`2` 表示输入、配置或本地文件错误。
 
-## 9. 本地开发与验证
+## 9. 验证安装与更新
 
-每次打开新的终端，先激活 `.venv`。修改 SDK/CLI 逻辑后运行：
+在应用实际使用的 Python 环境中检查安装：
 
 ```bash
-python -m unittest discover -s tests -v
+python -c "from linxsci import LinxSciClient; print('SDK import OK')"
+linxsci --version
 ```
 
-这些测试使用本地模拟 HTTP 服务和临时配置，不需要真实 Key，不访问远程测试环境。真实联调可依次验证：搜索 → 真实论文 ID → 目录 → 真实章节 ID；PDF 按需验证一次创建、查询和结果流程。
+这两条命令均不调用远程 API。安装新版源码或 wheel 后，在同一解释器环境继续运行应用。SDK 无需安装 Skill；需要同步本工具管理的助手副本时，执行 `linxsci install-skill --update`，外部安装器管理的副本使用原工具更新。
 
-只使用 SDK 时无需安装 Skill。需要验证 AI 助手调用效果时，再按 [测试环境验收与 Skill 调优](TESTING.zh-CN.md) 安装或更新 Skill，并核对助手实际使用的源码路径。
-
-交付安装包、上传制品和版本维护见 [发布指南](RELEASING.zh-CN.md)。接口方法、路由和代理约定见 [接口文档](API.zh-CN.md)。
-
-### 9.1 新增其他 Skill 的命名与入口
-
-当前 `linxsci-skills` 提供 LinxSci API 能力，常用动作直接位于 `linxsci` 下。新增能力可使用下列扩展结构：
-
-| 内容 | 规则 | 将来新增专利能力的命名示例 |
-| --- | --- | --- |
-| CLI | `linxsci <能力名> <动作>` | `linxsci patents search` |
-| Skill 名称 | `linxsci-<能力名>` | `linxsci-patents` |
-| Skill 目录 | `skills/linxsci-<能力名>/` | `skills/linxsci-patents/SKILL.md` |
-| Python 模块 | 使用合法的 Python 模块名 | `linxsci_patents` |
-
-新的能力实现后，在 `skills/linxsci-skills/scripts/cli.py` 的 `CAPABILITIES` 中注册处理函数，处理函数接收 `argv` 和 `prog`。注册的能力名应避开 `setup`、`search`、`paper` 等已有动作名。将对应实现纳入发行包配置，并补充命令与安装测试。由统一入口分派到各能力，不要让多个发行包分别注册并覆盖同一个 `linxsci` 可执行文件。
-
-新增能力按以下步骤落地：
-
-1. 在独立的 `skills/linxsci-<能力名>/` 中编写 `SKILL.md` 和所需脚本、参考资料，明确任务范围及使用流程。
-2. 实现命令处理函数并注册能力名，验证 `linxsci <能力名> --help` 和具体动作。
-3. 更新 `pyproject.toml` 的模块和资源配置、`tools/build_release.py` 的 ZIP 白名单，以及 Skill 复制安装逻辑。当前 `linxsci install-skill` 只安装 `linxsci-skills`，添加命令组不会自动安装独立的新 Skill。
-4. 补充测试及 README、用户指南、开发者指南和发布指南，并验证新环境安装的 wheel、ZIP 都包含新能力所需文件。
-
-发行包名称为 `linxsci`，ZIP 为 `linxsci-skills-<版本>.zip`。新增能力继续复用统一入口和包名；上述扩展命名示例不表示当前安装包已包含这些能力。
+CLI 参数详见 [CLI 指南](CLI_GUIDE.zh-CN.md)，接口方法与错误码见 [API 参考](API.zh-CN.md)。
 
 ## 10. 常见问题
 

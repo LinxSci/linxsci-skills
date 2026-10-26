@@ -4,11 +4,11 @@
 
 ## Local development and remote acceptance
 
-Install the source in one virtual environment. Local source can call the remote test service directly; pushing Git or rebuilding a wheel is not required for each change.
+Install the source in one virtual environment. Set the service root explicitly for integration tests. Replace the example `https://api.example.com` below with your actual test service root.
 
 ```bash
 python -m pip install -e .
-linxsci setup --base-url http://101.126.93.213:28888
+linxsci setup --base-url https://api.example.com
 linxsci doctor --json
 linxsci search "graph neural networks"
 ```
@@ -53,7 +53,7 @@ Evaluate task completion, correctness of calls, traceable evidence, redundant re
 | Root command dispatch | `scripts/cli.py` and package entry points |
 | Configuration or arguments | `scripts/config.py`, `scripts/commands.py` |
 | Stale installation | `scripts/installer.py` and the assistant's executable path |
-| Disabled actions, member or upstream failures | Server configuration and logs |
+| Unavailable endpoints, accounting or provider failures | Server configuration and logs |
 
 ## Automated checks
 
@@ -66,4 +66,4 @@ python tools/smoke_release.py /tmp/linxsci-release --uv uv
 
 The route coverage tests compare all 34 documented routes, then call the standalone skill against a local mock service through convenience commands and generic requests. They check authentication, raw ID encoding, repeated parameters, JSON, multipart, PDF headers, and binary output. Release smoke tests use fresh wheel and ZIP installations; optional uv checks use isolated tool/bin/cache directories and uninstall the temporary tool afterward.
 
-These checks validate transport and packaging, not live business fields, permissions, production data, or actual assistant behavior. Run the remote acceptance cases before claiming live deployment support. See [releasing](RELEASING.md).
+These checks validate transport and packaging, not live business fields, permissions, production data, or actual assistant behavior. Use integration cases to check the configured service. See [releasing](RELEASING.md).

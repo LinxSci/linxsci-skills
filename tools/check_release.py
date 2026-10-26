@@ -2,6 +2,7 @@
 """Verify release contents, checksums, versions and package metadata."""
 import hashlib
 import configparser
+import posixpath
 import re
 import subprocess
 import sys
@@ -44,14 +45,38 @@ def check(directory):
         assert entries['console_scripts']['linxsci'] == 'linxsci.scripts.cli:main'
         assert set(entries['console_scripts']) == {'linxsci'}, 'Unexpected console entry point'
     with tarfile.open(sdist) as archive:
-        assert any(name.endswith('/tools/build_release.py') for name in archive.getnames())
+        source_names = archive.getnames()
+        assert any(name.endswith('/tools/build_release.py') for name in source_names)
+        for name in ('RELEASING.md', 'RELEASING.zh-CN.md', 'TESTING.md', 'TESTING.zh-CN.md'):
+            assert any(path.endswith('/docs/' + name) for path in source_names), 'Missing maintainer guide: ' + name
+        assert not any('/WEBSITE_PUBLISHING' in name for name in source_names), 'Obsolete website plan in source archive'
     with zipfile.ZipFile(bundle) as archive:
         assert archive.testzip() is None
         prefix = 'linxsci-skills-' + version + '/'
         assert {prefix + 'skills/linxsci-skills/' + name for name in expected} <= set(archive.namelist())
         assert prefix + 'install.py' in archive.namelist()
-        for name in ('README.md', 'README.zh-CN.md', 'docs/API.md', 'docs/API.zh-CN.md', 'docs/USER_GUIDE.md', 'docs/USER_GUIDE.zh-CN.md'):
-            assert prefix + name in archive.namelist()
+        user_docs = {
+            'docs/' + name + language + '.md'
+            for name in ('USER_GUIDE', 'CLI_GUIDE', 'DEVELOPMENT', 'API')
+            for language in ('', '.zh-CN')
+        }
+        names = set(archive.namelist())
+        for name in user_docs | {'README.md', 'README.zh-CN.md'}:
+            assert archive.read(prefix + name) == (ROOT / name).read_bytes(), 'Stale bundled guide: ' + name
+        assert {name[len(prefix):] for name in names if name.startswith(prefix + 'docs/')} == user_docs, 'ZIP must contain only the bilingual user guides'
+        for name in ('README.md', 'README.zh-CN.md'):
+            assert prefix + name in names
+        # Links must work after extraction without maintainer docs from the repository.
+        for name in sorted(names):
+            if not name.endswith('.md'):
+                continue
+            document = archive.read(name).decode('utf-8')
+            for target in re.findall(r'\]\(([^)]+)\)', document):
+                if '://' in target or target.startswith(('#', 'mailto:')):
+                    continue
+                target_path = target.split('#', 1)[0]
+                resolved = posixpath.normpath(posixpath.join(posixpath.dirname(name), target_path))
+                assert resolved in names, 'Broken bundled link: ' + name + ' -> ' + target
         mode = archive.getinfo(prefix + 'Install.command').external_attr >> 16
         assert mode & 0o111, 'macOS launcher must be executable'
         assert not any('/.env' in name or '/config.json' in name or '/__pycache__/' in name

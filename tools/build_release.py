@@ -9,6 +9,11 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+USER_DOCUMENTS = tuple(
+    "docs/" + name + language + ".md"
+    for name in ("USER_GUIDE", "CLI_GUIDE", "DEVELOPMENT", "API")
+    for language in ("", ".zh-CN")
+)
 
 
 def bundle(output):
@@ -18,7 +23,7 @@ def bundle(output):
     target = output / ("linxsci-skills-" + version + ".zip")
     # Explicit allowlist prevents accidentally shipping local settings or credentials.
     files = [ROOT / name for name in ("install.py", "Install.command", "Install.bat", "README.md", "README.zh-CN.md")]
-    files += list((ROOT / "docs").glob("*.md"))
+    files += [ROOT / name for name in USER_DOCUMENTS]
     skill = ROOT / "skills/linxsci-skills"
     files += [skill / "SKILL.md", skill / "SKILL.zh-CN.md", skill / "service.json", skill / "__init__.py"]
     for directory, pattern in (("scripts", "*.py"), ("references", "*.md"), ("agents", "*.yaml")):

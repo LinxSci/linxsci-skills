@@ -2,26 +2,22 @@
 
 [English](API.md)
 
-LinxSci 的 `/openapi/v2` 将请求转发给独立 Agent API。客户端只需使用 LinxSci API Key；服务端负责向 Agent API 提供自己的 Key。接口路径、业务请求参数和上游业务响应以 Agent API 的 `/openapi/v1` 契约为准。健康检查分别转发到 Agent API 的 `/health/live` 和 `/health/ready`。
+服务根地址为 `https://linxsci.com`，接口前缀为 `/openapi/v2`，所有接口均需要 LinxSci API Key。业务 JSON 字段、分页及任务状态字段按对应接口的 API 契约使用。
 
-可直接导入 Postman 集合（当前仓库未包含该文件） 调用下表中的接口。
+## 认证与请求追踪
 
-## 认证和配置
-
-| 请求头 | 提供方 | 用途 |
+| 请求头 | 是否必填 | 用途 |
 | --- | --- | --- |
-| `Authorization: Bearer <LinxSci OpenAPI Key>` | 客户端 | LinxSci 校验 API Key，所有 v2 接口都需要。 |
-| `X-Request-ID` | 客户端，可选 | 转发给 Agent API；LinxSci 自身返回错误时也会在响应头回传。 |
-| `X-ANYTHINGRIGHT-REQ-ID` | 客户端，可选 | 指定 LinxSci 框架响应中的 `extra.request-id`；未提供时由框架生成。 |
-| `X-MinerU-API-Key` | 客户端，按需 | PDF 解析相关请求转发给 Agent API。 |
+| `Authorization: Bearer <LinxSci OpenAPI Key>` | 是 | 客户端鉴权 |
+| `X-Request-ID` | 否 | 上游/代理请求追踪；未提供时 SDK 自动生成 |
+| `X-ANYTHINGRIGHT-REQ-ID` | 否 | 框架请求追踪，对应框架错误的 `extra.request-id`；未提供时由服务生成 |
+| `X-MinerU-API-Key` | 按需 | PDF 解析接口所需的附加 Key |
 
-LinxSci 服务端配置 `AgentPublicServerIp` 和 `AgentPublicAPIKey`；相应环境变量 `AGENT_PUBLIC_API_URL`、`AGENT_PUBLIC_API_KEY` 可在配置项为空时使用。转发到 Agent API `/openapi/v1` 的请求会由服务端附加 `X-API-Key`，客户端无需提供第二把 Key。v2 的这组配置与旧版 Agent API 配置独立。
+客户端 Key 可通过本机配置向导或 `LINXSCI_OPENAPI_KEY` 设置。上游服务鉴权由 LinxSci 管理，客户端仅需按要求提供上述请求头。
 
 ## 接口目录
 
-以下为 LinxSci 对外路径。除健康检查外，上游使用相同的 HTTP 方法及 `/openapi/v1` 路径前缀。
-
-| Postman 分类 | 方法 | LinxSci 路径 | 接口 |
+| 分类 | 方法 | LinxSci 路径 | 接口 |
 | --- | --- | --- | --- |
 | 服务信息与健康检查 | GET | `/openapi/v2/meta` | 接口元信息 |
 | 服务信息与健康检查 | GET | `/openapi/v2/usage` | 用量信息 |
@@ -58,21 +54,17 @@ LinxSci 服务端配置 `AgentPublicServerIp` 和 `AgentPublicAPIKey`；相应�
 | PDF 解析 | GET | `/openapi/v2/pdf/parse/{task_id}` | 查询 PDF 解析任务 |
 | PDF 解析 | GET | `/openapi/v2/pdf/parse/{task_id}/result` | 获取 PDF 解析结果 |
 
-`paper_id` 支持 `local:`、`arxiv:`、`openalex:`、`s2:`、`doi:` 前缀。ID 中的 `/` 需要 URL 编码，例如 `doi:10.1000%2Fexample`。`POST` 接口的 JSON 字段按 Agent API 契约填写；Postman 中的 `{}` 只是待编辑模板。PDF 上传使用 `multipart/form-data` 的 `file` 字段，具体参数与文件大小限制以 Agent API 配置为准。
+论文 ID 支持 `local:`、`arxiv:`、`openalex:`、`s2:`、`doi:` 前缀。动态路径段需分别 URL 编码，包含 DOI 中的斜杠，例如 `doi:10.1000%2Fexample`。SDK/CLI 便捷方法接收原始 ID 并自动编码；通用请求接收已编码路径。POST JSON 按接口契约准备，不能假定 `{}` 通用有效。PDF 上传使用 multipart 的 `file` 字段，文件大小限制及附加字段由服务决定。
 
-## API Key 调用与计费流程
+## 用量与限额
 
-正常调用依次经过 LinxSci 的 API Key 校验、member 的 `/internal/openapi/calls/begin`、Agent API 转发和 member 的 `/internal/openapi/calls/finish`。若服务端 Agent API 配置缺失，请求会在 `begin` 前返回；若 `begin` 拒绝请求，则不会转发上游或调用 `finish`。路由映射生成固定的 `openapi_v2_*` action，例如论文资源接口的 action 为 `openapi_v2_paper_asset`。
-
-首次调用尚未登记的 action 时，member 会在 `openapi_register` 创建**待启用**记录；该次请求返回 HTTP 503，且不会转发给 Agent API。管理员按免费或计费策略配置并启用对应 action 后，才能继续调用。
-
-每次请求预计调用量为 1。Agent API 返回 2xx 时，实际调用量为 1；返回其他状态或发生连接失败时，实际调用量为 0，member 根据 `finish` 结果释放预占积分。每日调用限额由 member 检查。
+每次请求的预计调用量为 1。上游返回 2xx 时实际调用量为 1，其他状态或连接失败时为 0。预占积分在服务确认计量完成后释放，不能仅根据 HTTP 失败保证已经释放。每日限额及接口可用性由服务检查，需要时通过 `usage` 和下表错误码排查。
 
 ## 响应与错误
 
-Agent API 已返回且 `finish` 成功时，LinxSci 保留上游 HTTP 状态码和响应体，并透传 `Content-Type`、`X-Request-ID`、`Retry-After`、`Cache-Control`。这也适用于 Agent API 的业务错误，例如 `validation_error` 或 `asset_unavailable`；其错误体仍使用 Agent API 的格式。
+成功的上游响应保留其状态、响应体及相关响应头（`Content-Type`、`X-Request-ID`、`Retry-After`、`Cache-Control`）。`validation_error`、`asset_unavailable` 等业务错误保留原有响应模型。SDK 保留原始响应字节；CLI 的显示、字段筛选及文件输出见 [命令指南](CLI_GUIDE.zh-CN.md#紧凑输出与显式响应筛选)。
 
-LinxSci 自身产生的鉴权、配置、用量和连接错误使用统一框架结构：
+鉴权、服务配置、用量及连接等框架错误采用：
 
 ```json
 {
@@ -80,28 +72,27 @@ LinxSci 自身产生的鉴权、配置、用量和连接错误使用统一框架
   "data": {},
   "error": {
     "code": -3900,
-    "msg": "OpenAPI action openapi_v2_paper_asset has been registered but is not enabled. Ask an administrator to configure and enable it before retrying."
+    "msg": "This endpoint is not enabled. Contact the service administrator."
   },
-  "extra": {
-    "request-id": "example-request-id",
-    "cost": 0.01
-  }
+  "extra": {"request-id": "example-request-id", "cost": 0.01}
 }
 ```
 
-示例中的 HTTP 状态为 503；`extra.cost` 是本次请求耗时，单位为秒。这里的 `extra.request-id` 来自 `X-ANYTHINGRIGHT-REQ-ID` 或由框架生成。member 内部使用的 `-3501`、`-3500` 会分别转换为下表的对外错误码。
+该示例的 HTTP 状态为 503。`extra.cost` 是耗时，单位为秒，不是扣费金额。`extra.request-id` 来自 `X-ANYTHINGRIGHT-REQ-ID`，或由服务生成。
 
-| HTTP | `error.code` | 原因与处理 |
+| HTTP | `error.code` | 含义与处理 |
 | --- | --- | --- |
-| 401 | `-401` | LinxSci API Key 缺失、无效或无法识别用户；检查 `Authorization`。 |
-| 404 | `-404` | 未匹配到 v2 接口映射；检查路径和 HTTP 方法。 |
-| 503 | `-3900` | 接口 action 已登记但未启用；联系管理员配置、启用后重试。 |
-| 429 | `-3901` | 已达到每日调用限额；额度恢复后重试或联系管理员。 |
-| 503 | `-3902` | Agent API 地址或服务端 Key 未配置；联系服务端管理员。 |
-| 502 | `-3903` | Agent API 连接或传输失败；LinxSci 会尝试以失败结果调用 `finish`。 |
-| 502 | `-3904` | member 的 `begin` 未成功，尚未转发上游；检查 member 服务和内部鉴权配置。 |
-| 502 | `-3905` | Agent API 已返回，但 member 的 `finish` 未确认；先查询执行与计费结果，再决定是否重试可能产生写入的请求。 |
+| 401 | `-401` | 客户端 Key 缺失或无效，检查 Authorization 或重新运行配置向导 |
+| 404 | `-404` | 方法或路径不支持，核对接口目录 |
+| 503 | `-3900` | 接口未启用，联系服务管理员 |
+| 429 | `-3901` | 达到每日限额，等待额度恢复或联系管理员 |
+| 503 | `-3902` | 上游服务连接配置缺失，联系管理员 |
+| 502 | `-3903` | 上游连接或传输失败，检查服务连接后再决定是否重试 |
+| 502 | `-3904` | 请求准备失败，尚未转发，联系管理员 |
+| 502 | `-3905` | 上游已返回，但计量完成尚未确认，先核查执行和计费结果再决定是否重试 |
 
-## Postman 调用
+排查问题时保留两种请求 ID 和 `Retry-After`（如有）。结果不确定时，不自动重复上传或创建任务。尤其 `-3905` 不代表操作未执行，`Retry-After` 也不能替代执行结果核查。
 
-在 Postman 中设置 LinxSci 服务根地址和 Bearer API Key。GET 请求可直接按路径变量调用；POST 请求先按 Agent API 契约填写 JSON。调用 `/openapi/v2/pdf/parse/upload` 时，在 Postman 的 `file` 字段中选择本地 PDF。
+## 手动调用
+
+在 Postman 或其他 HTTP 客户端中设置服务根地址和 Bearer Key，再按上表选择方法和路径。POST 使用对应接口要求的 JSON。调用 `/openapi/v2/pdf/parse/upload` 时，在 multipart 的 `file` 字段选择本地 PDF。

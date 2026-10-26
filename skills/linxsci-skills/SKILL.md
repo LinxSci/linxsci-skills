@@ -86,7 +86,7 @@ python3 <skill-dir>/scripts/cli.py setup
 python3 <skill-dir>/scripts/cli.py setup --online
 ```
 
-The server's `AGENT_PUBLIC_API_KEY` is not a client key. `config` shows redacted settings. Clear configuration only when the user asks. `doctor` calls `/meta` and consumes a service call; reuse an existing successful connection check instead of probing repeatedly.
+`config` shows redacted settings. Clear configuration only when the user asks. `doctor` calls `/meta` and consumes a service call; reuse an existing successful connection check instead of probing repeatedly.
 
 ## Research workflow
 
@@ -137,7 +137,7 @@ Upstream responses and business errors keep their original format. Framework err
 | `-3901` | Wait for daily quota reset or administrative action |
 | `-3902` | Ask the administrator to configure the upstream URL/key |
 | `-3903` | Inspect upstream connectivity; failure does not prove the operation did not execute |
-| `-3904` | Member begin failed before forwarding; administrator investigation is needed |
-| `-3905` | Upstream returned but finish is unconfirmed; check execution and billing before retrying writes |
+| `-3904` | Request preparation failed before forwarding; contact the administrator |
+| `-3905` | Upstream returned but accounting completion is unconfirmed; check execution and billing before retrying writes |
 
-Do not treat all 502/503 errors identically. No automatic retries are performed. Preserve `Retry-After`, but it does not resolve `-3905` uncertainty. Expected call quantity is 1; upstream 2xx means actual 1, otherwise 0, with reserved-credit release confirmed by member finish. Do not guarantee release based solely on HTTP failure. Avoid redundant search, diagnosis and polling. See [the API reference](references/api.md) for details.
+Do not treat all 502/503 errors identically. No automatic retries are performed. Preserve `Retry-After`, but it does not resolve `-3905` uncertainty. Expected call quantity is 1; upstream 2xx means actual 1, otherwise 0, with reserved-credit release confirmed by the service. Do not guarantee release based solely on HTTP failure. Avoid redundant search, diagnosis and polling. See [the API reference](references/api.md) for details.

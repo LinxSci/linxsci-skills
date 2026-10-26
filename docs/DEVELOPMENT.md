@@ -15,9 +15,9 @@ linxsci --version
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 
-On Windows activate with `.venv\Scripts\activate`. Use the same environment for installation and execution. For a release wheel, install `linxsci-0.3.0-py3-none-any.whl`. After publication, use `python -m pip install linxsci` inside your application environment. A CLI installed by `uv tool install` lives in a separate environment.
+On Windows activate with `.venv\Scripts\activate`. Use the same environment for installation and execution. For a release wheel, install `linxsci-0.3.0-py3-none-any.whl`. A CLI installed by `uv tool install` lives in a separate environment.
 
-The project and skill are named `linxsci-skills`; the Python distribution, import and terminal command are `linxsci`. Earlier package names, client classes, environment prefixes and configuration directories have been replaced. Uninstall obsolete distributions using the original package manager, update imports to `LinxSciClient` / `LinxSciError`, configure the new `LINXSCI_*` variables or rerun setup, and remove obsolete skill copies from scan directories using their original installer. The current installer updates only its managed `linxsci-skills` directory.
+The project and Skill are named `linxsci-skills`; the Python package, import and terminal command are `linxsci`.
 
 ## Configuration
 
@@ -52,7 +52,7 @@ except LinxSciError as error:
     print(error.request_id, error.framework_request_id)
 ```
 
-`python examples/research.py "graph neural networks"` runs the bundled example. Client construction loads settings without issuing an HTTP request.
+In a source checkout, `python examples/research.py "graph neural networks"` runs the repository example. Client construction loads settings without issuing an HTTP request.
 
 ```python
 paper_id = "<actual-returned-paper-id>"
@@ -173,17 +173,10 @@ response = client.request(
 )
 ```
 
-The two IDs have different purposes. Framework IDs may also be set on the constructor. See [API errors and accounting](API.md) for all public codes. `-3905` means upstream returned but accounting finish is uncertain: query execution and billing before repeating a possible write. The client does not retry automatically. `Retry-After` does not resolve uncertain execution.
+The two IDs have different purposes. Framework IDs may also be set on the constructor. See [API errors and accounting](API.md) for all public codes. `-3905` means upstream returned but accounting completion is uncertain: query execution and billing before repeating a possible write. The client does not retry automatically. `Retry-After` does not resolve uncertain execution.
 
-## CLI, skill and extensions
+## CLI and Skill
 
-The CLI exposes common actions directly under `linxsci`; see [all endpoint commands](CLI_GUIDE.md). Skill installation is optional for SDK use. Run `linxsci install-skill --update` after source changes to refresh a managed assistant copy.
+The CLI exposes actions directly under `linxsci`; see [all commands and parameters](CLI_GUIDE.md). The Skill runs independently through its bundled scripts; see [Skill installation](../skills/linxsci-skills/SKILL.md#install-the-skill-independently). SDK applications do not need a Skill installation.
 
-The package maps `linxsci` to `skills/linxsci-skills`. `scripts/cli.py` handles the root command, `commands.py` implements current actions, `client.py` handles transport, `config.py` handles settings, and `installer.py` copies the self-contained skill. Keep scripts usable without installing the SDK. New capability groups may be registered in `cli.CAPABILITIES` only when their handlers are implemented and packaged; handlers receive their own argv and a `prog` display name. Do not advertise unimplemented capabilities.
-
-```bash
-python -m unittest discover -s tests -v
-python tools/build_release.py --bundle-only
-```
-
-See [testing](TESTING.md) for remote acceptance and [releasing](RELEASING.md) for artifact checks.
+Install an updated source or wheel in the same Python environment. After updating the package, `linxsci install-skill --update` refreshes a managed assistant copy while retaining a backup. External-installer copies should be updated with their original installer.

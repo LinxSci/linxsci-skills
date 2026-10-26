@@ -1,8 +1,8 @@
-# 测试环境验收与 Skill 调优
+# 测试与 Skill 验证
 
 [English](TESTING.md)
 
-本地源码可以直接连接远程测试服务 `http://101.126.93.213:28888`。无需每次修改都先推送 Git 或重新生成安装包。Git 用于协作和记录版本；请求由你本地运行的脚本发往远程 LinxSci。
+本地源码可连接自行配置的测试服务；下文的 `https://api.example.com` 是示例地址，执行前请替换为实际可用的服务根地址。无需每次修改都先推送 Git 或重新生成安装包。Git 用于协作和记录版本；请求由你本地运行的脚本发往远程 LinxSci。
 
 发行包默认连接正式服务 `https://linxsci.com`，本页命令通过 `--base-url` 显式选择测试环境。测试完成后可运行 `linxsci setup --online` 切回正式服务；已有配置和环境变量优先于发行默认值。
 
@@ -19,7 +19,7 @@ python3 -m pip install --upgrade pip setuptools wheel
 python3 -m pip install -e .
 linxsci --version
 linxsci --help
-linxsci setup --base-url http://101.126.93.213:28888
+linxsci setup --base-url https://api.example.com
 ```
 
 Windows 激活使用 `.venv\Scripts\activate`，其余命令在对应 Python 环境中执行。Key 在向导中隐藏输入，不能发到聊天或写入 Git。`setup` 默认完成一次 `/meta` 连接检查；看到成功后，不必紧接着再运行 `doctor`。
@@ -54,7 +54,7 @@ linxsci paper '同一个实际论文ID' --resource sections --item-id '目录返
 | `-401` | LinxSci Key 和环境变量覆盖 |
 | `-3900` | 对应 action 未启用，请管理员配置并启用 |
 | `-3901` | 每日调用限额 |
-| `-3902` / `-3903` / `-3904` | 服务端配置、上游连接、member begin |
+| `-3902` / `-3903` / `-3904` | 服务端配置、上游连接或请求准备失败 |
 | `-3905` | 上游已返回但 finish 未确认，先核查执行与计费结果，不直接重复创建任务或上传 |
 | CLI 成功，助手失败 | 助手是否读到正确 Skill、执行路径、命令参数和阅读策略 |
 
@@ -138,12 +138,12 @@ A8 会把文件发送到测试服务，只使用适合该测试的文件。真�
 | `linxsci` 下能力列表或命令转发有问题 | `skills/linxsci-skills/scripts/cli.py` 的 `CAPABILITIES` 和分派逻辑；入口注册检查 `pyproject.toml` |
 | 配置、命令参数或提示不易使用 | `skills/linxsci-skills/scripts/commands.py`、`config.py` |
 | 测到旧代码或安装失败 | `installer.py` 与助手实际读取路径 |
-| 服务端 action、member、上游失败 | 服务端配置/服务日志，不能通过改提示词修复 |
+| 接口未启用、计量或上游失败 | 服务端配置/服务日志，不能通过改提示词修复 |
 
 每次围绕一个已观察到的问题做最小改动，复跑原失败题及相关正常题。改 Python 逻辑后运行 `python3 -m unittest discover -s tests -v`；只改 Skill 文字时优先复测真实助手行为，文字改了并不代表行为必然改善。
 
 全接口覆盖由 `tests/test_framework_errors.py` 对照原始接口文档检查方法/路径，再由 `tests/test_api_coverage.py` 逐条运行 Skill 的独立脚本，分别用便捷命令和通用入口向本机模拟服务发送全部 34 个接口请求。后者检查认证、动态 ID 编码、重复查询参数、JSON、multipart 上传、PDF 可选请求头及响应文件内容。这些测试验证调用链，不验证真实服务的业务参数、权限或响应数据。发布冒烟测试还会从新安装的 wheel 和 ZIP 各通过便捷命令调用一遍全部接口。
 
-验证 uv 工具安装时运行 `python tools/smoke_release.py dist --uv uv`。它使用临时工具目录、命令目录和缓存，通过本地 wheel 离线安装，覆盖全部 34 个接口、随包 Skill 安装与更新及工具卸载，不修改当前用户的 uv 工具环境。CI 已包含这项检查；这不等于包已发布到 PyPI。
+验证 uv 工具安装时运行 `python tools/smoke_release.py dist --uv uv`。它使用临时工具目录、命令目录和缓存，通过本地 wheel 离线安装，覆盖全部 34 个接口、随包 Skill 安装与更新及工具卸载，不修改当前用户的 uv 工具环境。CI 包含此项安装检查。
 
-本地测试满意后再提交和推送 Git。需要交付安装包时，按发布指南重新构建并运行 `tools/check_release.py` 和 `tools/smoke_release.py`。无需每个调优回合都重新发版。
+安装产物的构建与检查见 [维护者指南](RELEASING.zh-CN.md)。

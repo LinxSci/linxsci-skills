@@ -6,11 +6,11 @@
 
 本 Skill 不依赖已安装的 CLI、SDK 或 PyPI 包。准备你的 LinxSci API Key，安装 Python 3.9 或更新版本，并使用一个支持本地 Skill 和脚本执行的 AI 助手。普通网页聊天并不一定支持读取你电脑上的 Skill。
 
-本包默认使用正式服务 `https://linxsci.com`，无需在你的电脑部署 LinxSci。使用其他环境时在向导中修改地址，测试环境配置见 [测试指南](TESTING.zh-CN.md)。
+本包默认使用正式服务 `https://linxsci.com`，无需在你的电脑部署 LinxSci。使用其他环境时在向导中修改地址，配置参数见 [CLI 指南](CLI_GUIDE.zh-CN.md#setup)。
 
 ## 安装与首次配置
 
-官方仓库为 [LinxSci/linxsci-skills](https://github.com/LinxSci/linxsci-skills)，完整 Skill 位于 `skills/linxsci-skills/`。发布方也可以提供 ZIP 下载。
+官方仓库为 [LinxSci/linxsci-skills](https://github.com/LinxSci/linxsci-skills)，完整 Skill 位于 `skills/linxsci-skills/`。也可使用完整的源码压缩包或独立 Skill 安装包。
 
 通过支持 GitHub Skill 的安装器安装，按提示选择目标助手和安装范围：
 
@@ -29,7 +29,7 @@ python3 /absolute/path/to/installed/linxsci-skills/scripts/cli.py setup
 
 第一条命令默认复制到 `~/.agents/skills/linxsci-skills`，第二条使用安装后脚本的实际绝对路径。通过 `--skills-dir` 可指定其他助手扫描父目录。独立安装步骤及安装器参数详见 [Skill 说明](../skills/linxsci-skills/SKILL.zh-CN.md#独立安装-skill)。本工具仅更新由其托管的副本，外部安装器管理的 Skill 使用原安装方式更新。ZIP 的完整流程如下。
 
-下载发布方提供的 ZIP，完整解压，不要直接在压缩包中执行。macOS 双击 `Install.command`，Windows 双击 `Install.bat`。向导会安装 Skill，然后提示输入服务地址和 Key，并检查连接。
+下载源码压缩包或独立 Skill ZIP，完整解压，不要直接在压缩包中执行。macOS 双击 `Install.command`，Windows 双击 `Install.bat`。向导会安装 Skill，然后提示输入服务地址和 Key，并检查连接。
 
 如果双击不运行，打开终端进入解压目录，执行：
 
@@ -121,7 +121,7 @@ python3 install.py --update
 | `-3901` 每日调用限额 | 等待额度恢复或联系管理员 |
 | `-3902` 服务端上游未配置 | 联系服务端管理员 |
 | `-3903` 上游连接失败 | 联系服务维护者检查连接 |
-| `-3904` 调用开始失败 | 尚未转发上游，联系管理员检查 member 服务 |
+| `-3904` 调用开始失败 | 请求尚未转发，联系服务管理员 |
 | `-3905` 执行和计费结果未确认 | 先核查执行与计费结果，不要直接重复上传或创建任务 |
 | Skill 已存在 | 工具安装的版本使用 `--update`；手动安装先备份 |
 

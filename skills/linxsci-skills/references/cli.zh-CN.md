@@ -449,7 +449,7 @@ python3 "<skill-dir>/scripts/cli.py" request GET "/papers/doi:10.1000%2Fexample/
 | `LINXSCI_CONFIG_FILE` | 覆盖配置文件路径；默认 macOS/Linux 为 `~/.config/linxsci-skills/config.json`，Windows 为 `%LOCALAPPDATA%\linxsci-skills\config.json` |
 | `LINXSCI_MINERU_API_KEY` | PDF 命令及通用 PDF 请求可选的 `X-MinerU-API-Key`，不会发送到其他接口 |
 
-保存的配置优先于发行默认值，环境变量优先于保存的配置。客户端 Key 与服务端的 `AGENT_PUBLIC_API_KEY` 不同。
+保存的配置优先于发行默认值，环境变量优先于保存的配置。使用 LinxSci 客户端 Key 完成鉴权。
 
 接口成功后默认输出紧凑 JSON，大响应和二进制使用上文的文件引用规则。全局 `--output` 保留原始响应字节。不要假定接口拥有统一的列表、分页或任务状态字段。
 

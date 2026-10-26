@@ -4,7 +4,7 @@
 
 ## 选择调用入口
 
-使用已安装 CLI 时，可通过 `python -m pip install /path/to/linxsci-0.3.0-py3-none-any.whl` 安装发行 wheel；正式发布到 PyPI 后可使用 `uv tool install linxsci`。源码开发者可执行 `python -m pip install -e .`，终端命令为 `linxsci`。
+使用已安装 CLI 时，可通过 `python -m pip install /path/to/linxsci-0.3.0-py3-none-any.whl` 安装发行 wheel；隔离的 CLI 环境可使用 `uv tool install /path/to/linxsci-0.3.0-py3-none-any.whl`。源码开发者可执行 `python -m pip install -e .`，终端命令为 `linxsci`。
 
 Skill 可以独立运行，不需要安装 CLI 或 SDK。下载完整 Skill 后，将下文所有示例中的 `linxsci` 替换为 `python3 "/absolute/path/to/linxsci-skills/scripts/cli.py"` 即可；Windows 使用 `py -3` 和实际脚本路径。安装方式见 [Skill 说明](../skills/linxsci-skills/SKILL.zh-CN.md#独立安装-skill)。
 
@@ -453,7 +453,7 @@ linxsci request GET "/papers/doi:10.1000%2Fexample/toc"
 | `LINXSCI_CONFIG_FILE` | 覆盖配置文件路径；默认 macOS/Linux 为 `~/.config/linxsci-skills/config.json`，Windows 为 `%LOCALAPPDATA%\linxsci-skills\config.json` |
 | `LINXSCI_MINERU_API_KEY` | PDF 命令及通用 PDF 请求可选的 `X-MinerU-API-Key`，不会发送到其他接口 |
 
-保存的配置优先于发行默认值，环境变量优先于保存的配置。客户端 Key 与服务端的 `AGENT_PUBLIC_API_KEY` 不同。
+保存的配置优先于发行默认值，环境变量优先于保存的配置。使用 LinxSci 客户端 Key 完成鉴权。
 
 接口成功后默认输出紧凑 JSON，大响应和二进制使用上文的文件引用规则。全局 `--output` 保留原始响应字节。不要假定接口拥有统一的列表、分页或任务状态字段。
 

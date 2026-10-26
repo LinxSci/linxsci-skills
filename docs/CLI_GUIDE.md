@@ -4,7 +4,7 @@
 
 ## Choose an entry point
 
-For the installed CLI, install a release wheel with `python -m pip install /path/to/linxsci-0.3.0-py3-none-any.whl`. After publication to PyPI, CLI users can use `uv tool install linxsci`. Source users can run `python -m pip install -e .`. The terminal command is `linxsci`.
+For the installed CLI, install a release wheel with `python -m pip install /path/to/linxsci-0.3.0-py3-none-any.whl`. For an isolated CLI environment, use `uv tool install /path/to/linxsci-0.3.0-py3-none-any.whl`. Source users can run `python -m pip install -e .`. The terminal command is `linxsci`.
 
 The Skill runs independently: no CLI or SDK installation is required. After downloading the complete Skill, use `python3 "/absolute/path/to/linxsci-skills/scripts/cli.py"` instead of `linxsci` in every example below. On Windows, use `py -3` with the actual script path. For installation instructions, see [the Skill](../skills/linxsci-skills/SKILL.md#install-the-skill-independently).
 
@@ -486,7 +486,7 @@ Search `--body` must parse to an object; other JSON bodies must follow the selec
 | `LINXSCI_CONFIG_FILE` | Override configuration path; otherwise `~/.config/linxsci-skills/config.json` on macOS/Linux or `%LOCALAPPDATA%\linxsci-skills\config.json` on Windows |
 | `LINXSCI_MINERU_API_KEY` | Optional `X-MinerU-API-Key` on PDF commands and generic PDF requests; not sent to other endpoints |
 
-Saved settings override release defaults; environment overrides saved settings. Do not confuse the client's key with the server's `AGENT_PUBLIC_API_KEY`.
+Saved settings override release defaults; environment overrides saved settings. Use the LinxSci client key for authentication.
 
 Successful endpoint calls use compact JSON by default, with file references for large or binary responses as described above. Global `--output` preserves original response bytes. There is no common guaranteed list, pagination or task-status schema.
 

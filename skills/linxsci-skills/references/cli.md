@@ -482,7 +482,7 @@ Search `--body` must parse to an object; other JSON bodies must follow the selec
 | `LINXSCI_CONFIG_FILE` | Override configuration path; otherwise `~/.config/linxsci-skills/config.json` on macOS/Linux or `%LOCALAPPDATA%\linxsci-skills\config.json` on Windows |
 | `LINXSCI_MINERU_API_KEY` | Optional `X-MinerU-API-Key` on PDF commands and generic PDF requests; not sent to other endpoints |
 
-Saved settings override release defaults; environment overrides saved settings. Do not confuse the client's key with the server's `AGENT_PUBLIC_API_KEY`.
+Saved settings override release defaults; environment overrides saved settings. Use the LinxSci client key for authentication.
 
 Successful endpoint calls use compact JSON by default, with file references for large or binary responses as described above. Global `--output` preserves original response bytes. There is no common guaranteed list, pagination or task-status schema.
 

@@ -88,7 +88,7 @@ python3 <skill-dir>/scripts/cli.py setup
 python3 <skill-dir>/scripts/cli.py setup --online
 ```
 
-不要把服务端的 `AGENT_PUBLIC_API_KEY` 当成客户端 Key。`config` 仅显示配置状态，`config --clear` 清除保存的配置；执行清除需来自用户请求。
+`config` 仅显示配置状态，`config --clear` 清除保存的配置；执行清除需来自用户请求。
 
 ```bash
 python3 <skill-dir>/scripts/cli.py doctor
@@ -152,9 +152,9 @@ python3 <skill-dir>/scripts/cli.py --output /absolute/path/asset.bin paper 'arxi
 | `-3901` | 每日调用限额已满，额度恢复后或管理员处理后再调用 |
 | `-3902` | 服务端 Agent API 地址或 Key 缺失，联系管理员 |
 | `-3903` | 上游连接/传输失败，检查连接；不要将失败等同于业务操作一定未执行 |
-| `-3904` | member begin 未成功，未转发上游，交由管理员排查 |
-| `-3905` | 上游已返回但 finish 未确认，先查询执行与计费结果，再决定是否重试，尤其不要直接重复上传或创建解析任务 |
+| `-3904` | 请求准备失败，未转发上游，联系管理员排查 |
+| `-3905` | 上游已返回但计量完成尚未确认，先查询执行与计费结果，再决定是否重试，尤其不要直接重复上传或创建解析任务 |
 
 上游业务错误（例如 `validation_error`、`asset_unavailable`）保留其原有格式；不要把全部 502/503 当作相同原因。脚本不自动重试；保留 `Retry-After`，但它不能替代 `-3905` 的执行/计费核查。
 
-每次请求预计调用量为 1，Agent API 2xx 对应实际调用量 1，其他状态或连接失败对应 0，预占释放由 member finish 结果确认。不要根据 HTTP 失败自行保证扣费已经释放，尤其遇到 `-3905`。避免无目的的重复检索、诊断与轮询；查询动作也走调用限额。详细规则见 [references/api.md](references/api.zh-CN.md)。
+每次请求预计调用量为 1，Agent API 2xx 对应实际调用量 1，其他状态或连接失败对应 0，预占释放由 服务确认计量完成后确定。不要根据 HTTP 失败自行保证扣费已经释放，尤其遇到 `-3905`。避免无目的的重复检索、诊断与轮询；查询动作也走调用限额。详细规则见 [references/api.md](references/api.zh-CN.md)。

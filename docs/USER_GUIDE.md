@@ -45,8 +45,6 @@ python3 "<skill-dir>/scripts/cli.py" config --clear
 
 For a ZIP update, extract the new bundle and run `python3 install.py --update`. Use `--no-config` when configuration is already valid. Keep customized or externally installed copies under their original installer's management.
 
-The current configuration uses `LINXSCI_*` variables and the `linxsci-skills` directory. After upgrading from older naming, rerun setup and update deployment variables; remove obsolete skill copies from assistant scan directories using their installation tool.
-
 ## Troubleshooting
 
 | Symptom | Action |
@@ -58,4 +56,4 @@ The current configuration uses `LINXSCI_*` variables and the `linxsci-skills` di
 | Search is empty | Adjust the query and report the empty result honestly |
 | PDF creation has an uncertain result | Inspect task and billing status before resubmitting |
 
-See [independent Skill installation and installer parameters](../skills/linxsci-skills/SKILL.md#install-the-skill-independently), [standalone commands and all parameters](../skills/linxsci-skills/references/cli.md), [CLI commands](CLI_GUIDE.md), [error codes](API.md), and [testing](TESTING.md).
+See [independent Skill installation and installer parameters](../skills/linxsci-skills/SKILL.md#install-the-skill-independently), [standalone commands and all parameters](../skills/linxsci-skills/references/cli.md), [CLI commands](CLI_GUIDE.md), [error codes](API.md).
