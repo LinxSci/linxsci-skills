@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tarfile
 import zipfile
+from email.parser import BytesParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,10 +37,10 @@ def check(directory):
         assert {'linxsci/' + name for name in expected} <= set(archive.namelist())
         for name in expected:
             assert archive.read('linxsci/' + name) == (ROOT / 'skills/linxsci-skills' / name).read_bytes(), 'Stale packaged file: ' + name
-        pkg_metadata = archive.read('linxsci-' + version + '.dist-info/METADATA').decode()
-        assert 'Requires-Dist:' not in pkg_metadata, 'Runtime dependencies are expected to be empty'
-        assert 'Version: ' + version in pkg_metadata
-        assert 'Name: linxsci\n' in pkg_metadata
+        pkg_metadata = BytesParser().parsebytes(archive.read('linxsci-' + version + '.dist-info/METADATA'))
+        assert not pkg_metadata.get_all('Requires-Dist'), 'Runtime dependencies are expected to be empty'
+        assert pkg_metadata['Version'] == version
+        assert pkg_metadata['Name'] == 'linxsci'
         entries = configparser.ConfigParser()
         entries.read_string(archive.read('linxsci-' + version + '.dist-info/entry_points.txt').decode())
         assert entries['console_scripts']['linxsci'] == 'linxsci.scripts.cli:main'
