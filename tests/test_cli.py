@@ -70,7 +70,7 @@ class UnifiedCLITests(unittest.TestCase):
                                {"error": {"code": -3905}, "extra": {"request-id": "root-framework"}})
         output, errors = io.StringIO(), io.StringIO()
         with patch.object(LinxSciClient, "request", autospec=True, side_effect=failure) as request, contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
-            self.assertEqual(cli.main(["--json-errors", "--framework-request-id", "root-framework", "search", "-3905"]), 1)
+            self.assertEqual(cli.main(["--json-errors", "--framework-request-id", "root-framework", "search", "-3905"]), 1, errors.getvalue())
             self.assertEqual(request.call_count, 1)
             self.assertEqual(request.call_args.kwargs["payload"], {"query": "-3905"})
         report = json.loads(errors.getvalue())

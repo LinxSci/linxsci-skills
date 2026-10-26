@@ -30,7 +30,7 @@ jobs:
         run: python -m unittest discover -s tests -v > test-results.txt 2>&1
       - name: Report test failures
         if: failure()
-        run: python -c "from pathlib import Path; p = Path('test-results.txt'); text = p.read_text(encoding='utf-8') if p.exists() else 'Tests did not start'; print('::error::' + text[-12000:].replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))"
+        run: python -c "from pathlib import Path; p = Path('test-results.txt'); text = p.read_text(encoding='utf-8') if p.exists() else 'Tests did not start'; [print('::error::' + text[i:i+2000].replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')) for i in range(0, len(text), 2000)]"
       - run: python tools/build_release.py
       - run: python tools/check_release.py dist
       - run: python tools/smoke_release.py dist --uv uv
