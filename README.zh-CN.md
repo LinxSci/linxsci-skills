@@ -2,6 +2,8 @@
 
 [English](README.md)
 
+接口默认输出紧凑 JSON，错误默认以结构化 JSON 写入 stderr，人工阅读可用 `--pretty` 或 `--human-errors`。全局 `--select`、`--fields`、`--limit` 按已知真实模型精简本地响应，`--table` 合并重复字段。超过 12000 输出字符的大响应和二进制资源保存到私有临时文件并返回 JSON 引用；`--output PATH --output-summary` 可保存原始字节到指定位置并返回元信息。详见 [输出参数](docs/CLI_GUIDE.zh-CN.md#紧凑输出与显式响应筛选)。
+
 让 AI 助手帮你搜索学术论文、阅读相关章节、查询引用，并解析你指定的 PDF。
 
 你需要一个已有的 LinxSci API Key，以及能够执行本地 Python 脚本的 AI 助手。运行环境需要 **Python 3.9+**；本工具不需要额外 Python 运行依赖。

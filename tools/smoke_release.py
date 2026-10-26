@@ -97,6 +97,15 @@ def check(directory, uv=None):
             check_all_routes(cli)
             assert json.loads(run(cli + ["doctor", "--json"]))["ok"]
             assert json.loads(run(cli + ["search", "test topic"]))["data"][0]["query"] == "test topic"
+            # Verify the installed wheel includes local response views and compact output.
+            compact = run(cli + ["search", "test topic"])
+            assert compact.count("\n") == 1
+            projected = json.loads(run(cli[:1] + ["--select", "/data", "--fields", "id", "--table", "search", "test topic"]))
+            assert projected == {"columns": ["id"], "rows": [["arxiv:2301.07041"]]}
+            saved_response = root / "saved-search.json"
+            summary = json.loads(run(cli[:1] + ["--output", str(saved_response), "--output-summary", "search", "test topic"]))
+            assert summary["file"] == str(saved_response.resolve())
+            assert json.loads(run(cli[:1] + ["--select", "/data/0/id", "read-output", str(saved_response)])) == "arxiv:2301.07041"
             run(cli + ["install-skill", "--skills-dir", str(root / "wheel-skills")])
             installed = root / "wheel-skills/linxsci-skills/scripts/cli.py"
             run([str(python), str(installed), "doctor"])

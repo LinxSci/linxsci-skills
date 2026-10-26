@@ -22,15 +22,53 @@ python3 "<skill-dir>/scripts/cli.py" COMMAND --help
 | `--version` | Flag | Print the version and exit |
 | `--timeout SECONDS` | Number, default `60` | Positive finite network timeout in seconds; not a total timeout for a PDF task |
 | `--output PATH` | File path, unset | For API responses, write original response bytes to this file instead of stdout; overwrites an existing file; the parent directory must exist |
-| `--json-errors` | Flag, off | Write structured failure diagnostics to stderr; does not change successful API responses |
+| `--json-errors` | Flag, on by default | Write structured failure diagnostics to stderr; does not change successful API responses |
+| `--pretty` | Flag, off | Indent successful JSON and local JSON reports for terminal reading |
+| `--human-errors` | Flag, off | Use human-readable stderr errors; mutually exclusive with `--json-errors` |
+| `--select POINTER` | JSON Pointer, unset | Select an actual response value, e.g. `/data/items`; empty string selects the root |
+| `--fields KEYS` | Comma-separated literal names, unset | Keep these fields in the selected object or each array object; every requested field must exist |
+| `--limit N` | Nonnegative integer, unset | Locally keep the first N selected array items; does not request server pagination |
+| `--table` | Flag, off | Encode a uniform selected object array as `columns` and `rows` |
+| `--max-output-chars N` | Nonnegative integer, default `12000` | If formatted endpoint output exceeds N characters, save the full original response and return file metadata plus a bounded preview; `0` disables this threshold |
+| `--output-summary` | Flag, off | With `--output`, print JSON containing the saved absolute path, byte count and available content type |
 | `--framework-request-id ID` | Nonempty printable ASCII, unset | Send `X-ANYTHINGRIGHT-REQ-ID`; framework errors expose it as `extra.request-id`; the server generates the framework ID when omitted |
 
-`--output` applies to endpoint responses, not local configuration/help output or the doctor's diagnostic report. For example:
+`--output` applies to endpoint responses and `read-output`, not configuration/help output or the doctor's diagnostic report. For example:
 
 ```bash
 python3 "<skill-dir>/scripts/cli.py" --timeout 90 --output search.json search "graph neural networks"
 python3 "<skill-dir>/scripts/cli.py" --framework-request-id framework-001 meta --request-id upstream-001
 ```
+
+## Compact output and explicit response views
+
+Endpoint data and errors default to compact JSON, with Unicode characters emitted directly. `--pretty` indents successful JSON; `--human-errors` restores readable error text. `--json-errors` remains available as an explicit compatibility flag for the default error mode. Help/version and interactive setup prompts remain human-readable; setup's connection check is a JSON report. `config`, `routes`, `install-skill`, and `doctor` produce compact JSON; `doctor --text` provides a readable report.
+
+Response views run **locally after one API request**, in this order: select a value, limit an array, project fields, then optionally encode a table. They do not change the request body, URL parameters, billing or server pagination. They apply to endpoint commands and local `read-output`; the CLI rejects using them with configuration/installation/diagnostic commands. Use actual response keys, rather than guessing a provider's schema.
+
+For example, **if an inspected response** contains `data.items` and each item has `id`, `title`, and `url`:
+
+```bash
+python3 "<skill-dir>/scripts/cli.py" --select /data/items --fields id,title,url --limit 3 search "graph neural networks"
+python3 "<skill-dir>/scripts/cli.py" --select /data/items --fields id,title,url --limit 3 --table search "graph neural networks"
+```
+
+`--select` follows [JSON Pointer](https://www.rfc-editor.org/rfc/rfc6901.html): `/data/items/0` selects the first item, `~1` represents `/` inside a key, and `~0` represents `~`. It supports exact keys and array indices, not wildcards. `--fields` selects literal top-level keys from the selected object(s), not dotted paths; missing keys or mismatched types produce a local output error instead of an empty result. Explicitly selected `null`, `false`, zero and empty values are preserved. Empty optional diagnostic fields are omitted from error reports; upstream business data is not silently cleaned.
+
+When `--limit` omits items, output is wrapped as `{"data":...,"total":N,"returned":M,"truncated":true}`. Here `total` is the number of items in the **already received array**, not the service's total result count. `--limit 0` intentionally returns no items. `--table` requires objects with identical field sets; `--fields` can choose their common fields first. It emits `{"columns":[...],"rows":[...]}` and preserves nested values as JSON. Empty arrays are supported.
+
+Large output defaults to a `12000`-character spill threshold, measured on formatted output, not tokens or network bytes. Above the threshold, the complete **original response bytes** are saved in a private system temporary directory. Stdout contains `file` (absolute path), `bytes`, available `content_type`, `reason:"output_limit"`, `raw_response:true`, `truncated:true`, `output_chars`, and `preview` (up to 500 characters, or the chosen threshold if smaller). The preview may be incomplete JSON and must not be treated as the full result. This is a spill trigger, not a strict cap on the metadata report length. Files persist for subsequent local reads; remove them when no longer needed.
+
+Binary responses, including PDF/image/audio/video media, are saved to a temporary file with `reason:"binary_response"`; their bytes are not dumped into the model's context. Short UTF-8 non-JSON text is wrapped as `{"text":"..."}`. Use `--max-output-chars 0` to print a full JSON/text response when deliberately needed; binary responses still use file references.
+
+For a chosen destination, the existing `--output` behavior remains: save exact response bytes and leave stdout empty. Add `--output-summary` to receive file metadata:
+
+```bash
+python3 "<skill-dir>/scripts/cli.py" --output paper.json --output-summary paper "<paper-id>" --resource content
+python3 "<skill-dir>/scripts/cli.py" --pretty --max-output-chars 0 meta
+```
+
+`--output-summary` requires `--output`. Raw `--output` cannot be combined with `--select`, `--fields`, `--limit`, or `--table`; it always saves the original response. If local formatting or saving fails **after a successful API call**, the stderr JSON has `error_code:"response_output_error"`, `request_completed:true`, and `do_not_repeat:true`, with the original response file if recovery succeeds. Use `read-output` on that file to correct the view locally; do not repeat an upload/task creation just to fix formatting.
 
 ## Shared endpoint options
 
@@ -45,7 +83,7 @@ The endpoint commands below all accept these options. Local commands `setup`, `c
 python3 "<skill-dir>/scripts/cli.py" paper "<paper-id>" --param "<contract-key>=<value>" --request-id upstream-001
 ```
 
-For a contract-defined multi-value key, repeat `--param "KEY=VALUE1" --param "KEY=VALUE2"`. Do not append query strings to a generic request path. `--param` is for URL parameters; `--body` is for JSON; `--field` is for upload form fields. They are not interchangeable. There are no built-in `--limit`, `--page`, or `--year` flags; pass such fields only if the deployed upstream contract defines them.
+For a contract-defined multi-value key, repeat `--param "KEY=VALUE1" --param "KEY=VALUE2"`. Do not append query strings to a generic request path. `--param` is for URL parameters; `--body` is for JSON; `--field` is for upload form fields. They are not interchangeable. Global `--limit` only trims the received response locally; it is not an upstream pagination parameter. There are no built-in `--page` or `--year` flags. Send server-side fields through `--param` or `--body` only as defined by the upstream contract.
 
 ## Configuration and local commands
 
@@ -84,7 +122,7 @@ python3 "<skill-dir>/scripts/cli.py" doctor
 python3 "<skill-dir>/scripts/cli.py" doctor --json
 ```
 
-`--json` is an optional flag (off by default) that prints the diagnostic report as JSON on stdout. Reports include `ok`, effective `base_url`, configuration information and, when available, status/error/trace metadata. A missing or invalid local configuration gives exit code 2; service failure gives 1; success gives 0. The check makes a real `/meta` request and requires a configured key. A 200 HTML login page does not count as a working JSON API. Avoid redundant checks because they follow normal call accounting.
+`--json` is retained as a compatibility flag: JSON is already the default report format. Optional `--text` (off by default) selects a readable report; the two flags are mutually exclusive. Reports go to stdout. Reports include `ok`, effective `base_url`, configuration information and, when available, status/error/trace metadata. A missing or invalid local configuration gives exit code 2; service failure gives 1; success gives 0. The check makes a real `/meta` request and requires a configured key. A 200 HTML login page does not count as a working JSON API. Avoid redundant checks because they follow normal call accounting.
 
 ### routes
 
@@ -108,6 +146,16 @@ python3 "<skill-dir>/scripts/cli.py" install-skill --update
 | `--update` | Flag, off | Replace a copy managed by this installer and keep the old version in a sibling `linxsci-skill-backups` directory outside the scan directory |
 
 This action uses local bundled files and needs no key or network. It also works through the standalone skill script without an installed CLI/SDK. When updating, run the command from the **new** downloaded source/bundle so that the new files are copied. The installer rejects symlink destinations and unmanaged or mismatched installation markers; use the original external installer for its copies. This action does not configure a key or register a terminal command.
+
+### read-output
+
+Filter a saved original response locally, without a key or network request. Use it to fix a response view without calling the service again:
+
+```bash
+python3 "<skill-dir>/scripts/cli.py" --select /data/items --fields id,title,url --limit 3 read-output "/absolute/path/response.json"
+```
+
+Required positional `file` is the saved local response path; a leading `~` is expanded. Replace paths and field examples with actual values. Supports global `--select`, `--fields`, `--limit`, `--table`, `--pretty`, and `--max-output-chars`; raw `--output` can save a copy but cannot be combined with selection flags. If output still exceeds the threshold, the existing input file is referenced instead of creating a duplicate. Missing/unreadable files or invalid selections are local errors and do not make an API call.
 
 ## Endpoint index: all 34 routes
 
@@ -436,7 +484,7 @@ Search `--body` must parse to an object; other JSON bodies must follow the selec
 
 Saved settings override release defaults; environment overrides saved settings. Do not confuse the client's key with the server's `AGENT_PUBLIC_API_KEY`.
 
-For successful endpoint calls, JSON is pretty-printed on stdout; non-JSON data is written as raw bytes. Global `--output` saves the original bytes, so the saved JSON need not have stdout's formatting. There is no common guaranteed list, pagination or task-status schema.
+Successful endpoint calls use compact JSON by default, with file references for large or binary responses as described above. Global `--output` preserves original response bytes. There is no common guaranteed list, pagination or task-status schema.
 
 | Exit code | Meaning |
 | --- | --- |
@@ -444,4 +492,4 @@ For successful endpoint calls, JSON is pretty-printed on stdout; non-JSON data i
 | `1` | HTTP/network or service diagnostic failure |
 | `2` | Argument, configuration, local file or cancellation failure |
 
-`--json-errors` reports `message`, HTTP `status`, `error_code`, `request_id`, `framework_request_id`, `execution_uncertain`, and `retry_after` when an HTTP/network error occurs. Local errors may contain only `message`; `doctor --json` uses its stdout report. Argument-parser errors still use argparse's normal stderr help/error format. No automatic retries occur. In particular, `-3905` requires checking execution and accounting before repeating uploads or task creation. See [API errors and accounting](api.md).
+`--json-errors` reports `message`, HTTP `status`, `error_code`, `request_id`, `framework_request_id`, `execution_uncertain`, and `retry_after` when an HTTP/network error occurs. Local errors include `error_code` and `message`; `doctor --json` uses its stdout report. Argument-parser errors default to stderr JSON with `error_code:"invalid_arguments"`; local errors use `error_code:"local_error"`, and cancellation uses `error_code:"cancelled"`. `--human-errors` restores readable error text. No automatic retries occur. In particular, `-3905` requires checking execution and accounting before repeating uploads or task creation. See [API errors and accounting](api.md).

@@ -123,7 +123,7 @@ class FrameworkContractTests(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertFalse(report["ok"])
         self.assertEqual(report["error_code"], -3900)
-        self.assertIsNone(report["request_id"])
+        self.assertNotIn("request_id", report)
         self.assertEqual(report["framework_request_id"], "framework-only")
         self.assertIn("未启用", report["message"])
         self.assertNotIn("never-print-secret", output.getvalue())

@@ -129,11 +129,19 @@ python3 <skill-dir>/scripts/cli.py --output /absolute/path/asset.bin paper 'arxi
 
 上传会发送本地文件到配置服务，仅在用户请求解析该文件时执行。任务状态结构未定义，使用实际返回的标识和状态；不自动无限轮询或重复创建任务，确认完成后获取结果。
 
+## 控制工具输出量
+
+默认使用紧凑 JSON 和结构化错误，`--pretty` / `--human-errors` 仅用于人工终端阅读。确认真实响应模型后，可将全局 `--select <JSON-Pointer>`、`--fields <字面字段,列表>`、`--limit <N>` 放在动作之前，仅保留筛选所需的真实论文 ID、标题、来源链接等字段。这些选项只调整本地响应，不改变请求或服务端分页；不能猜测 `data.items` 路径或字段别名，应按实际契约或保存的响应选择。选择数组时如需分页等外层元信息，应另外保留。`null` 和 `false` 有语义，不会自动丢弃。
+
+大量字段一致的记录可用 `--table`，仅声明一次 `columns` 并返回 `rows`。全文或具体章节按需获取。接口输出超过 12000 字符时自动将完整原始字节保存到私有临时文件，应通过 `scripts/cli.py --select <真实路径> --fields <真实,字段> read-output <文件绝对路径>` 按需读取，不再次调用 API。`truncated:true` 和 `preview` 不代表完整证据；二进制资源同样返回文件元信息。临时文件保留到读取后自行删除。指定路径时使用 `--output /absolute/path/response.json --output-summary`；确需完整 JSON/文本时可用 `--max-output-chars 0` 关闭自动转存。详见 [全部输出选项](references/cli.zh-CN.md#紧凑输出与显式响应筛选)。
+
+`response_output_error` 配合 `request_completed:true`、`do_not_repeat:true` 表示接口已成功执行，仅本地格式化/保存失败，应读取保留的原始响应文件并在本地修正，不能为格式问题重复上传或创建任务。保留业务错误码、两种请求 ID、Retry-After 和 `execution_uncertain`，尤其不能丢失 `-3905` 的含义。
+
 ## 输出与故障
 
-stdout 输出 JSON 或原始响应；`--output`（放在 `linxsci` 之后、具体动作之前）保留响应原始字节，适用于二进制资源。上游响应原样透传，LinxSci 自身错误则使用 `code/data/error/extra` 框架结构；读取 `error.code` 和 `extra.request-id`，不把它当作上游业务模型。`extra.cost` 是请求耗时（秒），不是扣费金额。不要假定列表字段或 PDF 终态。
+接口 stdout 默认输出紧凑 JSON 或文件元信息；`--output`（放在 `linxsci` 之后、具体动作之前）保留响应原始字节，适用于二进制资源。上游响应原样透传，LinxSci 自身错误则使用 `code/data/error/extra` 框架结构；读取 `error.code` 和 `extra.request-id`，不把它当作上游业务模型。`extra.cost` 是请求耗时（秒），不是扣费金额。不要假定列表字段或 PDF 终态。
 
-退出码：0 成功，1 HTTP/网络错误，2 参数/本地文件错误。CLI 的结构化 HTTP/网络诊断提供 `error_code`、`request_id`、`framework_request_id`、`execution_uncertain`。CLI 默认输出中文诊断和两种请求 ID；`linxsci --json-errors` 输出结构化诊断，不展示服务端错误消息全文。
+退出码：0 成功，1 HTTP/网络错误，2 参数/本地文件错误。CLI 的结构化 HTTP/网络诊断提供 `error_code`、`request_id`、`framework_request_id`、`execution_uncertain`。CLI 默认输出紧凑的结构化 JSON 诊断，保留可用的两种请求 ID；`--json-errors` 是兼容选项，`--human-errors` 切换文本诊断，不展示服务端错误消息全文。
 
 按 HTTP 状态和实际 `error.code` 区分故障：
 

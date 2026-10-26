@@ -2,6 +2,8 @@
 
 [简体中文](README.zh-CN.md)
 
+Endpoint output now defaults to compact JSON, and errors default to structured JSON on stderr. Use `--pretty` or `--human-errors` for terminal reading. Global `--select`, `--fields`, and `--limit` shape known response data locally; `--table` packs uniform records. Large responses (over 12000 output characters) and binary assets are saved to private temporary files with JSON references. `--output PATH --output-summary` saves raw bytes at a chosen path and reports metadata. See [output options](docs/CLI_GUIDE.md#compact-output-and-explicit-response-views).
+
 Search academic papers, read sections and citations, explore research entities, and parse PDFs through LinxSci OpenAPI v2. The project includes an AI skill, a CLI, and a Python SDK covering all 34 documented routes.
 
 Requires **Python 3.9+**, an existing LinxSci API key, and an assistant that can execute local scripts when using the skill. No third-party Python runtime dependencies are required.

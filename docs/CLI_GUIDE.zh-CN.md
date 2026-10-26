@@ -26,15 +26,53 @@ linxsci 命令 --help
 | `--version` | 开关 | 输出版本号并退出 |
 | `--timeout SECONDS` | 数值，默认 `60` | 网络超时秒数，必须为正的有限数；不是 PDF 任务的整体完成时限 |
 | `--output PATH` | 文件路径，默认不设置 | 将接口原始响应字节写入文件而不输出到 stdout；覆盖同名文件，父目录需已存在 |
-| `--json-errors` | 开关，默认关闭 | 将结构化错误写入 stderr，不改变成功响应格式 |
+| `--json-errors` | 开关，默认开启 | 将结构化错误写入 stderr，不改变成功响应格式 |
+| `--pretty` | 开关，默认关闭 | 将成功 JSON 和本地 JSON 报告缩进排版，方便终端阅读 |
+| `--human-errors` | 开关，默认关闭 | 使用面向人的 stderr 错误提示，与 `--json-errors` 互斥 |
+| `--select POINTER` | JSON Pointer，默认不设置 | 选择真实响应中的数据位置，如 `/data/items`；空字符串选择根值 |
+| `--fields KEYS` | 逗号分隔的字面字段名，默认不设置 | 保留选中对象或数组各对象的指定字段；每个请求字段都必须存在 |
+| `--limit N` | 非负整数，默认不设置 | 在本地仅保留选中数组的前 N 项，不向服务端请求分页 |
+| `--table` | 开关，默认关闭 | 将字段一致的对象数组编码为 `columns` 与 `rows` |
+| `--max-output-chars N` | 非负整数，默认 `12000` | 格式化后的接口输出超过 N 字符时，将完整原始响应保存为文件，返回文件元信息及有长度上限的预览；`0` 关闭此阈值 |
+| `--output-summary` | 开关，默认关闭 | 配合 `--output`，额外输出包含文件绝对路径、字节数及可用内容类型的 JSON |
 | `--framework-request-id ID` | 非空可打印 ASCII，默认不设置 | 发送 `X-ANYTHINGRIGHT-REQ-ID`，对应框架错误的 `extra.request-id`；未设置时由服务端生成框架 ID |
 
-`--output` 仅保存接口响应，不用于本地配置/帮助输出或 doctor 的诊断报告。例如：
+`--output` 用于接口响应及 `read-output`，不用于配置/帮助输出或 doctor 的诊断报告。例如：
 
 ```bash
 linxsci --timeout 90 --output search.json search "graph neural networks"
 linxsci --framework-request-id framework-001 meta --request-id upstream-001
 ```
+
+## 紧凑输出与显式响应筛选
+
+接口数据和错误默认使用紧凑 JSON，直接输出中文等 Unicode 字符。`--pretty` 将成功 JSON 缩进排版，`--human-errors` 切换为面向人的错误文本。`--json-errors` 保留为显式选择默认错误模式的兼容参数。帮助、版本和交互 setup 提示仍方便人工阅读，setup 的连接检查输出 JSON 报告。`config`、`routes`、`install-skill`、`doctor` 输出紧凑 JSON；`doctor --text` 可查看可读报告。
+
+响应筛选在**一次接口请求完成后于本地执行**，顺序为：选择数据位置、限制数组条数、保留字段、按需转换表格。不会改变请求体、URL 参数、计费或服务端分页。适用于接口命令及本地 `read-output`，不能与配置、安装、诊断命令混用。必须根据真实响应选择字段，不能猜测不同来源的返回模型。
+
+例如，**已查看的真实响应**包含 `data.items`，且每项都有 `id`、`title`、`url` 时：
+
+```bash
+linxsci --select /data/items --fields id,title,url --limit 3 search "graph neural networks"
+linxsci --select /data/items --fields id,title,url --limit 3 --table search "graph neural networks"
+```
+
+`--select` 使用 [JSON Pointer](https://www.rfc-editor.org/rfc/rfc6901.html)：`/data/items/0` 选择第一项，键中的 `/` 写为 `~1`，`~` 写为 `~0`。支持精确键和数组下标，不支持通配符。`--fields` 选择选中对象或数组各对象的顶层字面键，不解析点号路径；字段缺失或类型不匹配时返回本地输出错误，避免误报为空结果。显式选中的 `null`、`false`、零和空值均保留。错误报告省略缺失的可选诊断字段，不会自动清理上游业务数据。
+
+`--limit` 实际省略了项目时，输出包装为 `{"data":...,"total":N,"returned":M,"truncated":true}`。`total` 仅指**已经收到的数组**的长度，不代表服务端全部结果数。`--limit 0` 明确返回零项。`--table` 要求数组各对象字段集合一致，可先用 `--fields` 选择共有字段；输出 `{"columns":[...],"rows":[...]}`，嵌套值仍保持 JSON，支持空数组。
+
+大响应默认使用 `12000` 字符的转存阈值，按格式化后的输出计算，不是 token 数或网络字节数。超过阈值时，将**完整原始响应字节**保存在私有系统临时目录，stdout 返回 `file`（绝对路径）、`bytes`、可用的 `content_type`、`reason:"output_limit"`、`raw_response:true`、`truncated:true`、`output_chars` 和 `preview`（最多 500 字符，阈值更小时不超过该阈值）。预览可能是未完整闭合的 JSON，不能当作完整结果。阈值用于触发转存，不是对元信息总长度的严格限制。文件在命令结束后保留供本地按需读取，用完后可删除。
+
+PDF、图像、音视频等二进制响应自动保存文件，并返回 `reason:"binary_response"`，不将原始字节输出到模型上下文。短的 UTF-8 非 JSON 文本包装为 `{"text":"..."}`。确需完整 JSON/文本时可使用 `--max-output-chars 0`；二进制内容仍返回文件引用。
+
+需要自行选择保存路径时，`--output` 继续保留原有行为：保存原始字节、stdout 留空。增加 `--output-summary` 可获取文件元信息：
+
+```bash
+linxsci --output paper.json --output-summary paper "<paper-id>" --resource content
+linxsci --pretty --max-output-chars 0 meta
+```
+
+`--output-summary` 必须配合 `--output`，保存原始响应的 `--output` 不可与 `--select`、`--fields`、`--limit`、`--table` 混用。如果**接口已成功执行后**本地格式化或保存失败，stderr JSON 返回 `error_code:"response_output_error"`、`request_completed:true`、`do_not_repeat:true`，恢复保存成功时还会返回完整原始响应的文件。应读取文件在本地修正展示，不能为修正格式而重复上传或创建任务。
 
 ## 接口命令共有参数
 
@@ -49,7 +87,7 @@ linxsci --framework-request-id framework-001 meta --request-id upstream-001
 linxsci paper "<paper-id>" --param "<contract-key>=<value>" --request-id upstream-001
 ```
 
-契约支持多值查询键时，使用 `--param "KEY=VALUE1" --param "KEY=VALUE2"`。通用请求的路径中不要附加查询字符串。`--param` 是 URL 查询参数，`--body` 是 JSON 请求体，`--field` 是上传表单字段，三者不能相互替代。当前没有内置的 `--limit`、`--page`、`--year` 选项；只有上游契约明确支持时，才按其定义传递这些业务字段。
+契约支持多值查询键时，使用 `--param "KEY=VALUE1" --param "KEY=VALUE2"`。通用请求的路径中不要附加查询字符串。`--param` 是 URL 查询参数，`--body` 是 JSON 请求体，`--field` 是上传表单字段，三者不能相互替代。全局 `--limit` 仅在本地裁剪响应，不是上游分页参数；没有内置的 `--page`、`--year` 选项。服务端字段应按上游契约通过 `--param` 或 `--body` 传递。
 
 ## 配置与本地命令
 
@@ -88,7 +126,7 @@ linxsci doctor
 linxsci doctor --json
 ```
 
-`--json` 为可选开关，默认关闭；指定后将诊断报告以 JSON 输出到 stdout。报告包含 `ok`、实际 `base_url`、配置信息，以及可用时的状态、错误和请求追踪信息。本地配置缺失/无效退出码为 2，服务失败为 1，成功为 0。此操作需要已配置 Key，会实际请求 `/meta`；200 状态的 HTML 登录页不算 JSON API 连接成功。请求计入正常调用流程，已有有效检查结果时不要重复探测。
+`--json` 保留为兼容开关，JSON 已是默认格式；使用 `--text`（默认关闭）可切换人工可读报告，二者互斥。报告输出到 stdout。报告包含 `ok`、实际 `base_url`、配置信息，以及可用时的状态、错误和请求追踪信息。本地配置缺失/无效退出码为 2，服务失败为 1，成功为 0。此操作需要已配置 Key，会实际请求 `/meta`；200 状态的 HTML 登录页不算 JSON API 连接成功。请求计入正常调用流程，已有有效检查结果时不要重复探测。
 
 ### routes
 
@@ -112,6 +150,16 @@ linxsci install-skill --update
 | `--update` | 开关，默认关闭 | 更新由本安装器管理的副本，并将旧版备份到扫描父目录旁的 `linxsci-skill-backups`，避免被助手重复扫描 |
 
 此操作复制随包文件，不需要 Key 或网络；可通过 Skill 独立脚本运行，无需安装 CLI/SDK。更新时必须从**新版本**下载源码或安装包运行命令，确保复制的是新文件。安装器拒绝符号链接目标、不受其管理或标记不匹配的目录；外部安装器的副本请用原工具更新。此命令不配置 Key，也不注册终端命令。
+
+### read-output
+
+从已保存的响应文件进行本地筛选，不需要 Key、不联网，可避免为调整输出再次请求远程服务：
+
+```bash
+linxsci --select /data/items --fields id,title,url --limit 3 read-output "/absolute/path/response.json"
+```
+
+位置参数 `file` 必填，指定本地原始响应文件，支持展开开头的 `~`。路径和字段示例需替换为实际值。支持全局 `--select`、`--fields`、`--limit`、`--table`、`--pretty`、`--max-output-chars`，也可用 `--output`（与筛选选项互斥）另存原始字节。响应仍超过阈值时复用原文件引用，不重复生成副本。文件缺失、无法读取或字段选择错误返回本地错误，不会发起接口请求。
 
 ## 全部 34 条接口索引
 
@@ -407,7 +455,7 @@ linxsci request GET "/papers/doi:10.1000%2Fexample/toc"
 
 保存的配置优先于发行默认值，环境变量优先于保存的配置。客户端 Key 与服务端的 `AGENT_PUBLIC_API_KEY` 不同。
 
-接口成功后，JSON 以格式化文本输出到 stdout，非 JSON 则输出原始字节。全局 `--output` 保存原始响应字节，因此文件中的 JSON 排版不一定与 stdout 相同。不要假定接口拥有统一的列表、分页或任务状态字段。
+接口成功后默认输出紧凑 JSON，大响应和二进制使用上文的文件引用规则。全局 `--output` 保留原始响应字节。不要假定接口拥有统一的列表、分页或任务状态字段。
 
 | 退出码 | 含义 |
 | --- | --- |
@@ -415,4 +463,4 @@ linxsci request GET "/papers/doi:10.1000%2Fexample/toc"
 | `1` | HTTP/网络或服务诊断失败 |
 | `2` | 参数、配置、本地文件或取消操作错误 |
 
-HTTP/网络失败时，`--json-errors` 提供 `message`、HTTP `status`、`error_code`、`request_id`、`framework_request_id`、`execution_uncertain` 和 `retry_after`。本地错误可能仅包含 `message`，`doctor --json` 则使用 stdout 的诊断报告。参数解析阶段的错误仍按 argparse 默认帮助/错误格式写入 stderr。工具不自动重试，尤其 `-3905` 时应先查询执行及计费结果，再决定是否重复上传或创建任务。详见 [API 错误与计量规则](API.zh-CN.md)。
+HTTP/网络失败时，`--json-errors` 提供 `message`、HTTP `status`、`error_code`、`request_id`、`framework_request_id`、`execution_uncertain` 和 `retry_after`。本地错误包含 `error_code` 和 `message`，`doctor --json` 则使用 stdout 的诊断报告。参数解析错误默认以 `error_code:"invalid_arguments"` 的 JSON 写入 stderr，本地错误使用 `error_code:"local_error"`，取消使用 `error_code:"cancelled"`；`--human-errors` 恢复文本错误。工具不自动重试，尤其 `-3905` 时应先查询执行及计费结果，再决定是否重复上传或创建任务。详见 [API 错误与计量规则](API.zh-CN.md)。

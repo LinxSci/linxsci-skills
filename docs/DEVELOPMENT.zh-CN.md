@@ -597,7 +597,7 @@ CLI 在 PDF 命令中按其实现读取 `LINXSCI_MINERU_API_KEY`：`parse-pdf`�
 linxsci --timeout 90 --framework-request-id linxsci-trace-001 meta --request-id agent-trace-001
 ```
 
-成功输出为格式化 JSON 或原始数据；`--output` 保存原始响应字节。错误写入 stderr。退出码 `0` 表示成功，`1` 表示 HTTP/网络或连接检查错误，`2` 表示输入、配置或本地文件错误。
+CLI 成功输出默认为紧凑 JSON，大响应及二进制返回文件引用；`--pretty` 供人工阅读，`--output` 保存原始响应字节。错误默认以结构化 JSON 写入 stderr。退出码 `0` 表示成功，`1` 表示 HTTP/网络或连接检查错误，`2` 表示输入、配置或本地文件错误。
 
 ## 9. 本地开发与验证
 

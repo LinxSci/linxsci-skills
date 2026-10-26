@@ -2,19 +2,22 @@
 """LinxSci：搜索论文、按章节阅读和解析 PDF；首次使用请运行 linxsci setup。"""
 import argparse
 import getpass
+from functools import partial
 import json
 import os
 import sys
 import warnings
 from pathlib import Path
 if __package__:
-    from .client import ROUTES, LinxSciClient, LinxSciError, paper_path, segment
+    from .client import ROUTES, Response, LinxSciClient, LinxSciError, paper_path, segment
     from .config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
     from .installer import install_skill
+    from .output import ResponseOutputError, json_text, write_response
 else:
-    from client import ROUTES, LinxSciClient, LinxSciError, paper_path, segment
+    from client import ROUTES, Response, LinxSciClient, LinxSciError, paper_path, segment
     from config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
     from installer import install_skill
+    from output import ResponseOutputError, json_text, write_response
 
 VERSION = "0.3.0"
 
@@ -36,6 +39,8 @@ ENTITY_COMMANDS = {"author": "authors", "institution": "institutions", "venue": 
 
 def error_info(error):
     code = error.error_code
+    if code is None:
+        code = "network_error" if error.status is None else "http_error"
     hints = {
         401: "API Key 无效或已过期，请运行 linxsci setup 重新配置。",
         403: "账号无权调用此接口，请检查账号权限。",
@@ -60,9 +65,10 @@ def error_info(error):
     message = code_hints.get(code, message)
     headers = {k.lower(): v for k, v in error.headers.items()}
     # Only selected response metadata is exposed; never print the upstream error body.
-    return {"message": message, "status": error.status, "error_code": code,
+    report = {"message": message, "status": error.status, "error_code": code,
             "request_id": error.request_id, "framework_request_id": error.framework_request_id,
             "execution_uncertain": error.execution_uncertain, "retry_after": headers.get("retry-after")}
+    return {key: value for key, value in report.items() if value is not None}
 
 
 def print_error_details(report, stream):
@@ -76,7 +82,7 @@ def print_error_details(report, stream):
         print("Retry-After：" + report["retry_after"], file=stream)
 
 
-def doctor(client, as_json=False):
+def doctor(client, as_json=True, pretty=False):
     report = {"ok": False, "base_url": client.base_url, "key_configured": True,
               "config_file": str(config_path())}
     try:
@@ -88,7 +94,7 @@ def doctor(client, as_json=False):
     except (ValueError, UnicodeDecodeError):
         report["message"] = "服务返回了非 JSON 内容，请核对根地址，排除登录页或代理页面。"
     if as_json:
-        print(json.dumps(report, ensure_ascii=False, indent=2))
+        print(json_text(report, pretty))
     else:
         print("服务地址：" + report["base_url"])
         print(report["message"])
@@ -128,7 +134,7 @@ def setup(args):
     if args.no_check:
         print("已跳过连接检查。稍后运行 linxsci doctor 检查连接。")
         return 0
-    return doctor(LinxSciClient(base_url, key, timeout=args.timeout, framework_request_id=args.framework_request_id))
+    return doctor(LinxSciClient(base_url, key, timeout=args.timeout, framework_request_id=args.framework_request_id), pretty=args.pretty)
 
 
 def pairs(values):
@@ -141,21 +147,75 @@ def pairs(values):
     return result
 
 
-def build_parser(*, prog=None):
-    parser = argparse.ArgumentParser(prog=prog, description=__doc__)
+class CLIArgumentParser(argparse.ArgumentParser):
+    def __init__(self, *args, human_errors=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.human_errors = human_errors
+
+    def error(self, message):
+        if self.human_errors:
+            super().error(message)
+        self.exit(2, json_text({"error_code": "invalid_arguments", "message": message}) + "\n")
+
+
+def nonnegative_int(value):
+    try:
+        number = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError("expected a nonnegative integer") from None
+    if number < 0:
+        raise argparse.ArgumentTypeError("expected a nonnegative integer")
+    return number
+
+
+def validate_output_options(args):
+    transforms = args.select is not None or args.fields is not None or args.limit is not None or args.table
+    if args.output_summary and not args.output:
+        raise ValueError("--output-summary requires --output")
+    if args.output and transforms:
+        raise ValueError("--output saves raw bytes and cannot be combined with --select, --fields, --limit or --table")
+    if args.command in ("setup", "config", "doctor", "routes", "install-skill"):
+        if transforms or args.output or args.output_summary:
+            raise ValueError("Response selection and file output apply only to endpoint commands")
+    if args.select is not None and args.select != "" and not args.select.startswith("/"):
+        raise ValueError("--select must start with /, or be empty for the root")
+    if args.fields is not None:
+        fields = args.fields.split(",")
+        if any(not key for key in fields) or len(set(fields)) != len(fields):
+            raise ValueError("--fields requires unique, nonempty comma-separated literal field names")
+
+
+def build_parser(*, prog=None, human_errors=False):
+    parser = CLIArgumentParser(prog=prog, description=__doc__, human_errors=human_errors)
     parser.add_argument("--version", action="version", version=VERSION)
-    parser.add_argument("--json-errors", action="store_true", help="Output structured errors on stderr")
+    errors = parser.add_mutually_exclusive_group()
+    errors.add_argument("--json-errors", dest="json_errors", action="store_true", default=True,
+                        help="Output structured errors on stderr (default)")
+    errors.add_argument("--human-errors", dest="json_errors", action="store_false", help="Human-readable errors")
+    parser.add_argument("--pretty", action="store_true", help="Indent JSON for terminal reading")
+    parser.add_argument("--select", metavar="POINTER", help="Select response data using a JSON Pointer, e.g. /data/items")
+    parser.add_argument("--fields", metavar="KEYS", help="Keep literal comma-separated fields in the selected object(s)")
+    parser.add_argument("--limit", type=nonnegative_int, help="Locally limit a selected array; not server pagination")
+    parser.add_argument("--table", action="store_true", help="Encode uniform object arrays as columns and rows")
+    parser.add_argument("--max-output-chars", type=nonnegative_int, default=12000,
+                        help="Save larger endpoint output to a temporary file (default 12000; 0 disables)")
+    parser.add_argument("--output-summary", action="store_true", help="With --output, print file metadata as JSON")
     parser.add_argument("--timeout", type=float, default=60)
     parser.add_argument("--framework-request-id", help="设置 X-ANYTHINGRIGHT-REQ-ID，用于定位 LinxSci 框架请求")
-    sub = parser.add_subparsers(dest="command", required=True)
+    sub = parser.add_subparsers(dest="command", required=True,
+                                parser_class=partial(CLIArgumentParser, human_errors=human_errors))
     sub.add_parser("routes", help="列出已知接口，无需配置 Key")
+    reader = sub.add_parser("read-output", help="Read and filter a saved response locally; no API call")
+    reader.add_argument("file", help="Path of a saved response file")
     configure = sub.add_parser("setup", help="首次配置服务地址和 API Key")
     configure.add_argument("--base-url", help="Service root URL")
     configure.add_argument("--online", action="store_true", help="Use linxsci.com as the suggested service")
     configure.add_argument("--api-key-stdin", action="store_true", help="Read the Key from stdin without echoing it")
     configure.add_argument("--no-check", action="store_true", help="Save settings without a network check")
     diagnose = sub.add_parser("doctor", help="检查配置和服务连接")
-    diagnose.add_argument("--json", action="store_true")
+    doctor_format = diagnose.add_mutually_exclusive_group()
+    doctor_format.add_argument("--json", action="store_true", help="JSON report (default)")
+    doctor_format.add_argument("--text", action="store_true", help="Human-readable diagnostic report")
     configuration = sub.add_parser("config", help="查看配置状态（不显示 Key）或清除配置")
     configuration.add_argument("--clear", action="store_true")
     installer = sub.add_parser("install-skill", help="安装自包含 Skill，无需联网")
@@ -202,37 +262,45 @@ def build_parser(*, prog=None):
 
 
 def main(argv=None, *, prog=None):
-    parser = build_parser(prog=prog)
+    argv = list(sys.argv[1:] if argv is None else argv)
+    parser = build_parser(prog=prog, human_errors="--human-errors" in argv)
     args = parser.parse_args(argv)
     try:
+        validate_output_options(args)
         if args.command == "setup":
             return setup(args)
         if args.command == "config":
             if args.clear:
                 clear_config()
-                print("本地配置已清除；如设置了环境变量，请另行清除。")
+                print(json_text({"cleared": True, "config_file": str(config_path())}, args.pretty))
             else:
                 saved = load_config()
-                print(json.dumps({"config_file": str(config_path()),
+                print(json_text({"config_file": str(config_path()),
                                   "saved_base_url": saved.get("base_url"),
                                   "saved_key_configured": bool(saved.get("api_key")),
                                   "environment_url_override": bool(os.environ.get("LINXSCI_BASE_URL")),
                                   "environment_key_override": bool(os.environ.get("LINXSCI_OPENAPI_KEY"))},
-                                 ensure_ascii=False, indent=2))
+                                 args.pretty))
             return 0
         if args.command == "install-skill":
             destination, backup = install_skill(args.skills_dir, args.update)
-            print("Skill 已安装：" + str(destination))
+            report = {"installed": str(destination.resolve()), "skill": "linxsci-skills"}
             if backup:
-                print("旧版本备份：" + str(backup))
-            print("现在可在助手中使用 $linxsci-skills；如果没有显示，请重启助手。")
+                report["backup"] = str(backup.resolve())
+            print(json_text(report, args.pretty))
             return 0
         if args.command == "routes":
-            print(json.dumps(ROUTES, ensure_ascii=False, indent=2))
+            print(json_text(ROUTES, args.pretty))
+            return 0
+        if args.command == "read-output":
+            source = Path(args.file).expanduser().resolve()
+            headers = {"Content-Type": "application/octet-stream"} if source.suffix.lower() == ".bin" else {}
+            response = Response(200, headers, source.read_bytes())
+            write_response(response, args, source_path=source)
             return 0
         client = LinxSciClient(timeout=args.timeout, framework_request_id=args.framework_request_id)
         if args.command == "doctor":
-            return doctor(client, args.json)
+            return doctor(client, as_json=not args.text, pretty=args.pretty)
         def body(value):
             return json.loads(Path(value[1:]).read_text(encoding="utf-8") if value.startswith("@") else value)
         def invoke(method, path, **options):
@@ -271,29 +339,31 @@ def main(argv=None, *, prog=None):
             if args.method == "POST" and not args.body:
                 raise ValueError("JSON POST requires --body with the upstream request schema; use upload for files")
             response = invoke(args.method, args.path, payload=body(args.body) if args.body else None)
-        if args.output:
-            Path(args.output).write_bytes(response.body)
-        else:
-            try:
-                print(json.dumps(response.json(), ensure_ascii=False, indent=2))
-            except (ValueError, UnicodeDecodeError):
-                sys.stdout.buffer.write(response.body)
+        write_response(response, args)
         return 0
     except LinxSciError as error:
         report = error_info(error)
-        print(json.dumps(report, ensure_ascii=False) if args.json_errors else report["message"], file=sys.stderr)
+        print(json_text(report) if args.json_errors else report["message"], file=sys.stderr)
         if not args.json_errors:
             print_error_details(report, sys.stderr)
         return 1
+    except ResponseOutputError as error:
+        if args.json_errors:
+            print(json_text(error.report), file=sys.stderr)
+        else:
+            print("接口已成功执行，请勿重复请求。" + str(error), file=sys.stderr)
+            if error.report.get("file"):
+                print("原始响应：" + error.report["file"], file=sys.stderr)
+        return 2
     except (ValueError, OSError) as error:
         message = "配置、输入或文件错误：" + str(error)
-        if args.command == "doctor" and args.json:
-            print(json.dumps({"ok": False, "message": message}, ensure_ascii=False))
+        if args.command == "doctor" and not args.text:
+            print(json_text({"ok": False, "message": message}, args.pretty))
         else:
-            print(json.dumps({"message": message}, ensure_ascii=False) if args.json_errors else message, file=sys.stderr)
+            print(json_text({"error_code": "local_error", "message": message}) if args.json_errors else message, file=sys.stderr)
         return 2
     except (EOFError, KeyboardInterrupt):
-        print("操作已取消。", file=sys.stderr)
+        print(json_text({"error_code": "cancelled", "message": "操作已取消。"}) if args.json_errors else "操作已取消。", file=sys.stderr)
         return 2
 
 

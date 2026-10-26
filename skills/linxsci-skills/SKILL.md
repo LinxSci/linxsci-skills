@@ -116,9 +116,17 @@ Global `--framework-request-id` goes before the action and sends `X-ANYTHINGRIGH
 
 When the upstream contract needs `X-MinerU-API-Key`, the user can set `LINXSCI_MINERU_API_KEY` locally. PDF create/upload/status/result commands and generic PDF requests read it.
 
+## Keep tool output small
+
+Use the default compact JSON and structured errors; `--pretty` / `--human-errors` are for terminal reading. Once the actual schema is known, use global `--select <JSON-Pointer>`, `--fields <literal,keys>` and `--limit <N>` before the action to keep only screening fields such as actual paper IDs, titles and source links. These flags only shape the local response and do not change server pagination or requests. Do not assume a `data.items` path or field aliases; derive them from the actual contract or a saved response. If metadata such as pagination is needed, retain it separately when selecting an array. Null and false values carry information and are preserved.
+
+For repeated uniform records, `--table` encodes `columns` once and returns `rows`. Get full paper content or individual sections only when needed. Endpoint output larger than 12000 characters is automatically saved as complete original bytes in a private temporary file; read the returned absolute `file` selectively using `scripts/cli.py --select <actual-pointer> --fields <actual,keys> read-output <absolute-file>`, without another API call. `truncated:true` and `preview` do not constitute full evidence. Binary assets also return file metadata. Temporary files remain available until removed. For an explicit destination use `--output /absolute/path/response.json --output-summary`. `--max-output-chars 0` disables automatic spilling for JSON/text when full output is necessary. See [all output options](references/cli.md#compact-output-and-explicit-response-views).
+
+A `response_output_error` with `request_completed:true` and `do_not_repeat:true` means the API call succeeded but local formatting/saving failed; inspect its preserved raw response file and fix the view locally. Do not repeat task creation or upload for a formatting failure. Preserve public error codes, trace IDs, Retry-After and `execution_uncertain`, especially `-3905`.
+
 ## Output and failures
 
-Stdout contains JSON or the raw response. Global `--output` preserves response bytes, including binary assets. Exit codes: 0 success, 1 HTTP/network failure, 2 argument/local-file failure. `--json-errors` produces structured diagnostics without exposing the full upstream error message. Structured HTTP/network diagnostics expose `error_code`, `request_id`, `framework_request_id`, and `execution_uncertain`.
+Endpoint stdout defaults to compact JSON or file metadata. Global `--output` preserves response bytes, including binary assets. Exit codes: 0 success, 1 HTTP/network failure, 2 argument/local-file failure. Errors default to structured JSON; `--json-errors` remains a compatibility flag for these diagnostics without exposing the full upstream error message. Structured HTTP/network diagnostics expose `error_code`, `request_id`, `framework_request_id`, and `execution_uncertain`.
 
 Upstream responses and business errors keep their original format. Framework errors use `code/data/error/extra`; `extra.cost` is elapsed seconds, not a charge. Do not assume common list fields or PDF terminal states.
 
