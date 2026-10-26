@@ -3,9 +3,9 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "linxsci-sdk"
+name = "linxsci"
 version = "0.3.0"
-description = "Scholar OpenAPI v2 CLI and Python client"
+description = "LinxSci OpenAPI v2 CLI and Python client"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = []
@@ -21,9 +21,8 @@ linxsci = "linxsci.scripts.cli:main"
 
 [tool.setuptools]
 include-package-data = false
-py-modules = ["scholar", "scholar_client"]
 packages = ["linxsci", "linxsci.scripts"]
 package-dir = {"linxsci" = "skills/linxsci-skills"}
 
 [tool.setuptools.package-data]
-linxsci = ["SKILL.md", "service.json", "agents/*.yaml", "references/*.md"]
+linxsci = ["SKILL.md", "SKILL.zh-CN.md", "service.json", "agents/*.yaml", "references/*.md"]

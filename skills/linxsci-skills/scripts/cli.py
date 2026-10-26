@@ -3,9 +3,9 @@
 import sys
 
 if __package__:
-    from .scholar import VERSION, build_parser, main as scholar_main
+    from .commands import VERSION, build_parser, main as commands_main
 else:
-    from scholar import VERSION, build_parser, main as scholar_main
+    from commands import VERSION, build_parser, main as commands_main
 
 # Add a capability only after its command handler is implemented and packaged.
 # Handlers receive their own argv and a display name for argparse help/errors.
@@ -27,7 +27,7 @@ def main(argv=None):
             parser.print_help()
             return 0
         parser.parse_args(argv)  # argparse prints help and exits successfully.
-    return scholar_main(argv, prog="linxsci")
+    return commands_main(argv, prog="linxsci")
 
 
 if __name__ == "__main__":

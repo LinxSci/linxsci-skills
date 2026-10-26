@@ -1,4 +1,4 @@
-"""Scholar OpenAPI v2 client; Python standard library only."""
+"""LinxSci OpenAPI v2 client; Python standard library only."""
 import json
 import math
 import os
@@ -11,12 +11,12 @@ from urllib.parse import quote, urlencode, urlsplit
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 
 if __package__:
-    from .scholar_config import resolve_settings
+    from .config import resolve_settings
 else:
-    from scholar_config import resolve_settings
+    from config import resolve_settings
 
 
-class ScholarError(Exception):
+class LinxSciError(Exception):
     def __init__(self, message, status=None, body=None, headers=None):
         super().__init__(message)
         self.status, self.body, self.headers = status, body, headers or {}
@@ -121,16 +121,16 @@ def request_header(value, name):
     return value
 
 
-class ScholarClient:
+class LinxSciClient:
     def __init__(self, base_url=None, api_key=None, timeout=60, *, framework_request_id=None):
         base_url, api_key = resolve_settings(base_url, api_key)
         url = urlsplit(base_url)
         if url.scheme not in ("http", "https") or not url.netloc or url.username or url.password or url.query or url.fragment:
-            raise ValueError("SCHOLAR_BASE_URL must be an http(s) service root URL")
+            raise ValueError("LINXSCI_BASE_URL must be an http(s) service root URL")
         if url.path.endswith(("/openapi/v2", "/openapi/v1")):
             raise ValueError("Base URL must not include /openapi/v2 or /openapi/v1")
         if not api_key or any(c in api_key for c in "\r\n"):
-            raise ValueError("Set SCHOLAR_OPENAPI_KEY to a valid Scholar key")
+            raise ValueError("Set LINXSCI_OPENAPI_KEY to a valid LinxSci key")
         if not math.isfinite(timeout) or timeout <= 0:
             raise ValueError("timeout must be a positive finite number")
         self.base_url, self.api_key, self.timeout = base_url, api_key, timeout
@@ -169,7 +169,7 @@ class ScholarClient:
             headers["Content-Type"] = "application/json"
         if file is not None:
             source = Path(file)
-            boundary = "scholar-" + uuid.uuid4().hex
+            boundary = "linxsci-" + uuid.uuid4().hex
             chunks = []
             for key, value in (fields or {}).items():
                 if any(c in key for c in '\r\n"'):
@@ -192,9 +192,9 @@ class ScholarClient:
                 detail = json.loads(raw)
             except (ValueError, UnicodeDecodeError):
                 detail = raw.decode("utf-8", errors="replace")
-            raise ScholarError(f"Scholar HTTP {error.code}", error.code, detail, dict(error.headers)) from None
+            raise LinxSciError(f"LinxSci HTTP {error.code}", error.code, detail, dict(error.headers)) from None
         except (URLError, TimeoutError, OSError):
-            raise ScholarError("Scholar network request failed; check service URL and connectivity") from None
+            raise LinxSciError("LinxSci network request failed; check service URL and connectivity") from None
 
     def search(self, query, **options):
         return self.request("POST", "/papers/search", payload={**options, "query": query})

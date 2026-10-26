@@ -1,4 +1,4 @@
-"""Contract regression tests for the revised Scholar framework/billing errors."""
+"""Contract regression tests for the revised LinxSci framework/billing errors."""
 import contextlib
 import io
 import json
@@ -14,8 +14,8 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "skills/linxsci-skills/scripts"))
-from scholar import error_info, main
-from scholar_client import ROUTES, ScholarClient, ScholarError
+from commands import error_info, main
+from client import ROUTES, LinxSciClient, LinxSciError
 
 STATUS = {-401: 401, -404: 404, -3900: 503, -3901: 429,
           -3902: 503, -3903: 502, -3904: 502, -3905: 502}
@@ -67,19 +67,19 @@ class FrameworkContractTests(unittest.TestCase):
         cls.server.server_close()
 
     def test_routes_match_updated_document(self):
-        document = (ROOT / "Scholar-OpenAPI-v2-使用文档.md").read_text(encoding="utf-8")
+        document = (ROOT / "docs/API.md").read_text(encoding="utf-8")
         documented = re.findall(r"\| (GET|POST) \| `/openapi/v2([^`]+)` \|", document)
         self.assertEqual(len(documented), 34)
         self.assertEqual(set(ROUTES), set(documented))
-        self.assertEqual((ROOT / "Scholar-OpenAPI-v2-使用文档.md").read_bytes(),
-                         (ROOT / "skills/linxsci-skills/references/api.md").read_bytes())
+        self.assertEqual(document.replace("(API.zh-CN.md)", "(api.zh-CN.md)"),
+                         (ROOT / "skills/linxsci-skills/references/api.md").read_text(encoding="utf-8"))
 
     def test_numeric_errors_and_two_distinct_ids(self):
-        client = ScholarClient(self.base_url, "test-key", framework_request_id="framework-client")
+        client = LinxSciClient(self.base_url, "test-key", framework_request_id="framework-client")
         for code, status in STATUS.items():
             with self.subTest(code=code):
                 before = len(FrameworkAPI.calls)
-                with self.assertRaises(ScholarError) as caught:
+                with self.assertRaises(LinxSciError) as caught:
                     client.request("POST", "/papers/search", payload={"query": str(code)}, request_id="agent-client")
                 error = caught.exception
                 self.assertEqual(len(FrameworkAPI.calls), before + 1)
@@ -96,8 +96,8 @@ class FrameworkContractTests(unittest.TestCase):
 
     def test_cli_does_not_retry_finish_uncertainty(self):
         with tempfile.TemporaryDirectory() as temporary:
-            environment = {"SCHOLAR_BASE_URL": self.base_url, "SCHOLAR_OPENAPI_KEY": "never-print-secret",
-                           "SCHOLAR_CONFIG_FILE": str(Path(temporary) / "unused.json")}
+            environment = {"LINXSCI_BASE_URL": self.base_url, "LINXSCI_OPENAPI_KEY": "never-print-secret",
+                           "LINXSCI_CONFIG_FILE": str(Path(temporary) / "unused.json")}
             output, errors = io.StringIO(), io.StringIO()
             before = len(FrameworkAPI.calls)
             with patch.dict(os.environ, environment, clear=True), contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
@@ -112,13 +112,13 @@ class FrameworkContractTests(unittest.TestCase):
             self.assertNotIn("never-print-secret", errors.getvalue())
 
     def test_doctor_reports_action_not_enabled(self):
-        error = ScholarError("HTTP 503", 503,
+        error = LinxSciError("HTTP 503", 503,
                              {"code": -1, "data": {}, "error": {"code": -3900, "msg": "never-print-secret"},
                               "extra": {"request-id": "framework-only", "cost": 0.01}})
-        from scholar import doctor
+        from commands import doctor
         output = io.StringIO()
-        with patch.object(ScholarClient, "request", side_effect=error), contextlib.redirect_stdout(output):
-            status = doctor(ScholarClient(self.base_url, "test-key"), as_json=True)
+        with patch.object(LinxSciClient, "request", side_effect=error), contextlib.redirect_stdout(output):
+            status = doctor(LinxSciClient(self.base_url, "test-key"), as_json=True)
         report = json.loads(output.getvalue())
         self.assertEqual(status, 1)
         self.assertFalse(report["ok"])
@@ -129,7 +129,7 @@ class FrameworkContractTests(unittest.TestCase):
         self.assertNotIn("never-print-secret", output.getvalue())
 
     def test_headers_and_per_request_override(self):
-        client = ScholarClient(self.base_url, "test-key", framework_request_id="default-framework")
+        client = LinxSciClient(self.base_url, "test-key", framework_request_id="default-framework")
         response = client.request("GET", "/meta", request_id="upstream-id", framework_request_id="override-framework")
         headers = {k.lower(): v for k, v in FrameworkAPI.calls[-1][2].items()}
         self.assertEqual(headers["authorization"], "Bearer test-key")
@@ -142,7 +142,7 @@ class FrameworkContractTests(unittest.TestCase):
         self.assertEqual(headers["x-anythingright-req-id"], "default-framework")
 
     def test_header_validation_before_network(self):
-        client = ScholarClient(self.base_url, "test-key")
+        client = LinxSciClient(self.base_url, "test-key")
         before = len(FrameworkAPI.calls)
         with self.assertRaises(ValueError):
             client.request("GET", "/meta", framework_request_id="bad\r\nInjected: value")
@@ -154,7 +154,7 @@ class FrameworkContractTests(unittest.TestCase):
         for code in ("validation_error", "asset_unavailable", "upstream_unconfigured"):
             with self.subTest(code=code):
                 body = {"error": {"code": code, "message": "private-detail", "request_id": "upstream-body-id"}}
-                error = ScholarError("HTTP error", 422, body)
+                error = LinxSciError("HTTP error", 422, body)
                 self.assertEqual(error.error_code, code)
                 self.assertEqual(error.request_id, "upstream-body-id")
                 self.assertIsNone(error.framework_request_id)

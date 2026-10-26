@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LinxSci Scholar：搜索论文、按章节阅读和解析 PDF；首次使用请运行 linxsci setup。"""
+"""LinxSci：搜索论文、按章节阅读和解析 PDF；首次使用请运行 linxsci setup。"""
 import argparse
 import getpass
 import json
@@ -8,13 +8,13 @@ import sys
 import warnings
 from pathlib import Path
 if __package__:
-    from .scholar_client import ROUTES, ScholarClient, ScholarError, paper_path, segment
-    from .scholar_config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
-    from .scholar_install import install_skill
+    from .client import ROUTES, LinxSciClient, LinxSciError, paper_path, segment
+    from .config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
+    from .installer import install_skill
 else:
-    from scholar_client import ROUTES, ScholarClient, ScholarError, paper_path, segment
-    from scholar_config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
-    from scholar_install import install_skill
+    from client import ROUTES, LinxSciClient, LinxSciError, paper_path, segment
+    from config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
+    from installer import install_skill
 
 VERSION = "0.3.0"
 
@@ -41,7 +41,7 @@ def error_info(error):
         403: "账号无权调用此接口，请检查账号权限。",
         404: "服务未提供此接口，请核对服务根地址和部署版本。",
         429: "请求过于频繁或额度不足，请稍后重试或检查账号用量。",
-        502: "Scholar 无法连接上游服务，请联系服务维护者。",
+        502: "LinxSci 无法连接上游服务，请联系服务维护者。",
         503: "服务暂不可用，请稍后重试或联系服务维护者。",
     }
     message = hints.get(error.status, "服务调用失败，请检查服务地址、网络和服务状态。")
@@ -54,8 +54,8 @@ def error_info(error):
         -3903: "Agent API 连接或传输失败，请联系服务维护者检查连接。",
         -3904: "member 的 begin 未成功，请求尚未转发上游；请联系管理员检查 member 服务和内部鉴权。",
         -3905: "Agent API 已返回，但 member 的 finish 未确认。请先查询执行与计费结果，再决定是否重试；不要直接重复上传或创建任务。",
-        # Keep compatibility with older Scholar deployments.
-        "upstream_unconfigured": "Scholar 服务端上游配置不完整，请联系服务维护者。",
+        # Keep compatibility with older LinxSci deployments.
+        "upstream_unconfigured": "LinxSci 服务端上游配置不完整，请联系服务维护者。",
     }
     message = code_hints.get(code, message)
     headers = {k.lower(): v for k, v in error.headers.items()}
@@ -71,7 +71,7 @@ def print_error_details(report, stream):
     if report.get("request_id"):
         print("上游/代理请求 ID：" + report["request_id"], file=stream)
     if report.get("framework_request_id"):
-        print("Scholar 框架请求 ID：" + report["framework_request_id"], file=stream)
+        print("LinxSci 框架请求 ID：" + report["framework_request_id"], file=stream)
     if report.get("retry_after"):
         print("Retry-After：" + report["retry_after"], file=stream)
 
@@ -83,7 +83,7 @@ def doctor(client, as_json=False):
         response = client.request("GET", "/meta")
         response.json()  # A 200 HTML login page is not a working API connection.
         report.update(ok=True, status=response.status, message="连接成功，可以开始检索论文。")
-    except ScholarError as error:
+    except LinxSciError as error:
         report.update(error_info(error))
     except (ValueError, UnicodeDecodeError):
         report["message"] = "服务返回了非 JSON 内容，请核对根地址，排除登录页或代理页面。"
@@ -108,7 +108,7 @@ def setup(args):
     if not args.api_key_stdin:
         if not sys.stdin.isatty():
             raise ValueError("配置向导需要交互终端；自动配置请使用 --api-key-stdin。")
-        print("LinxSci Scholar 配置向导（API Key 输入不会显示）")
+        print("LinxSci 配置向导（API Key 输入不会显示）")
         print("线上服务：" + defaults["online_base_url"])
         base_url = input("服务根地址 [" + base_url + "]：").strip() or base_url
         try:
@@ -123,12 +123,12 @@ def setup(args):
     base_url = validate_url(base_url)
     path = save_config(base_url, key)
     print("配置已保存：" + str(path))
-    if os.environ.get("SCHOLAR_BASE_URL") or os.environ.get("SCHOLAR_OPENAPI_KEY"):
+    if os.environ.get("LINXSCI_BASE_URL") or os.environ.get("LINXSCI_OPENAPI_KEY"):
         print("提示：后续调用时，已有环境变量优先于本地配置。")
     if args.no_check:
         print("已跳过连接检查。稍后运行 linxsci doctor 检查连接。")
         return 0
-    return doctor(ScholarClient(base_url, key, timeout=args.timeout, framework_request_id=args.framework_request_id))
+    return doctor(LinxSciClient(base_url, key, timeout=args.timeout, framework_request_id=args.framework_request_id))
 
 
 def pairs(values):
@@ -146,7 +146,7 @@ def build_parser(*, prog=None):
     parser.add_argument("--version", action="version", version=VERSION)
     parser.add_argument("--json-errors", action="store_true", help="Output structured errors on stderr")
     parser.add_argument("--timeout", type=float, default=60)
-    parser.add_argument("--framework-request-id", help="设置 X-ANYTHINGRIGHT-REQ-ID，用于定位 Scholar 框架请求")
+    parser.add_argument("--framework-request-id", help="设置 X-ANYTHINGRIGHT-REQ-ID，用于定位 LinxSci 框架请求")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("routes", help="列出已知接口，无需配置 Key")
     configure = sub.add_parser("setup", help="首次配置服务地址和 API Key")
@@ -216,8 +216,8 @@ def main(argv=None, *, prog=None):
                 print(json.dumps({"config_file": str(config_path()),
                                   "saved_base_url": saved.get("base_url"),
                                   "saved_key_configured": bool(saved.get("api_key")),
-                                  "environment_url_override": bool(os.environ.get("SCHOLAR_BASE_URL")),
-                                  "environment_key_override": bool(os.environ.get("SCHOLAR_OPENAPI_KEY"))},
+                                  "environment_url_override": bool(os.environ.get("LINXSCI_BASE_URL")),
+                                  "environment_key_override": bool(os.environ.get("LINXSCI_OPENAPI_KEY"))},
                                  ensure_ascii=False, indent=2))
             return 0
         if args.command == "install-skill":
@@ -230,14 +230,14 @@ def main(argv=None, *, prog=None):
         if args.command == "routes":
             print(json.dumps(ROUTES, ensure_ascii=False, indent=2))
             return 0
-        client = ScholarClient(timeout=args.timeout, framework_request_id=args.framework_request_id)
+        client = LinxSciClient(timeout=args.timeout, framework_request_id=args.framework_request_id)
         if args.command == "doctor":
             return doctor(client, args.json)
         def body(value):
             return json.loads(Path(value[1:]).read_text(encoding="utf-8") if value.startswith("@") else value)
         def invoke(method, path, **options):
             return client.request(method, path, query=pairs(args.param), request_id=args.request_id,
-                                  mineru_key=os.environ.get("SCHOLAR_MINERU_API_KEY") if path.startswith("/pdf/parse") else None,
+                                  mineru_key=os.environ.get("LINXSCI_MINERU_API_KEY") if path.startswith("/pdf/parse") else None,
                                   **options)
         if args.command in ("meta", "usage"):
             response = invoke("GET", "/" + args.command)
@@ -279,7 +279,7 @@ def main(argv=None, *, prog=None):
             except (ValueError, UnicodeDecodeError):
                 sys.stdout.buffer.write(response.body)
         return 0
-    except ScholarError as error:
+    except LinxSciError as error:
         report = error_info(error)
         print(json.dumps(report, ensure_ascii=False) if args.json_errors else report["message"], file=sys.stderr)
         if not args.json_errors:

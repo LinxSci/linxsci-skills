@@ -7,7 +7,6 @@ import uuid
 from pathlib import Path
 
 SKILL_NAME = "linxsci-skills"
-LEGACY_SKILL_NAME = "linxsci-scholar"
 MARKER = ".linxsci-install.json"
 
 
@@ -19,14 +18,9 @@ def install_skill(skills_dir=None, update=False):
     source = Path(__file__).resolve().parents[1]
     parent = Path(skills_dir).expanduser() if skills_dir else default_skills_dir()
     destination = parent / SKILL_NAME
-    legacy = parent / LEGACY_SKILL_NAME
     if destination.is_symlink():
         raise ValueError("目标 Skill 是符号链接，请选择其他安装目录。")
-    if legacy.is_symlink():
-        raise ValueError("旧 Skill 是符号链接，请使用原安装工具管理它，或选择其他目录。")
-    if destination.exists() and legacy.exists():
-        raise ValueError("检测到新旧两个 Skill 目录，请先将不再使用的副本备份到助手扫描目录之外。")
-    existing = destination if destination.exists() else legacy
+    existing = destination
     if existing.exists():
         if not update:
             raise ValueError("Skill 已存在。更新或迁移本工具安装的版本请使用 --update；自定义安装请先备份。")

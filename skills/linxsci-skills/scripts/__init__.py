@@ -1,1 +1,1 @@
-"""Executable helpers for the LinxSci Scholar Skill."""
+"""Executable helpers for the LinxSci Skill."""

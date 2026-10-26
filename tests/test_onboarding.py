@@ -11,10 +11,10 @@ from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/linxsci-skills/scripts"
 sys.path.insert(0, str(SCRIPTS))
-from scholar import main, doctor, error_info
-from scholar_client import ScholarClient, ScholarError, Response
-from scholar_config import config_path, load_config, resolve_settings, save_config
-from scholar_install import install_skill
+from commands import main, doctor, error_info
+from client import LinxSciClient, LinxSciError, Response
+from config import config_path, load_config, resolve_settings, save_config
+from installer import install_skill
 
 
 class OnboardingTests(unittest.TestCase):
@@ -22,7 +22,7 @@ class OnboardingTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.env = patch.dict(os.environ, {"SCHOLAR_CONFIG_FILE": str(self.root / "settings/config.json")}, clear=True)
+        self.env = patch.dict(os.environ, {"LINXSCI_CONFIG_FILE": str(self.root / "settings/config.json")}, clear=True)
         self.env.start()
         self.addCleanup(self.env.stop)
 
@@ -36,7 +36,7 @@ class OnboardingTests(unittest.TestCase):
         status, out, err = self.invoke(["setup", "--api-key-stdin", "--no-check"], "test-secret\n")
         self.assertEqual(status, 0, err)
         self.assertNotIn("test-secret", out + err)
-        client = ScholarClient()  # A fresh process need not inherit terminal exports.
+        client = LinxSciClient()  # A fresh process need not inherit terminal exports.
         self.assertEqual(client.base_url, "https://linxsci.com")
         self.assertEqual(client.api_key, "test-secret")
         if os.name != "nt":
@@ -53,7 +53,7 @@ class OnboardingTests(unittest.TestCase):
 
     def test_priority_and_redaction(self):
         save_config("http://localhost:9090", "saved-secret")
-        os.environ.update(SCHOLAR_BASE_URL="https://linxsci.com", SCHOLAR_OPENAPI_KEY="env-secret")
+        os.environ.update(LINXSCI_BASE_URL="https://linxsci.com", LINXSCI_OPENAPI_KEY="env-secret")
         self.assertEqual(resolve_settings(), ("https://linxsci.com", "env-secret"))
         self.assertEqual(resolve_settings("https://other.example", "explicit"), ("https://other.example", "explicit"))
         status, out, err = self.invoke(["config"])
@@ -92,11 +92,11 @@ class OnboardingTests(unittest.TestCase):
 
     def test_doctor_does_not_accept_html_or_expose_error_body(self):
         save_config("http://localhost:9090", "secret")
-        with patch.object(ScholarClient, "request", return_value=Response(200, {}, b"<html>login</html>")):
+        with patch.object(LinxSciClient, "request", return_value=Response(200, {}, b"<html>login</html>")):
             status, out, err = self.invoke(["doctor", "--json"])
         self.assertEqual(status, 1)
         self.assertFalse(json.loads(out)["ok"])
-        with patch.object(ScholarClient, "request", side_effect=ScholarError("unsafe", 401, {"error": {"message": "secret"}})):
+        with patch.object(LinxSciClient, "request", side_effect=LinxSciError("unsafe", 401, {"error": {"message": "secret"}})):
             status, out, err = self.invoke(["search", "topic"])
         self.assertEqual(status, 1)
         self.assertNotIn("secret", out + err)
@@ -107,7 +107,7 @@ class OnboardingTests(unittest.TestCase):
         destination, backup = install_skill(parent)
         self.assertIsNone(backup)
         self.assertTrue((destination / "SKILL.md").is_file())
-        self.assertTrue((destination / "scripts/scholar_config.py").is_file())
+        self.assertTrue((destination / "scripts/config.py").is_file())
         self.assertTrue((destination / "references/api.md").is_file())
         with self.assertRaises(ValueError):
             install_skill(parent)
@@ -128,50 +128,6 @@ class OnboardingTests(unittest.TestCase):
             install_skill(parent, update=True)
         self.assertEqual(user_file.read_text(), "user content")
 
-    def legacy_skill(self, parent):
-        destination, _ = install_skill(parent)
-        legacy = parent / "linxsci-scholar"
-        destination.rename(legacy)
-        (legacy / ".linxsci-install.json").write_text(json.dumps({"name": "linxsci-scholar", "version": "0.3.0"}))
-        (legacy / "custom-note.txt").write_text("keep legacy note")
-        return legacy
-
-    def test_legacy_skill_migration_and_backup(self):
-        parent = self.root / "agent/skills"
-        legacy = self.legacy_skill(parent)
-        with self.assertRaises(ValueError):
-            install_skill(parent)
-        destination, backup = install_skill(parent, update=True)
-        self.assertEqual(destination.name, "linxsci-skills")
-        self.assertFalse(legacy.exists())
-        self.assertEqual((backup / "custom-note.txt").read_text(), "keep legacy note")
-        self.assertNotEqual(backup.parent, parent)
-        self.assertEqual(json.loads((destination / ".linxsci-install.json").read_text())["name"], "linxsci-skills")
-
-    def test_legacy_skill_migration_rollback(self):
-        parent = self.root / "agent/skills"
-        legacy = self.legacy_skill(parent)
-        real_replace = os.replace
-        def replace(source, target):
-            if Path(source).name.startswith(".linxsci-stage-"):
-                raise OSError("simulated migration failure")
-            return real_replace(source, target)
-        with patch("scholar_install.os.replace", side_effect=replace), self.assertRaises(OSError):
-            install_skill(parent, update=True)
-        self.assertEqual((legacy / "custom-note.txt").read_text(), "keep legacy note")
-        self.assertFalse((parent / "linxsci-skills").exists())
-
-    def test_legacy_skill_migration_refuses_unmanaged_directory(self):
-        parent = self.root / "agent/skills"
-        legacy = parent / "linxsci-scholar"
-        legacy.mkdir(parents=True)
-        note = legacy / "SKILL.md"
-        note.write_text("user content")
-        with self.assertRaises(ValueError):
-            install_skill(parent, update=True)
-        self.assertEqual(note.read_text(), "user content")
-        self.assertFalse((parent / "linxsci-skills").exists())
-
     def test_installer_rollback(self):
         parent = self.root / "agent/skills"
         destination, _ = install_skill(parent)
@@ -181,7 +137,7 @@ class OnboardingTests(unittest.TestCase):
             if Path(source).name.startswith(".linxsci-stage-"):
                 raise OSError("simulated failure")
             return real_replace(source, target)
-        with patch("scholar_install.os.replace", side_effect=replace), self.assertRaises(OSError):
+        with patch("installer.os.replace", side_effect=replace), self.assertRaises(OSError):
             install_skill(parent, update=True)
         self.assertEqual((destination / "SKILL.md").read_bytes(), original)
 
@@ -189,7 +145,7 @@ class OnboardingTests(unittest.TestCase):
         save_config("http://localhost:9090", "secret")
         binary = b"\x00\xffPDF asset"
         output = self.root / "asset.bin"
-        with patch.object(ScholarClient, "request", return_value=Response(200, {}, binary)):
+        with patch.object(LinxSciClient, "request", return_value=Response(200, {}, binary)):
             status, out, err = self.invoke(["--output", str(output), "paper", "arxiv:123", "--resource", "assets", "--item-id", "figure1"])
         self.assertEqual(status, 0, err)
         self.assertEqual(output.read_bytes(), binary)

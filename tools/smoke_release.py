@@ -47,10 +47,10 @@ class API(BaseHTTPRequestHandler):
 def check(directory, uv=None):
     root = Path(__file__).resolve().parents[1]
     version = re.search(r'^version = "([^"]+)"', (root / "pyproject.toml").read_text(), re.MULTILINE).group(1)
-    document = (root / "Scholar-OpenAPI-v2-使用文档.md").read_text(encoding="utf-8")
+    document = (root / "docs/API.md").read_text(encoding="utf-8")
     routes = re.findall(r"\| (GET|POST) \| `/openapi/v2([^`]+)` \|", document)
     assert len(routes) == 34
-    wheel = directory / ("linxsci_sdk-" + version + "-py3-none-any.whl")
+    wheel = directory / ("linxsci-" + version + "-py3-none-any.whl")
     bundle = directory / ("linxsci-skills-" + version + ".zip")
     server = HTTPServer(("127.0.0.1", 0), API)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -60,9 +60,9 @@ def check(directory, uv=None):
         with tempfile.TemporaryDirectory(prefix="linxsci-smoke-") as temporary:
             root = Path(temporary)
             env = dict(os.environ)
-            for name in ("SCHOLAR_BASE_URL", "SCHOLAR_OPENAPI_KEY", "SCHOLAR_MINERU_API_KEY", "PYTHONPATH"):
+            for name in ("LINXSCI_BASE_URL", "LINXSCI_OPENAPI_KEY", "LINXSCI_MINERU_API_KEY", "PYTHONPATH"):
                 env.pop(name, None)
-            env["SCHOLAR_CONFIG_FILE"] = str(root / "config.json")
+            env["LINXSCI_CONFIG_FILE"] = str(root / "config.json")
             def run(command, stdin=None):
                 result = subprocess.run(command, input=stdin, text=True, capture_output=True, env=env, cwd=root)
                 if result.returncode:
@@ -100,7 +100,7 @@ def check(directory, uv=None):
             run(cli + ["install-skill", "--skills-dir", str(root / "wheel-skills")])
             installed = root / "wheel-skills/linxsci-skills/scripts/cli.py"
             run([str(python), str(installed), "doctor"])
-            run([str(python), "-c", "from linxsci import ScholarClient; from scholar_client import ScholarClient as Legacy; assert Legacy is ScholarClient; print(ScholarClient().request('GET','/meta').status)"])
+            run([str(python), "-c", "from linxsci import LinxSciClient; print(LinxSciClient().request('GET','/meta').status)"])
             with zipfile.ZipFile(bundle) as archive:
                 archive.extractall(root / "bundle")
             unpacked = next((root / "bundle").iterdir())
@@ -124,7 +124,7 @@ def check(directory, uv=None):
                 uv_skill = root / "uv-skills/linxsci-skills/scripts/cli.py"
                 assert json.loads(run([str(python), str(uv_skill), "search", "uv topic"]))["data"][0]["query"] == "uv topic"
                 run(uv_cli + ["install-skill", "--skills-dir", str(root / "uv-skills"), "--update"])
-                run([uv, "tool", "uninstall", "linxsci-sdk"])
+                run([uv, "tool", "uninstall", "linxsci"])
                 assert not uv_executable.exists()
             run([str(python), str(installed), "config", "--clear"])
             assert not (root / "config.json").exists()

@@ -17,10 +17,10 @@ def bundle(output):
     output.mkdir(parents=True, exist_ok=True)
     target = output / ("linxsci-skills-" + version + ".zip")
     # Explicit allowlist prevents accidentally shipping local settings or credentials.
-    files = [ROOT / name for name in ("install.py", "Install.command", "Install.bat", "README.md", "Scholar-OpenAPI-v2-使用文档.md")]
+    files = [ROOT / name for name in ("install.py", "Install.command", "Install.bat", "README.md", "README.zh-CN.md")]
     files += list((ROOT / "docs").glob("*.md"))
     skill = ROOT / "skills/linxsci-skills"
-    files += [skill / "SKILL.md", skill / "service.json", skill / "__init__.py"]
+    files += [skill / "SKILL.md", skill / "SKILL.zh-CN.md", skill / "service.json", skill / "__init__.py"]
     for directory, pattern in (("scripts", "*.py"), ("references", "*.md"), ("agents", "*.yaml")):
         files += list((skill / directory).glob(pattern))
     with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED) as archive:

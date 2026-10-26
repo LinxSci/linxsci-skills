@@ -60,7 +60,7 @@ class SkillAPICoverageTests(unittest.TestCase):
         self.check_routes(convenient=True)
 
     def check_routes(self, convenient):
-        document = (ROOT / "Scholar-OpenAPI-v2-使用文档.md").read_text(encoding="utf-8")
+        document = (ROOT / "docs/API.md").read_text(encoding="utf-8")
         routes = re.findall(r"\| (GET|POST) \| `/openapi/v2([^`]+)` \|", document)
         self.assertEqual(len(routes), 34)
         identifiers = {"paper_id": "doi:10.1000/论文 A?#%", "task_id": "task/1",
@@ -76,10 +76,10 @@ class SkillAPICoverageTests(unittest.TestCase):
             body_file = directory / "request.json"
             body_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
             environment = dict(os.environ)
-            environment.update(SCHOLAR_BASE_URL="http://127.0.0.1:" + str(self.server.server_port),
-                               SCHOLAR_OPENAPI_KEY="coverage-test-key",
-                               SCHOLAR_CONFIG_FILE=str(directory / "unused.json"),
-                               SCHOLAR_MINERU_API_KEY="coverage-mineru-key",
+            environment.update(LINXSCI_BASE_URL="http://127.0.0.1:" + str(self.server.server_port),
+                               LINXSCI_OPENAPI_KEY="coverage-test-key",
+                               LINXSCI_CONFIG_FILE=str(directory / "unused.json"),
+                               LINXSCI_MINERU_API_KEY="coverage-mineru-key",
                                NO_PROXY="127.0.0.1,localhost")
             cases = shortcut_cases(identifiers, body_file, source)
             self.assertEqual(set(cases), set(routes))

@@ -23,7 +23,7 @@ jobs:
       - run: python tools/build_release.py
       - run: python tools/check_release.py dist
       - run: python tools/smoke_release.py dist --uv uv
-      - run: python -m pip install --no-deps dist/linxsci_sdk-0.3.0-py3-none-any.whl
+      - run: python -m pip install --no-deps dist/linxsci-0.3.0-py3-none-any.whl
       - run: linxsci --version
       - run: linxsci install-skill --skills-dir smoke/skills
       - run: python smoke/skills/linxsci-skills/scripts/cli.py routes

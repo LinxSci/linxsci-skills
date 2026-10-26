@@ -11,14 +11,14 @@ class ConfigError(ValueError):
 
 
 def config_path():
-    override = os.environ.get("SCHOLAR_CONFIG_FILE")
+    override = os.environ.get("LINXSCI_CONFIG_FILE")
     if override:
         return Path(override).expanduser()
     if os.name == "nt":
         root = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local")))
     else:
         root = Path.home() / ".config"
-    return root / "linxsci-scholar" / "config.json"
+    return root / "linxsci-skills" / "config.json"
 
 
 def validate_url(value):
@@ -73,8 +73,8 @@ def load_config():
 
 def resolve_settings(base_url=None, api_key=None):
     # Explicit arguments > environment > saved configuration > release defaults.
-    base_url = base_url or os.environ.get("SCHOLAR_BASE_URL")
-    api_key = api_key or os.environ.get("SCHOLAR_OPENAPI_KEY")
+    base_url = base_url or os.environ.get("LINXSCI_BASE_URL")
+    api_key = api_key or os.environ.get("LINXSCI_OPENAPI_KEY")
     saved = load_config() if not (base_url and api_key) else {}
     base_url = base_url or saved.get("base_url") or service_defaults()["base_url"]
     api_key = api_key or saved.get("api_key")

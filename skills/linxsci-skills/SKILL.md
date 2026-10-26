@@ -1,97 +1,82 @@
 ---
 name: linxsci-skills
-description: 调用 LinxSci Scholar OpenAPI v2，支持文献检索、论文内容与引用、推荐、学术实体和 PDF 解析。用于 Scholar 研究任务、指定接口调用，以及服务健康和用量查询。
+description: Use LinxSci OpenAPI v2 for academic paper search, content and citations, recommendations, research entities, PDF parsing, and explicit API health or usage queries.
 ---
 
-# LinxSci Scholar
+# linxsci-skills
 
-使用本 Skill 的统一入口 `scripts/cli.py`。所有示例中的 `<skill-dir>` 都替换为本文件所在目录的绝对路径；脚本仅依赖 Python 3.9+ 标准库，无需安装 SDK。
+[简体中文](SKILL.zh-CN.md)
 
-## 接口调用入口
+Use `scripts/cli.py` from this skill. Replace `<skill-dir>` with the absolute directory containing this file. Scripts require only Python 3.9+ and its standard library; no SDK installation is needed.
 
-本 Skill 可调用 [接口文档](references/api.md) 中的全部 34 个接口，覆盖服务信息与健康、各来源搜索和标识解析、论文详情与引用、推荐、作者/机构/期刊及 PDF 解析。全部接口都提供便捷命令，按 [命令速查](references/cli.md) 选择；`request` 保留作通用调试入口。
+## Choose the requested action
 
-用户指定接口或操作时，按目标路由、参数和响应直接执行；例如查询用量不需要先检索论文，调用推荐接口不需要先走章节阅读流程。按任务需要读取接口文档，使用 `routes` 查看支持的方法与路径（不联网）。
+All 34 routes in [the API reference](references/api.md) have [convenience commands](references/cli.md). Follow the user's requested endpoint and parameters directly. A usage query does not require paper search; a recommendation request does not require section reading. Read the relevant contract when needed. `routes` lists supported methods and paths without network access.
 
 ```bash
-python3 <skill-dir>/scripts/cli.py health ready
 python3 <skill-dir>/scripts/cli.py usage
+python3 <skill-dir>/scripts/cli.py health ready
 python3 <skill-dir>/scripts/cli.py search-openalex "large language models"
 python3 <skill-dir>/scripts/cli.py recommend --body @recommendations.json
-python3 <skill-dir>/scripts/cli.py resolve-entities --body @entities.json
 ```
 
-四个搜索命令都直接接收检索词，可选 `--body` 提供附加 JSON 对象，检索词以位置参数为准。示例中的 JSON 文件须先按部署环境的 Agent API 契约或用户提供的参数准备。便捷命令自动选择方法和路径；JSON 请求使用 `--body @file.json`，PDF 上传接口 `/pdf/parse/upload` 使用 `upload /absolute/path/paper.pdf`，由脚本构造 multipart 的 `file` 字段。接口调用不要求助手额外完成综述或研究分析。
+Prepare JSON files from the deployed Agent API contract or user-provided request data. The four search commands accept a positional query; optional `--body` adds fields without overriding it. Do not invent POST fields, filters, pagination or task states. `{}` is not a universally valid request. `meta` does not guarantee a complete schema. If required business parameters are missing, identify the missing contract or request data.
 
-## 配置与发现
+## Configuration
 
-脚本优先读取环境变量 `SCHOLAR_BASE_URL` 和 `SCHOLAR_OPENAPI_KEY`，其次读取 `setup` 保存的用户本地配置。地址默认值是正式服务 `https://linxsci.com`，可显式配置其他部署地址；服务根地址不含 `/openapi/v2`。已有配置优先于发行默认值，升级不会自动切换用户保存的地址。不要读取、展示或让用户把 Key 发到对话。缺少配置时请用户在本机运行向导，Key 通过隐藏输入保存：
+`LINXSCI_BASE_URL` and `LINXSCI_OPENAPI_KEY` override setup's saved configuration. The default service is `https://linxsci.com`; supply a root without `/openapi/v2`. Saved settings override release defaults and persist across upgrades.
+
+Do not read or display keys, or ask users to send them in chat. If configuration is missing, have the user run setup locally with hidden key input:
 
 ```bash
 python3 <skill-dir>/scripts/cli.py setup
-# 线上地址作为默认提示：
 python3 <skill-dir>/scripts/cli.py setup --online
 ```
 
-不要把服务端的 `AGENT_PUBLIC_API_KEY` 当成客户端 Key。`config` 仅显示配置状态，`config --clear` 清除保存的配置；执行清除需来自用户请求。
+The server's `AGENT_PUBLIC_API_KEY` is not a client key. `config` shows redacted settings. Clear configuration only when the user asks. `doctor` calls `/meta` and consumes a service call; reuse an existing successful connection check instead of probing repeatedly.
+
+## Research workflow
 
 ```bash
-python3 <skill-dir>/scripts/cli.py doctor
-# 需要元信息正文时再调用：
-python3 <skill-dir>/scripts/cli.py meta
-python3 <skill-dir>/scripts/cli.py routes
+python3 <skill-dir>/scripts/cli.py search "graph neural networks"
+python3 <skill-dir>/scripts/cli.py paper "<returned-paper-id>"
+python3 <skill-dir>/scripts/cli.py paper "<returned-paper-id>" --resource toc
+python3 <skill-dir>/scripts/cli.py paper "<returned-paper-id>" --resource sections --item-id "<returned-section-id>"
 ```
 
-首次接入可用 `doctor`（调用 `/meta`）验证连接；它也经过用量检查和计费流程，已有有效连接结果时不重复探测。根据 [接口文档](references/api.md) 核对目标路由；对于未定义的业务请求模型，读取部署环境的上游契约或用户提供的请求 JSON。`meta` 不保证返回完整 schema；缺少目标接口必需的业务参数时，说明需要补充的契约或请求 JSON，不猜测字段和分页，也不擅自改为其他接口任务。
+Use actual returned paper IDs with `local:`, `arxiv:`, `openalex:`, `s2:` or `doi:` prefixes. Convenience commands accept raw IDs, including DOI slashes, and encode them. Get section/asset IDs from responses. Read details and contents before relevant sections; fetch full content only when needed.
 
-## 文献工作流
+Synthesize research answers from content actually read. Cite returned paper IDs, links and section evidence. Distinguish abstract evidence from full text, report missing content and avoid invented numbers. There is no documented server-side ask, trends or automatic-review endpoint.
 
-```bash
-python3 <skill-dir>/scripts/cli.py search 'graph neural networks'
-python3 <skill-dir>/scripts/cli.py paper 'arxiv:2301.07041'
-python3 <skill-dir>/scripts/cli.py paper 'arxiv:2301.07041' --resource toc
-python3 <skill-dir>/scripts/cli.py paper 'arxiv:2301.07041' --resource sections --item-id '<returned-section-id>'
-```
-
-从搜索结果中取实际论文 ID；先看详情、目录，再读取相关章节，需要完整文本时才读 `--resource content`。论文 ID 需要 `local:`、`arxiv:`、`openalex:`、`s2:` 或 `doi:` 前缀。便捷命令接收未经编码的 ID（例如 `doi:10.1000/example`），SDK 负责编码。章节和资源 ID 必须取自返回结果。
-
-回答研究问题时由助手综合已读取内容，附上实际返回的论文标识、链接和章节依据。区分摘要和全文证据，说明缺失内容；不要声称存在服务端 `ask`、趋势榜或自动综述接口。
-
-## 其他接口与 PDF
-
-全部接口优先使用 [便捷命令速查](references/cli.md)，无需填写 HTTP 方法和路径。各来源检索、推荐、实体和 PDF 创建任务也都有独立命令。
+## PDF and transport
 
 ```bash
-python3 <skill-dir>/scripts/cli.py resolve --body @resolve.json
-python3 <skill-dir>/scripts/cli.py author '<returned-author-id>' --papers --param '<upstream-key>=<value>'
 python3 <skill-dir>/scripts/cli.py upload /absolute/path/paper.pdf
-python3 <skill-dir>/scripts/cli.py task '<returned-task-id>'
-python3 <skill-dir>/scripts/cli.py task '<returned-task-id>' --result
-python3 <skill-dir>/scripts/cli.py --output /absolute/path/asset.bin paper 'arxiv:2301.07041' --resource assets --item-id '<returned-asset-id>'
+python3 <skill-dir>/scripts/cli.py task "<returned-task-id>"
+python3 <skill-dir>/scripts/cli.py task "<returned-task-id>" --result
+python3 <skill-dir>/scripts/cli.py --output /absolute/path/asset.bin paper "<returned-paper-id>" --resource assets --item-id "<returned-asset-id>"
 ```
 
-全局可选参数 `--framework-request-id <id>`（放在 `linxsci` 之后、具体动作之前）发送 `X-ANYTHINGRIGHT-REQ-ID`，对应 Scholar 自身错误的 `extra.request-id`；各接口命令的 `--request-id <id>` 发送独立的 `X-Request-ID`。两者用途不同。通用 `request` 的路径相对于 `/openapi/v2`，每个动态 ID 独立 URL 编码（包括 DOI 中的斜杠）；查询参数用重复的 `--param key=value`。JSON 通过 `--body @file.json` 原样传入。`upload` 可传 `--field key=value`；上游契约需要 `X-MinerU-API-Key` 时，在本机设置 `SCHOLAR_MINERU_API_KEY`，`parse-pdf`、`upload`、`task`（含 `--result`）及通用 PDF `request` 都会读取它。
+Upload sends the local file to the configured service; perform it when the user requests parsing that file. Record the returned task ID, inspect actual statuses and fetch results after completion. Do not recreate tasks or poll indefinitely.
 
-上传会发送本地文件到配置服务，仅在用户请求解析该文件时执行。任务状态结构未定义，使用实际返回的标识和状态；不自动无限轮询或重复创建任务，确认完成后获取结果。
+Global `--framework-request-id` goes before the action and sends `X-ANYTHINGRIGHT-REQ-ID` for framework `extra.request-id`. Endpoint `--request-id` sends the separate upstream/proxy `X-Request-ID`. Repeat `--param key=value` for query parameters and `--field key=value` for upload fields. Generic `request` paths are relative to `/openapi/v2` and require separately encoded dynamic segments, including DOI slashes.
 
-## 输出与故障
+When the upstream contract needs `X-MinerU-API-Key`, the user can set `LINXSCI_MINERU_API_KEY` locally. PDF create/upload/status/result commands and generic PDF requests read it.
 
-stdout 输出 JSON 或原始响应；`--output`（放在 `linxsci` 之后、具体动作之前）保留响应原始字节，适用于二进制资源。SDK `Response` 保留 status、headers、body。上游响应原样透传，Scholar 自身错误则使用 `code/data/error/extra` 框架结构；读取 `error.code` 和 `extra.request-id`，不把它当作上游业务模型。`extra.cost` 是请求耗时（秒），不是扣费金额。不要假定列表字段或 PDF 终态。
+## Output and failures
 
-退出码：0 成功，1 HTTP/网络错误，2 参数/本地文件错误。SDK 异常保留原始错误体，并提供 `error_code`、`request_id`、`framework_request_id`、`execution_uncertain` 属性。CLI 默认输出中文诊断和两种请求 ID；`linxsci --json-errors` 输出结构化诊断，不展示服务端错误消息全文。
+Stdout contains JSON or the raw response. Global `--output` preserves response bytes, including binary assets. Exit codes: 0 success, 1 HTTP/network failure, 2 argument/local-file failure. `--json-errors` produces structured diagnostics without exposing the full upstream error message. SDK responses preserve status, headers and body; errors expose `error_code`, `request_id`, `framework_request_id`, and `execution_uncertain`.
 
-按 HTTP 状态和实际 `error.code` 区分故障：
+Upstream responses and business errors keep their original format. Framework errors use `code/data/error/extra`; `extra.cost` is elapsed seconds, not a charge. Do not assume common list fields or PDF terminal states.
 
-| error.code | 处理 |
+| Error code | Action |
 | --- | --- |
-| `-401` / `-404` | 检查 Scholar Key / 路径和方法 |
-| `-3900` | action 已登记但未启用，联系管理员配置并启用；不要反复重试 |
-| `-3901` | 每日调用限额已满，额度恢复后或管理员处理后再调用 |
-| `-3902` | 服务端 Agent API 地址或 Key 缺失，联系管理员 |
-| `-3903` | 上游连接/传输失败，检查连接；不要将失败等同于业务操作一定未执行 |
-| `-3904` | member begin 未成功，未转发上游，交由管理员排查 |
-| `-3905` | 上游已返回但 finish 未确认，先查询执行与计费结果，再决定是否重试，尤其不要直接重复上传或创建解析任务 |
+| `-401` / `-404` | Check client key / method and path |
+| `-3900` | Ask an administrator to enable the registered action; avoid repeated retries |
+| `-3901` | Wait for daily quota reset or administrative action |
+| `-3902` | Ask the administrator to configure the upstream URL/key |
+| `-3903` | Inspect upstream connectivity; failure does not prove the operation did not execute |
+| `-3904` | Member begin failed before forwarding; administrator investigation is needed |
+| `-3905` | Upstream returned but finish is unconfirmed; check execution and billing before retrying writes |
 
-上游业务错误（例如 `validation_error`、`asset_unavailable`）保留其原有格式；不要把全部 502/503 当作相同原因。脚本不自动重试；保留 `Retry-After`，但它不能替代 `-3905` 的执行/计费核查。
-
-每次请求预计调用量为 1，Agent API 2xx 对应实际调用量 1，其他状态或连接失败对应 0，预占释放由 member finish 结果确认。不要根据 HTTP 失败自行保证扣费已经释放，尤其遇到 `-3905`。避免无目的的重复检索、诊断与轮询；查询动作也走调用限额。详细规则见 [references/api.md](references/api.md)。
+Do not treat all 502/503 errors identically. No automatic retries are performed. Preserve `Retry-After`, but it does not resolve `-3905` uncertainty. Expected call quantity is 1; upstream 2xx means actual 1, otherwise 0, with reserved-credit release confirmed by member finish. Do not guarantee release based solely on HTTP failure. Avoid redundant search, diagnosis and polling. See [the API reference](references/api.md) for details.

@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "skills/linxsci-skills/scripts"))
 import cli
-from scholar_client import ScholarClient, ScholarError, Response
+from client import LinxSciClient, LinxSciError, Response
 
 
 class UnifiedCLITests(unittest.TestCase):
@@ -18,8 +18,8 @@ class UnifiedCLITests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        environment = {"SCHOLAR_CONFIG_FILE": str(self.root / "config.json"),
-                       "SCHOLAR_BASE_URL": "http://localhost:9000", "SCHOLAR_OPENAPI_KEY": "root-test-key"}
+        environment = {"LINXSCI_CONFIG_FILE": str(self.root / "config.json"),
+                       "LINXSCI_BASE_URL": "http://localhost:9000", "LINXSCI_OPENAPI_KEY": "root-test-key"}
         self.environment = patch.dict(os.environ, environment, clear=True)
         self.environment.start()
         self.addCleanup(self.environment.stop)
@@ -44,7 +44,7 @@ class UnifiedCLITests(unittest.TestCase):
         self.assertEqual(result.exception.code, 0)
         self.assertIn("linxsci", output.getvalue())
         output = io.StringIO()
-        with patch.dict(os.environ, {}, clear=True), patch.object(ScholarClient, "request") as request, contextlib.redirect_stdout(output):
+        with patch.dict(os.environ, {}, clear=True), patch.object(LinxSciClient, "request") as request, contextlib.redirect_stdout(output):
             self.assertEqual(cli.main(["routes"]), 0)
             self.assertEqual(len(json.loads(output.getvalue())), 34)
             request.assert_not_called()
@@ -60,16 +60,16 @@ class UnifiedCLITests(unittest.TestCase):
         self.assertEqual(received, [(arguments, "linxsci test-capability")])
 
     def test_unknown_capability_and_missing_action(self):
-        for arguments in (["patents", "search", "example"], ["scholar"], ["scholar", "search", "example"]):
+        for arguments in (["patents", "search", "example"], ["linxsci"], ["linxsci", "search", "example"]):
             with self.subTest(arguments=arguments), contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as result:
                 cli.main(arguments)
             self.assertEqual(result.exception.code, 2)
 
     def test_search_and_framework_error(self):
-        failure = ScholarError("HTTP 502", 502,
+        failure = LinxSciError("HTTP 502", 502,
                                {"error": {"code": -3905}, "extra": {"request-id": "root-framework"}})
         output, errors = io.StringIO(), io.StringIO()
-        with patch.object(ScholarClient, "request", autospec=True, side_effect=failure) as request, contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+        with patch.object(LinxSciClient, "request", autospec=True, side_effect=failure) as request, contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
             self.assertEqual(cli.main(["--json-errors", "--framework-request-id", "root-framework", "search", "-3905"]), 1)
             self.assertEqual(request.call_count, 1)
             self.assertEqual(request.call_args.kwargs["payload"], {"query": "-3905"})
@@ -86,7 +86,7 @@ class UnifiedCLITests(unittest.TestCase):
                               ("search-semantic-scholar", "/search/semantic-scholar"),
                               ("search-google-scholar", "/search/google-scholar")):
             for options in ([], ["--body", json.dumps(extra)], ["--body", "@" + str(source)]):
-                with self.subTest(command=command, options=options), patch.object(ScholarClient, "request", return_value=Response(200, {}, b"{}")) as request, contextlib.redirect_stdout(io.StringIO()):
+                with self.subTest(command=command, options=options), patch.object(LinxSciClient, "request", return_value=Response(200, {}, b"{}")) as request, contextlib.redirect_stdout(io.StringIO()):
                     self.assertEqual(cli.main([command, "large language models 中文"] + options), 0)
                     request.assert_called_once()
                     self.assertEqual(request.call_args.args, ("POST", path))
@@ -97,7 +97,7 @@ class UnifiedCLITests(unittest.TestCase):
         for command in ("search", "search-openalex", "search-semantic-scholar", "search-google-scholar"):
             for options in ([], ["--body", '{"query":"topic"}'], ["topic", "--body", "[]"],
                             ["topic", "--body", "null"], ["topic", "--body", "{"]):
-                with self.subTest(command=command, options=options), patch.object(ScholarClient, "request") as request, contextlib.redirect_stderr(io.StringIO()):
+                with self.subTest(command=command, options=options), patch.object(LinxSciClient, "request") as request, contextlib.redirect_stderr(io.StringIO()):
                     try:
                         code = cli.main([command] + options)
                     except SystemExit as error:
@@ -117,7 +117,7 @@ class UnifiedCLITests(unittest.TestCase):
             ["batch-get", "--body", "@" + str(self.root / "missing.json")],
         ]
         for arguments in cases:
-            with self.subTest(arguments=arguments), patch.object(ScholarClient, "request") as request, contextlib.redirect_stderr(io.StringIO()):
+            with self.subTest(arguments=arguments), patch.object(LinxSciClient, "request") as request, contextlib.redirect_stderr(io.StringIO()):
                 try:
                     code = cli.main(arguments)
                 except SystemExit as error:
@@ -128,7 +128,7 @@ class UnifiedCLITests(unittest.TestCase):
     def test_global_options_and_binary_output(self):
         output = self.root / "asset.bin"
         data = b"\x00\xffasset"
-        with patch.object(ScholarClient, "request", autospec=True, return_value=Response(200, {}, data)) as request:
+        with patch.object(LinxSciClient, "request", autospec=True, return_value=Response(200, {}, data)) as request:
             self.assertEqual(cli.main(["--timeout", "12", "--output", str(output), "paper", "doi:10.1000/example", "--resource", "assets", "--item-id", "figure1"]), 0)
             self.assertEqual(request.call_args.args[0].timeout, 12)
             self.assertIn("doi:10.1000%2Fexample/assets/figure1", request.call_args.args[2])

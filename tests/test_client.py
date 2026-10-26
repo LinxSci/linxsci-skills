@@ -7,8 +7,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'skills/linxsci-skills/scripts'))
-from scholar_client import ScholarClient, ScholarError, ROUTES
-from scholar import main
+from client import LinxSciClient, LinxSciError, ROUTES
+from commands import main
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -49,7 +49,7 @@ class ClientTests(unittest.TestCase):
         cls.server = HTTPServer(('127.0.0.1', 0), Handler)
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
-        cls.client = ScholarClient('http://127.0.0.1:' + str(cls.server.server_port), 'test-key')
+        cls.client = LinxSciClient('http://127.0.0.1:' + str(cls.server.server_port), 'test-key')
 
     @classmethod
     def tearDownClass(cls):
@@ -85,7 +85,7 @@ class ClientTests(unittest.TestCase):
 
     def test_error_preserved_without_retry(self):
         before = len(Handler.calls)
-        with self.assertRaises(ScholarError) as caught:
+        with self.assertRaises(LinxSciError) as caught:
             self.client.request('GET', '/usage')
         self.assertEqual(len(Handler.calls), before + 1)
         self.assertEqual(caught.exception.status, 429)
@@ -94,14 +94,14 @@ class ClientTests(unittest.TestCase):
 
     def test_redirect_not_followed(self):
         before = len(Handler.calls)
-        with self.assertRaises(ScholarError) as caught:
+        with self.assertRaises(LinxSciError) as caught:
             self.client.request('GET', '/health/live')
         self.assertEqual(caught.exception.status, 302)
         self.assertEqual(len(Handler.calls), before + 1)
 
     def test_input_validation(self):
         with self.assertRaises(ValueError):
-            ScholarClient('https://example.com/openapi/v2', 'key')
+            LinxSciClient('https://example.com/openapi/v2', 'key')
         with self.assertRaises(ValueError):
             self.client.paper('2301.07041')
         with self.assertRaises(ValueError):
