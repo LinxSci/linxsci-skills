@@ -161,8 +161,42 @@ python3 "<skill-dir>/scripts/cli.py" --select /data/items --fields id,title,url 
 
 每行都是独立示例，不应将整表当作必须依次执行的操作。各命令详细参数见下文。
 
-| 编号 | 接口 | 示例 |
-| --- | --- | --- |
+| 编号 | HTTP 方法与路径 | 接口 | 示例 |
+| --- | --- | --- | --- |
+| 01 | `GET /openapi/v2/meta` | 接口元信息 | `python3 "<skill-dir>/scripts/cli.py" meta` |
+| 02 | `GET /openapi/v2/usage` | 用量信息 | `python3 "<skill-dir>/scripts/cli.py" usage` |
+| 03 | `GET /openapi/v2/health/live` | 存活检查 | `python3 "<skill-dir>/scripts/cli.py" health live` |
+| 04 | `GET /openapi/v2/health/ready` | 就绪检查 | `python3 "<skill-dir>/scripts/cli.py" health ready` |
+| 05 | `POST /openapi/v2/papers/search` | 综合论文搜索 | `python3 "<skill-dir>/scripts/cli.py" search "large language models"` |
+| 06 | `POST /openapi/v2/search/openalex` | OpenAlex 搜索 | `python3 "<skill-dir>/scripts/cli.py" search-openalex "large language models"` |
+| 07 | `POST /openapi/v2/search/semantic-scholar` | Semantic Scholar 搜索 | `python3 "<skill-dir>/scripts/cli.py" search-semantic-scholar "large language models"` |
+| 08 | `POST /openapi/v2/search/google-scholar` | Google Scholar 搜索 | `python3 "<skill-dir>/scripts/cli.py" search-google-scholar "large language models"` |
+| 09 | `POST /openapi/v2/papers/resolve` | 论文标识解析 | `python3 "<skill-dir>/scripts/cli.py" resolve --body @papers-resolve.json` |
+| 10 | `POST /openapi/v2/papers:batchGet` | 批量获取论文 | `python3 "<skill-dir>/scripts/cli.py" batch-get --body @papers-batch-get.json` |
+| 11 | `GET /openapi/v2/papers/{paper_id}` | 论文详情 | `python3 "<skill-dir>/scripts/cli.py" paper "<paper-id>"` |
+| 12 | `GET /openapi/v2/papers/{paper_id}/content` | 论文内容 | `python3 "<skill-dir>/scripts/cli.py" paper "<paper-id>" --resource content` |
+| 13 | `GET /openapi/v2/papers/{paper_id}/toc` | 论文目录 | `python3 "<skill-dir>/scripts/cli.py" paper "<paper-id>" --resource toc` |
+| 14 | `GET /openapi/v2/papers/{paper_id}/sections/{section_id}` | 论文章节 | `python3 "<skill-dir>/scripts/cli.py" paper "<paper-id>" --resource sections --item-id "<section-id>"` |
+| 15 | `GET /openapi/v2/papers/{paper_id}/figures` | 论文图表 | `python3 "<skill-dir>/scripts/cli.py" paper "<paper-id>" --resource figures` |
+| 16 | `GET /openapi/v2/papers/{paper_id}/assets/{asset_id}` | 论文资源 | `python3 "<skill-dir>/scripts/cli.py" --output asset.bin paper "<paper-id>" --resource assets --item-id "<asset-id>"` |
+| 17 | `GET /openapi/v2/papers/{paper_id}/references` | 参考文献 | `python3 "<skill-dir>/scripts/cli.py" paper "<paper-id>" --resource references` |
+| 18 | `GET /openapi/v2/papers/{paper_id}/citations` | 被引论文 | `python3 "<skill-dir>/scripts/cli.py" paper "<paper-id>" --resource citations` |
+| 19 | `GET /openapi/v2/papers/{paper_id}/related` | 相关论文 | `python3 "<skill-dir>/scripts/cli.py" paper "<paper-id>" --resource related` |
+| 20 | `GET /openapi/v2/papers/{paper_id}/graph` | 引用图谱 | `python3 "<skill-dir>/scripts/cli.py" paper "<paper-id>" --resource graph` |
+| 21 | `GET /openapi/v2/papers/{paper_id}/citation` | 论文引用格式 | `python3 "<skill-dir>/scripts/cli.py" paper "<paper-id>" --resource citation` |
+| 22 | `POST /openapi/v2/recommendations` | 论文推荐 | `python3 "<skill-dir>/scripts/cli.py" recommend --body @recommendations.json` |
+| 23 | `GET /openapi/v2/recommendations/mobile-cards` | 移动端推荐卡片 | `python3 "<skill-dir>/scripts/cli.py" mobile-cards` |
+| 24 | `GET /openapi/v2/authors/{author_id}` | 作者详情 | `python3 "<skill-dir>/scripts/cli.py" author "<author-id>"` |
+| 25 | `GET /openapi/v2/authors/{author_id}/papers` | 作者论文 | `python3 "<skill-dir>/scripts/cli.py" author "<author-id>" --papers` |
+| 26 | `GET /openapi/v2/institutions/{institution_id}` | 机构详情 | `python3 "<skill-dir>/scripts/cli.py" institution "<institution-id>"` |
+| 27 | `GET /openapi/v2/institutions/{institution_id}/papers` | 机构论文 | `python3 "<skill-dir>/scripts/cli.py" institution "<institution-id>" --papers` |
+| 28 | `GET /openapi/v2/venues/{venue_id}` | 期刊或会议详情 | `python3 "<skill-dir>/scripts/cli.py" venue "<venue-id>"` |
+| 29 | `GET /openapi/v2/venues/{venue_id}/papers` | 期刊或会议论文 | `python3 "<skill-dir>/scripts/cli.py" venue "<venue-id>" --papers` |
+| 30 | `POST /openapi/v2/entities:resolve` | 实体标识解析 | `python3 "<skill-dir>/scripts/cli.py" resolve-entities --body @entities-resolve.json` |
+| 31 | `POST /openapi/v2/pdf/parse` | 创建 PDF 解析任务 | `python3 "<skill-dir>/scripts/cli.py" parse-pdf --body @pdf-parse.json` |
+| 32 | `POST /openapi/v2/pdf/parse/upload` | 上传 PDF 并创建解析任务 | `python3 "<skill-dir>/scripts/cli.py" upload "/absolute/path/paper.pdf"` |
+| 33 | `GET /openapi/v2/pdf/parse/{task_id}` | 查询 PDF 解析任务 | `python3 "<skill-dir>/scripts/cli.py" task "<task-id>"` |
+| 34 | `GET /openapi/v2/pdf/parse/{task_id}/result` | 获取 PDF 解析结果 | `python3 "<skill-dir>/scripts/cli.py" task "<task-id>" --result` |
 
 
 ## 服务信息与健康检查

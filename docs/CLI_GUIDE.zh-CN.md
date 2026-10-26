@@ -1,12 +1,28 @@
-# CLI 命令与参数详细指南
+# CLI 命令与参数指南
 
-[English](CLI_GUIDE.md) · [README](../README.zh-CN.md)
+[English](CLI_GUIDE.md)
 
-## 选择调用入口
+## 安装 CLI
 
-使用已安装 CLI 时，可通过 `python -m pip install /path/to/linxsci-0.3.0-py3-none-any.whl` 安装发行 wheel；隔离的 CLI 环境可使用 `uv tool install /path/to/linxsci-0.3.0-py3-none-any.whl`。源码开发者可执行 `python -m pip install -e .`，终端命令为 `linxsci`。
+需要 Python 3.9+。从 [发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.1) 下载 wheel，在文件所在目录运行：
 
-Skill 可以独立运行，不需要安装 CLI 或 SDK。下载完整 Skill 后，将下文所有示例中的 `linxsci` 替换为 `python3 "/absolute/path/to/linxsci-skills/scripts/cli.py"` 即可；Windows 使用 `py -3` 和实际脚本路径。安装方式见 [Skill 说明](../skills/linxsci-skills/SKILL.zh-CN.md#独立安装-skill)。
+```bash
+uv tool install ./linxsci-0.3.1-py3-none-any.whl
+linxsci --version
+```
+
+此方式需要 [uv](https://docs.astral.sh/uv/getting-started/installation/)。找不到命令时运行 `uv tool update-shell` 并重新打开终端。也可从官方源码安装到 Python 环境：
+
+```bash
+git clone https://github.com/LinxSci/linxsci-skills.git
+cd linxsci-skills
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install .
+linxsci --version
+```
+
+Windows 使用 `py -3 -m venv .venv` 和 `.venv\Scripts\activate.bat`。Python 包和命令均为 `linxsci`。调用服务前运行 `linxsci setup`。
 
 ## 调用格式与参数位置
 
@@ -16,7 +32,7 @@ linxsci --help
 linxsci 命令 --help
 ```
 
-不带参数运行 `linxsci` 显示帮助。`--help` 和 `--version` 无需配置、不联网。全局选项必须放在**命令之前**，命令专用参数放在**命令之后**。含空格的值使用引号。相对文件路径以当前工作目录为基准，不以 Skill 目录为基准。执行前将 `<...>` 占位参数替换成实际值。
+不带参数运行 `linxsci` 显示帮助。`--help` 和 `--version` 无需配置、不联网。全局选项必须放在**命令之前**，命令专用参数放在**命令之后**。含空格的值使用引号。相对文件路径以当前工作目录为基准。执行前将 `<...>` 占位参数替换成实际值。
 
 ## 全局选项
 
@@ -149,7 +165,7 @@ linxsci install-skill --update
 | `--skills-dir PATH` | 目录，默认 `~/.agents/skills` | 助手扫描父目录，安装器自动追加 `/linxsci-skills`；支持展开开头的 `~` |
 | `--update` | 开关，默认关闭 | 更新由本安装器管理的副本，并将旧版备份到扫描父目录旁的 `linxsci-skill-backups`，避免被助手重复扫描 |
 
-此操作复制随包文件，不需要 Key 或网络；可通过 Skill 独立脚本运行，无需安装 CLI/SDK。更新时必须从**新版本**下载源码或安装包运行命令，确保复制的是新文件。安装器拒绝符号链接目标、不受其管理或标记不匹配的目录；外部安装器的副本请用原工具更新。此命令不配置 Key，也不注册终端命令。
+此操作复制随包文件，不需要 Key 或网络。使用 `--update` 前先升级已安装的 CLI，确保其中包含新版随附文件。安装器拒绝符号链接目标、不受其管理或标记不匹配的目录；外部安装器的副本请用原工具更新。此命令仅复制随附的助手文件，不配置 API Key。
 
 ### read-output
 
@@ -165,8 +181,42 @@ linxsci --select /data/items --fields id,title,url --limit 3 read-output "/absol
 
 每行都是独立示例，不应将整表当作必须依次执行的操作。各命令详细参数见下文。
 
-| 编号 | 接口 | 示例 |
-| --- | --- | --- |
+| 编号 | HTTP 方法与路径 | 接口 | 示例 |
+| --- | --- | --- | --- |
+| 01 | `GET /openapi/v2/meta` | 接口元信息 | `linxsci meta` |
+| 02 | `GET /openapi/v2/usage` | 用量信息 | `linxsci usage` |
+| 03 | `GET /openapi/v2/health/live` | 存活检查 | `linxsci health live` |
+| 04 | `GET /openapi/v2/health/ready` | 就绪检查 | `linxsci health ready` |
+| 05 | `POST /openapi/v2/papers/search` | 综合论文搜索 | `linxsci search "large language models"` |
+| 06 | `POST /openapi/v2/search/openalex` | OpenAlex 搜索 | `linxsci search-openalex "large language models"` |
+| 07 | `POST /openapi/v2/search/semantic-scholar` | Semantic Scholar 搜索 | `linxsci search-semantic-scholar "large language models"` |
+| 08 | `POST /openapi/v2/search/google-scholar` | Google Scholar 搜索 | `linxsci search-google-scholar "large language models"` |
+| 09 | `POST /openapi/v2/papers/resolve` | 论文标识解析 | `linxsci resolve --body @papers-resolve.json` |
+| 10 | `POST /openapi/v2/papers:batchGet` | 批量获取论文 | `linxsci batch-get --body @papers-batch-get.json` |
+| 11 | `GET /openapi/v2/papers/{paper_id}` | 论文详情 | `linxsci paper "<paper-id>"` |
+| 12 | `GET /openapi/v2/papers/{paper_id}/content` | 论文内容 | `linxsci paper "<paper-id>" --resource content` |
+| 13 | `GET /openapi/v2/papers/{paper_id}/toc` | 论文目录 | `linxsci paper "<paper-id>" --resource toc` |
+| 14 | `GET /openapi/v2/papers/{paper_id}/sections/{section_id}` | 论文章节 | `linxsci paper "<paper-id>" --resource sections --item-id "<section-id>"` |
+| 15 | `GET /openapi/v2/papers/{paper_id}/figures` | 论文图表 | `linxsci paper "<paper-id>" --resource figures` |
+| 16 | `GET /openapi/v2/papers/{paper_id}/assets/{asset_id}` | 论文资源 | `linxsci --output asset.bin paper "<paper-id>" --resource assets --item-id "<asset-id>"` |
+| 17 | `GET /openapi/v2/papers/{paper_id}/references` | 参考文献 | `linxsci paper "<paper-id>" --resource references` |
+| 18 | `GET /openapi/v2/papers/{paper_id}/citations` | 被引论文 | `linxsci paper "<paper-id>" --resource citations` |
+| 19 | `GET /openapi/v2/papers/{paper_id}/related` | 相关论文 | `linxsci paper "<paper-id>" --resource related` |
+| 20 | `GET /openapi/v2/papers/{paper_id}/graph` | 引用图谱 | `linxsci paper "<paper-id>" --resource graph` |
+| 21 | `GET /openapi/v2/papers/{paper_id}/citation` | 论文引用格式 | `linxsci paper "<paper-id>" --resource citation` |
+| 22 | `POST /openapi/v2/recommendations` | 论文推荐 | `linxsci recommend --body @recommendations.json` |
+| 23 | `GET /openapi/v2/recommendations/mobile-cards` | 移动端推荐卡片 | `linxsci mobile-cards` |
+| 24 | `GET /openapi/v2/authors/{author_id}` | 作者详情 | `linxsci author "<author-id>"` |
+| 25 | `GET /openapi/v2/authors/{author_id}/papers` | 作者论文 | `linxsci author "<author-id>" --papers` |
+| 26 | `GET /openapi/v2/institutions/{institution_id}` | 机构详情 | `linxsci institution "<institution-id>"` |
+| 27 | `GET /openapi/v2/institutions/{institution_id}/papers` | 机构论文 | `linxsci institution "<institution-id>" --papers` |
+| 28 | `GET /openapi/v2/venues/{venue_id}` | 期刊或会议详情 | `linxsci venue "<venue-id>"` |
+| 29 | `GET /openapi/v2/venues/{venue_id}/papers` | 期刊或会议论文 | `linxsci venue "<venue-id>" --papers` |
+| 30 | `POST /openapi/v2/entities:resolve` | 实体标识解析 | `linxsci resolve-entities --body @entities-resolve.json` |
+| 31 | `POST /openapi/v2/pdf/parse` | 创建 PDF 解析任务 | `linxsci parse-pdf --body @pdf-parse.json` |
+| 32 | `POST /openapi/v2/pdf/parse/upload` | 上传 PDF 并创建解析任务 | `linxsci upload "/absolute/path/paper.pdf"` |
+| 33 | `GET /openapi/v2/pdf/parse/{task_id}` | 查询 PDF 解析任务 | `linxsci task "<task-id>"` |
+| 34 | `GET /openapi/v2/pdf/parse/{task_id}/result` | 获取 PDF 解析结果 | `linxsci task "<task-id>" --result` |
 
 
 ## 服务信息与健康检查
@@ -183,7 +233,7 @@ linxsci meta
 
 ### usage
 
-`GET /openapi/v2/usage`。查询账号用量信息。
+`GET /openapi/v2/usage`。查询当前服务进程的请求统计；账户余额和剩余额度在平台「用量」页查看。
 
 ```bash
 linxsci usage
@@ -464,3 +514,7 @@ linxsci request GET "/papers/doi:10.1000%2Fexample/toc"
 | `2` | 参数、配置、本地文件或取消操作错误 |
 
 HTTP/网络失败时，`--json-errors` 提供 `message`、HTTP `status`、`error_code`、`request_id`、`framework_request_id`、`execution_uncertain` 和 `retry_after`。本地错误包含 `error_code` 和 `message`，`doctor --json` 则使用 stdout 的诊断报告。参数解析错误默认以 `error_code:"invalid_arguments"` 的 JSON 写入 stderr，本地错误使用 `error_code:"local_error"`，取消使用 `error_code:"cancelled"`；`--human-errors` 恢复文本错误。工具不自动重试，尤其 `-3905` 时应先查询执行及计费结果，再决定是否重复上传或创建任务。详见 [API 错误与计量规则](API.zh-CN.md)。
+
+## 更新与卸载
+
+隔离 wheel 安装下载新版后运行 `uv tool install --force /path/to/linxsci-<version>-py3-none-any.whl`；源码安装更新源码后在同一环境执行 `python -m pip install --upgrade .`。隔离工具使用 `uv tool uninstall linxsci` 卸载，项目环境中的包使用 `python -m pip uninstall linxsci` 卸载。

@@ -21,7 +21,7 @@ def check(directory):
         ('skills/linxsci-skills/scripts/commands.py', r'VERSION = "([^"]+)"'),
         ('skills/linxsci-skills/scripts/installer.py', r'"version": "([^"]+)"'),
     ):
-        assert re.search(pattern, (ROOT / file).read_text()).group(1) == version, 'Version mismatch: ' + file
+        assert re.search(pattern, (ROOT / file).read_text(encoding='utf-8')).group(1) == version, 'Version mismatch: ' + file
     expected = {
         'SKILL.md', 'SKILL.zh-CN.md', 'references/api.zh-CN.md', 'references/cli.zh-CN.md', 'service.json', 'agents/openai.yaml', 'references/api.md', 'references/cli.md',
         '__init__.py', 'scripts/__init__.py', 'scripts/commands.py',
@@ -55,17 +55,15 @@ def check(directory):
         prefix = 'linxsci-skills-' + version + '/'
         assert {prefix + 'skills/linxsci-skills/' + name for name in expected} <= set(archive.namelist())
         assert prefix + 'install.py' in archive.namelist()
-        user_docs = {
-            'docs/' + name + language + '.md'
-            for name in ('USER_GUIDE', 'CLI_GUIDE', 'DEVELOPMENT', 'API')
-            for language in ('', '.zh-CN')
-        }
         names = set(archive.namelist())
-        for name in user_docs | {'README.md', 'README.zh-CN.md'}:
-            assert archive.read(prefix + name) == (ROOT / name).read_bytes(), 'Stale bundled guide: ' + name
-        assert {name[len(prefix):] for name in names if name.startswith(prefix + 'docs/')} == user_docs, 'ZIP must contain only the bilingual user guides'
-        for name in ('README.md', 'README.zh-CN.md'):
-            assert prefix + name in names
+        assert not any(name.startswith(prefix + 'docs/') for name in names), 'Skill ZIP must not include CLI/SDK or maintainer guides'
+        for language in ('', '.zh-CN'):
+            guide = (ROOT / ('docs/USER_GUIDE' + language + '.md')).read_text(encoding='utf-8')
+            guide = guide.replace('(USER_GUIDE.md)', '(README.md)').replace(
+                '(USER_GUIDE.zh-CN.md)', '(README.zh-CN.md)')
+            assert archive.read(prefix + 'README' + language + '.md').decode('utf-8') == guide, 'Stale bundled Skill guide'
+        for name in expected:
+            assert archive.read(prefix + 'skills/linxsci-skills/' + name) == (ROOT / 'skills/linxsci-skills' / name).read_bytes(), 'Stale bundled Skill file: ' + name
         # Links must work after extraction without maintainer docs from the repository.
         for name in sorted(names):
             if not name.endswith('.md'):

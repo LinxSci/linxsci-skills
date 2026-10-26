@@ -19,7 +19,7 @@ else:
     from installer import install_skill
     from output import ResponseOutputError, json_text, write_response
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 
 SEARCH_COMMANDS = {
     "search": ("/papers/search", "综合论文搜索"),

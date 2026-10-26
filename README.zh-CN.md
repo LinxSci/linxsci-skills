@@ -1,6 +1,6 @@
 # linxsci-skills
 
-[English](README.md)
+[English](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/README.md)
 
 通过 LinxSci OpenAPI v2 检索学术论文、阅读章节与引用、查询学术实体并解析 PDF。选择适合自己工作方式的入口，每种方式均支持文档中的全部 34 条接口。
 
@@ -16,56 +16,45 @@
 
 ### 安装与配置
 
-Skill 独立运行随附脚本，选择一种安装方式即可。
-
-本机有 Node.js / npx，且使用兼容的 Skill 安装器时：
-
-```bash
-npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-skills
-```
-
-安装后，使用安装器输出的实际 Skill 目录配置 Key：
-
-```bash
-python3 "/absolute/path/to/installed/linxsci-skills/scripts/cli.py" setup
-```
-
-也可以下载并解压 [仓库源码](https://github.com/LinxSci/linxsci-skills)，或独立的 `linxsci-skills-0.3.0.zip` 安装包。在解压目录执行：
+下载 [Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.1/linxsci-skills-0.3.1.zip)，完整解压后，在 macOS 双击 `Install.command`，Windows 双击 `Install.bat`。也可以在解压目录打开终端并运行：
 
 ```bash
 python3 install.py
 ```
 
-Windows 将 `python3` 替换为 `py -3`。独立安装包还包含 `Install.command` 和 `Install.bat`。该安装器默认复制到 `~/.agents/skills/linxsci-skills`，随后通过隐藏输入配置 Key。其他助手位置可使用 `--skills-dir <安装父目录>`。安装后刷新或重启助手。
+Windows 使用 `py -3 install.py`。安装器将完整 Skill 复制到 `~/.agents/skills/linxsci-skills`，并引导你在本机隐藏输入 Key。其他助手目录可使用 `--skills-dir <父目录>` 指定。安装后刷新或重启助手。
 
-### 在助手中使用
-
-在助手中输入：
-
-> 使用 $linxsci-skills 搜索图神经网络相关论文，阅读方法章节，比较主要方法并附上来源。
-
-> 使用 $linxsci-skills 解析 /absolute/path/paper.pdf，记录任务 ID，任务完成后读取结果。
-
-将 PDF 路径替换为实际本地文件。上传会将该文件发送到配置的服务。查看本机设置或检查连接时，使用已安装脚本的绝对路径：
+已有 Node.js/npx 和兼容的 Skill 安装器时，也可以运行：
 
 ```bash
-python3 "/absolute/path/to/installed/linxsci-skills/scripts/cli.py" config
-python3 "/absolute/path/to/installed/linxsci-skills/scripts/cli.py" doctor --json
+npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-skills
 ```
 
-脚本默认输出紧凑 JSON，大型响应和二进制内容返回文件引用。响应筛选、文件读取和错误处理见 [Skill 自身的命令与参数参考](skills/linxsci-skills/references/cli.zh-CN.md)。`doctor` 会实际请求 `/meta`，需要检查连接时再执行。
+克隆超时时可改用上方 ZIP。安装后向助手提出：
+
+> 使用 $linxsci-skills 检查配置；如需配置，请引导我在本机安全输入 API Key，不要让我把 Key 发到聊天中。
+
+### 使用 Skill
+
+> 使用 $linxsci-skills 检索图神经网络论文，阅读方法章节，对比研究方案，并引用返回的来源。
+
+> 使用 $linxsci-skills 解析 /absolute/path/paper.pdf，记录任务 ID，完成后获取结果。
+
+将 PDF 路径替换为助手可以访问的实际文件。解析会将文件上传至配置的服务。说明所需论文数量、回答长度和语言，助手负责检索与整理。
 
 ### 更新与卸载
 
-通过随附安装器管理的副本，下载并解压新版源码或安装包，在该**新版本目录**运行：
+对于自带安装器管理的副本，解压新版安装包，在**新版**目录执行：
 
 ```bash
 python3 install.py --update --no-config
 ```
 
-安装器保留已有配置，并将旧托管副本备份到助手扫描目录之外。外部工具管理的副本使用原安装器更新。卸载时删除已安装的 `linxsci-skills` 目录。如需同时删除保存的配置，在删除目录前运行已安装脚本的 `config --clear`；这不会撤销服务端 Key。
+自定义安装目录时，补充原来使用的 `--skills-dir`。更新保留配置，并将旧副本备份到助手扫描目录之外。其他安装器管理的副本请使用原安装器更新。
 
-详见 [Skill 独立安装与安装器参数](skills/linxsci-skills/SKILL.zh-CN.md#独立安装-skill) 和 [Skill 用户指南](docs/USER_GUIDE.zh-CN.md)。
+卸载时使用原安装器的移除功能，或删除自带安装器创建的目录，然后刷新助手。如需清除保存的配置，请在删除 Skill 前让助手协助处理。
+
+安装参数、配置、使用示例和故障排查见 [Skill 使用指南](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/docs/USER_GUIDE.zh-CN.md)。
 
 ## CLI
 
@@ -83,7 +72,7 @@ linxsci --version
 linxsci setup
 ```
 
-Windows 使用 `py -3 -m venv .venv` 创建环境，在命令提示符 CMD 中运行 `.venv\Scripts\activate.bat` 激活。也可通过 `python -m pip install /path/to/linxsci-0.3.0-py3-none-any.whl` 安装已下载的 wheel。已安装 uv 时，可用 `uv tool install /path/to/linxsci-0.3.0-py3-none-any.whl` 创建隔离的终端工具安装。
+Windows 使用 `py -3 -m venv .venv` 创建环境，在命令提示符 CMD 中运行 `.venv\Scripts\activate.bat` 激活。也可通过 `python -m pip install /path/to/linxsci-0.3.1-py3-none-any.whl` 安装已下载的 wheel。已安装 uv 时，可用 `uv tool install /path/to/linxsci-0.3.1-py3-none-any.whl` 创建隔离的终端工具安装。
 
 `linxsci setup` 通过隐藏输入读取 API Key。默认服务根地址为 `https://linxsci.com`，不添加 `/openapi/v2`。`LINXSCI_BASE_URL` 和 `LINXSCI_OPENAPI_KEY` 优先于保存的设置；`LINXSCI_CONFIG_FILE` 可指定其他配置文件。默认配置位于 macOS/Linux 的 `~/.config/linxsci-skills/config.json`，或 Windows 的 `%LOCALAPPDATA%\linxsci-skills\config.json`。
 
@@ -101,7 +90,7 @@ linxsci task "<returned-task-id>" --result
 
 使用响应返回的实际 ID，确认任务完成后才获取结果。PDF 接口需要额外解析 Key 时，相关命令读取 `LINXSCI_MINERU_API_KEY`。
 
-接口输出和错误默认使用紧凑 JSON；`--pretty` 和 `--human-errors` 提供便于人工阅读的终端输出。全局 `--select`、`--fields`、`--limit` 和 `--table` 在本地筛选响应。超过 12000 字符的输出及二进制内容保存到文件并返回 JSON 引用；`read-output` 读取已保存的响应，不再请求接口。详见 [CLI 全部命令与参数](docs/CLI_GUIDE.zh-CN.md)。
+接口输出和错误默认使用紧凑 JSON；`--pretty` 和 `--human-errors` 提供便于人工阅读的终端输出。全局 `--select`、`--fields`、`--limit` 和 `--table` 在本地筛选响应。超过 12000 字符的输出及二进制内容保存到文件并返回 JSON 引用；`read-output` 读取已保存的响应，不再请求接口。详见 [CLI 全部命令与参数](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/docs/CLI_GUIDE.zh-CN.md)。
 
 `linxsci config` 查看设置而不展示 Key；`linxsci doctor --json` 请求 `/meta` 检查连接，计入正常接口调用；`linxsci config --clear` 删除保存的设置，不清除环境变量或撤销服务端 Key。
 
@@ -120,7 +109,7 @@ linxsci task "<returned-task-id>" --result
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install /path/to/linxsci-0.3.0-py3-none-any.whl
+python -m pip install /path/to/linxsci-0.3.1-py3-none-any.whl
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 
@@ -164,7 +153,7 @@ response = client.upload_pdf(
 print(response.json())
 ```
 
-SDK 返回包含 HTTP 状态、响应头和原始 `body` 的 `Response`；JSON 使用 `.json()`，二进制内容直接保存 `body`。可选的 PDF Key 需要在 Python 中读取并显式传入。记录响应返回的实际任务 ID，用 `client.pdf_task(task_id)` 查询状态，确认完成后再调用 `client.pdf_task(task_id, result=True)`。详见 [SDK 方法、参数与错误处理](docs/DEVELOPMENT.zh-CN.md)。
+SDK 返回包含 HTTP 状态、响应头和原始 `body` 的 `Response`；JSON 使用 `.json()`，二进制内容直接保存 `body`。可选的 PDF Key 需要在 Python 中读取并显式传入。记录响应返回的实际任务 ID，用 `client.pdf_task(task_id)` 查询状态，确认完成后再调用 `client.pdf_task(task_id, result=True)`。详见 [SDK 方法、参数与错误处理](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/docs/DEVELOPMENT.zh-CN.md)。
 
 ### 更新与卸载
 
@@ -176,4 +165,4 @@ SDK 返回包含 HTTP 状态、响应头和原始 `body` 的 `Response`；JSON �
 
 POST 字段、分页及 PDF 任务状态应按所选接口的契约使用，保留返回的实际 ID 和请求追踪 ID。遇到 `-3905` 等执行或计费结果未确认的情况，先核查操作状态，再决定是否重复上传或创建任务。
 
-详见 [HTTP 接口、认证与错误处理](docs/API.zh-CN.md)。各链接指南均可切换至英文版。
+详见 [HTTP 接口、认证与错误处理](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/docs/API.zh-CN.md)。各链接指南均可切换至英文版。

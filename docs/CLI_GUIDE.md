@@ -1,12 +1,28 @@
-# CLI guide: commands and parameters
+# CLI command and parameter guide
 
-[简体中文](CLI_GUIDE.zh-CN.md) · [README](../README.md)
+[简体中文](CLI_GUIDE.zh-CN.md)
 
-## Choose an entry point
+## Install the CLI
 
-For the installed CLI, install a release wheel with `python -m pip install /path/to/linxsci-0.3.0-py3-none-any.whl`. For an isolated CLI environment, use `uv tool install /path/to/linxsci-0.3.0-py3-none-any.whl`. Source users can run `python -m pip install -e .`. The terminal command is `linxsci`.
+Requires Python 3.9+. Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.1) and run from its directory:
 
-The Skill runs independently: no CLI or SDK installation is required. After downloading the complete Skill, use `python3 "/absolute/path/to/linxsci-skills/scripts/cli.py"` instead of `linxsci` in every example below. On Windows, use `py -3` with the actual script path. For installation instructions, see [the Skill](../skills/linxsci-skills/SKILL.md#install-the-skill-independently).
+```bash
+uv tool install ./linxsci-0.3.1-py3-none-any.whl
+linxsci --version
+```
+
+This option requires [uv](https://docs.astral.sh/uv/getting-started/installation/). If the command is missing, run `uv tool update-shell` and reopen the terminal. Alternatively, install from the official source in a Python environment:
+
+```bash
+git clone https://github.com/LinxSci/linxsci-skills.git
+cd linxsci-skills
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install .
+linxsci --version
+```
+
+On Windows use `py -3 -m venv .venv` and `.venv\Scripts\activate.bat`. The Python package and command are `linxsci`. Run `linxsci setup` before service calls.
 
 ## Invocation and option placement
 
@@ -16,7 +32,7 @@ linxsci --help
 linxsci COMMAND --help
 ```
 
-`linxsci` without arguments shows help. `--help` and `--version` exit without configuration or network access. Global options go **before** the command; command-specific options go **after** it. Quote values containing spaces. Relative file paths are resolved against the current working directory, not the skill directory. Replace `<...>` placeholders before execution.
+`linxsci` without arguments shows help. `--help` and `--version` exit without configuration or network access. Global options go **before** the command; command-specific options go **after** it. Quote values containing spaces. Relative file paths are resolved against the current working directory. Replace `<...>` placeholders before execution.
 
 ## Global options
 
@@ -149,7 +165,7 @@ linxsci install-skill --update
 | `--skills-dir PATH` | Directory, default `~/.agents/skills` | Parent scan directory; the installer appends `/linxsci-skills`. A leading `~` is expanded |
 | `--update` | Flag, off | Replace a copy managed by this installer and keep the old version in a sibling `linxsci-skill-backups` directory outside the scan directory |
 
-This action uses local bundled files and needs no key or network. It also works through the standalone skill script without an installed CLI/SDK. When updating, run the command from the **new** downloaded source/bundle so that the new files are copied. The installer rejects symlink destinations and unmanaged or mismatched installation markers; use the original external installer for its copies. This action does not configure a key or register a terminal command.
+This action uses local bundled files and needs no key or network. Before using `--update`, upgrade the installed CLI so that it contains the new bundled files. The installer rejects symlink destinations and unmanaged or mismatched installation markers; use the original external installer for its copies. This action only copies the bundled assistant files; it does not configure an API key.
 
 ### read-output
 
@@ -165,42 +181,42 @@ Required positional `file` is the saved local response path; a leading `~` is ex
 
 Each row is an independent example, not a sequence to run in full. Detailed command parameters follow the index.
 
-| No. | Endpoint | Example |
-| --- | --- | --- |
-| 01 | API metadata | `linxsci meta` |
-| 02 | Usage | `linxsci usage` |
-| 03 | Liveness | `linxsci health live` |
-| 04 | Readiness | `linxsci health ready` |
-| 05 | Paper search | `linxsci search "large language models"` |
-| 06 | OpenAlex search | `linxsci search-openalex "large language models"` |
-| 07 | Semantic Scholar search | `linxsci search-semantic-scholar "large language models"` |
-| 08 | Google Scholar search | `linxsci search-google-scholar "large language models"` |
-| 09 | Resolve paper identifiers | `linxsci resolve --body @papers-resolve.json` |
-| 10 | Batch paper lookup | `linxsci batch-get --body @papers-batch-get.json` |
-| 11 | Paper details | `linxsci paper "<paper-id>"` |
-| 12 | Paper content | `linxsci paper "<paper-id>" --resource content` |
-| 13 | Table of contents | `linxsci paper "<paper-id>" --resource toc` |
-| 14 | Section | `linxsci paper "<paper-id>" --resource sections --item-id "<section-id>"` |
-| 15 | Figures | `linxsci paper "<paper-id>" --resource figures` |
-| 16 | Assets | `linxsci --output asset.bin paper "<paper-id>" --resource assets --item-id "<asset-id>"` |
-| 17 | References | `linxsci paper "<paper-id>" --resource references` |
-| 18 | Citing papers | `linxsci paper "<paper-id>" --resource citations` |
-| 19 | Related papers | `linxsci paper "<paper-id>" --resource related` |
-| 20 | Citation graph | `linxsci paper "<paper-id>" --resource graph` |
-| 21 | Citation format | `linxsci paper "<paper-id>" --resource citation` |
-| 22 | Recommendations | `linxsci recommend --body @recommendations.json` |
-| 23 | Mobile recommendation cards | `linxsci mobile-cards` |
-| 24 | Author details | `linxsci author "<author-id>"` |
-| 25 | Author papers | `linxsci author "<author-id>" --papers` |
-| 26 | Institution details | `linxsci institution "<institution-id>"` |
-| 27 | Institution papers | `linxsci institution "<institution-id>" --papers` |
-| 28 | Venue details | `linxsci venue "<venue-id>"` |
-| 29 | Venue papers | `linxsci venue "<venue-id>" --papers` |
-| 30 | Resolve entity identifiers | `linxsci resolve-entities --body @entities-resolve.json` |
-| 31 | Create a PDF parsing task | `linxsci parse-pdf --body @pdf-parse.json` |
-| 32 | Upload a PDF and create a task | `linxsci upload "/absolute/path/paper.pdf"` |
-| 33 | Task status | `linxsci task "<task-id>"` |
-| 34 | Task result | `linxsci task "<task-id>" --result` |
+| No. | HTTP method and path | Endpoint | Example |
+| --- | --- | --- | --- |
+| 01 | `GET /openapi/v2/meta` | API metadata | `linxsci meta` |
+| 02 | `GET /openapi/v2/usage` | Usage | `linxsci usage` |
+| 03 | `GET /openapi/v2/health/live` | Liveness | `linxsci health live` |
+| 04 | `GET /openapi/v2/health/ready` | Readiness | `linxsci health ready` |
+| 05 | `POST /openapi/v2/papers/search` | Paper search | `linxsci search "large language models"` |
+| 06 | `POST /openapi/v2/search/openalex` | OpenAlex search | `linxsci search-openalex "large language models"` |
+| 07 | `POST /openapi/v2/search/semantic-scholar` | Semantic Scholar search | `linxsci search-semantic-scholar "large language models"` |
+| 08 | `POST /openapi/v2/search/google-scholar` | Google Scholar search | `linxsci search-google-scholar "large language models"` |
+| 09 | `POST /openapi/v2/papers/resolve` | Resolve paper identifiers | `linxsci resolve --body @papers-resolve.json` |
+| 10 | `POST /openapi/v2/papers:batchGet` | Batch paper lookup | `linxsci batch-get --body @papers-batch-get.json` |
+| 11 | `GET /openapi/v2/papers/{paper_id}` | Paper details | `linxsci paper "<paper-id>"` |
+| 12 | `GET /openapi/v2/papers/{paper_id}/content` | Paper content | `linxsci paper "<paper-id>" --resource content` |
+| 13 | `GET /openapi/v2/papers/{paper_id}/toc` | Table of contents | `linxsci paper "<paper-id>" --resource toc` |
+| 14 | `GET /openapi/v2/papers/{paper_id}/sections/{section_id}` | Section | `linxsci paper "<paper-id>" --resource sections --item-id "<section-id>"` |
+| 15 | `GET /openapi/v2/papers/{paper_id}/figures` | Figures | `linxsci paper "<paper-id>" --resource figures` |
+| 16 | `GET /openapi/v2/papers/{paper_id}/assets/{asset_id}` | Assets | `linxsci --output asset.bin paper "<paper-id>" --resource assets --item-id "<asset-id>"` |
+| 17 | `GET /openapi/v2/papers/{paper_id}/references` | References | `linxsci paper "<paper-id>" --resource references` |
+| 18 | `GET /openapi/v2/papers/{paper_id}/citations` | Citing papers | `linxsci paper "<paper-id>" --resource citations` |
+| 19 | `GET /openapi/v2/papers/{paper_id}/related` | Related papers | `linxsci paper "<paper-id>" --resource related` |
+| 20 | `GET /openapi/v2/papers/{paper_id}/graph` | Citation graph | `linxsci paper "<paper-id>" --resource graph` |
+| 21 | `GET /openapi/v2/papers/{paper_id}/citation` | Citation format | `linxsci paper "<paper-id>" --resource citation` |
+| 22 | `POST /openapi/v2/recommendations` | Recommendations | `linxsci recommend --body @recommendations.json` |
+| 23 | `GET /openapi/v2/recommendations/mobile-cards` | Mobile recommendation cards | `linxsci mobile-cards` |
+| 24 | `GET /openapi/v2/authors/{author_id}` | Author details | `linxsci author "<author-id>"` |
+| 25 | `GET /openapi/v2/authors/{author_id}/papers` | Author papers | `linxsci author "<author-id>" --papers` |
+| 26 | `GET /openapi/v2/institutions/{institution_id}` | Institution details | `linxsci institution "<institution-id>"` |
+| 27 | `GET /openapi/v2/institutions/{institution_id}/papers` | Institution papers | `linxsci institution "<institution-id>" --papers` |
+| 28 | `GET /openapi/v2/venues/{venue_id}` | Venue details | `linxsci venue "<venue-id>"` |
+| 29 | `GET /openapi/v2/venues/{venue_id}/papers` | Venue papers | `linxsci venue "<venue-id>" --papers` |
+| 30 | `POST /openapi/v2/entities:resolve` | Resolve entity identifiers | `linxsci resolve-entities --body @entities-resolve.json` |
+| 31 | `POST /openapi/v2/pdf/parse` | Create a PDF parsing task | `linxsci parse-pdf --body @pdf-parse.json` |
+| 32 | `POST /openapi/v2/pdf/parse/upload` | Upload a PDF and create a task | `linxsci upload "/absolute/path/paper.pdf"` |
+| 33 | `GET /openapi/v2/pdf/parse/{task_id}` | Task status | `linxsci task "<task-id>"` |
+| 34 | `GET /openapi/v2/pdf/parse/{task_id}/result` | Task result | `linxsci task "<task-id>" --result` |
 
 ## Service information and health
 
@@ -216,7 +232,7 @@ No positional arguments or dedicated options; supports shared `--param` and `--r
 
 ### usage
 
-`GET /openapi/v2/usage`. Get account usage information.
+`GET /openapi/v2/usage`. Get request statistics for the current service process. Account balances and remaining quotas are available in the platform Usage page.
 
 ```bash
 linxsci usage
@@ -497,3 +513,7 @@ Successful endpoint calls use compact JSON by default, with file references for 
 | `2` | Argument, configuration, local file or cancellation failure |
 
 `--json-errors` reports `message`, HTTP `status`, `error_code`, `request_id`, `framework_request_id`, `execution_uncertain`, and `retry_after` when an HTTP/network error occurs. Local errors include `error_code` and `message`; `doctor --json` uses its stdout report. Argument-parser errors default to stderr JSON with `error_code:"invalid_arguments"`; local errors use `error_code:"local_error"`, and cancellation uses `error_code:"cancelled"`. `--human-errors` restores readable error text. No automatic retries occur. In particular, `-3905` requires checking execution and accounting before repeating uploads or task creation. See [API errors and accounting](API.md).
+
+## Update and uninstall
+
+For an isolated wheel installation, download the new wheel and run `uv tool install --force /path/to/linxsci-<version>-py3-none-any.whl`. For source installation, update the source and run `python -m pip install --upgrade .` in the same environment. Remove the isolated tool with `uv tool uninstall linxsci`, or the project package with `python -m pip uninstall linxsci`.

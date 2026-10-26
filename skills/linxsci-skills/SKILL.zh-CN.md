@@ -25,7 +25,7 @@ npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-skills
 
 ### 方式二：独立 ZIP 或下载源码
 
-解压 `linxsci-skills-0.3.0.zip`，在解压后的目录运行 `python3 install.py`（Windows 使用 `py -3 install.py`），也可双击 `Install.command` / `Install.bat`。安装器复制完整 Skill 并启动隐藏输入 Key 的配置向导。此方式不需要 pip、SDK 或 Node.js。只安装、不配置时运行 `python3 install.py --no-config`。
+解压 `linxsci-skills-0.3.1.zip`，在解压后的目录运行 `python3 install.py`（Windows 使用 `py -3 install.py`），也可双击 `Install.command` / `Install.bat`。安装器复制完整 Skill 并启动隐藏输入 Key 的配置向导。此方式不需要 pip、SDK 或 Node.js。只安装、不配置时运行 `python3 install.py --no-config`。
 
 ZIP 内的 `install.py` 支持以下参数，均放在 `install.py` 之后：
 
@@ -108,7 +108,7 @@ python3 <skill-dir>/scripts/cli.py paper 'arxiv:2301.07041' --resource toc
 python3 <skill-dir>/scripts/cli.py paper 'arxiv:2301.07041' --resource sections --item-id '<returned-section-id>'
 ```
 
-从搜索结果中取实际论文 ID；先看详情、目录，再读取相关章节，需要完整文本时才读 `--resource content`。论文 ID 需要 `local:`、`arxiv:`、`openalex:`、`s2:` 或 `doi:` 前缀。便捷命令接收未经编码的 ID（例如 `doi:10.1000/example`），SDK 负责编码。章节和资源 ID 必须取自返回结果。
+从搜索结果中取实际论文 ID；先看详情、目录，再读取相关章节，需要完整文本时才读 `--resource content`。论文 ID 需要 `local:`、`arxiv:`、`openalex:`、`s2:` 或 `doi:` 前缀。便捷命令接收未经编码的 ID（例如 `doi:10.1000/example`），随附脚本负责编码。章节和资源 ID 必须取自返回结果。
 
 回答研究问题时由助手综合已读取内容，附上实际返回的论文标识、链接和章节依据。区分摘要和全文证据，说明缺失内容；不要声称存在服务端 `ask`、趋势榜或自动综述接口。
 
@@ -125,7 +125,7 @@ python3 <skill-dir>/scripts/cli.py task '<returned-task-id>' --result
 python3 <skill-dir>/scripts/cli.py --output /absolute/path/asset.bin paper 'arxiv:2301.07041' --resource assets --item-id '<returned-asset-id>'
 ```
 
-全局可选参数 `--framework-request-id <id>`（放在 `linxsci` 之后、具体动作之前）发送 `X-ANYTHINGRIGHT-REQ-ID`，对应 LinxSci 自身错误的 `extra.request-id`；各接口命令的 `--request-id <id>` 发送独立的 `X-Request-ID`。两者用途不同。通用 `request` 的路径相对于 `/openapi/v2`，每个动态 ID 独立 URL 编码（包括 DOI 中的斜杠）；查询参数用重复的 `--param key=value`。JSON 通过 `--body @file.json` 原样传入。`upload` 可传 `--field key=value`；上游契约需要 `X-MinerU-API-Key` 时，在本机设置 `LINXSCI_MINERU_API_KEY`，`parse-pdf`、`upload`、`task`（含 `--result`）及通用 PDF `request` 都会读取它。
+全局可选参数 `--framework-request-id <id>`（放在 `scripts/cli.py` 之后、具体动作之前）发送 `X-ANYTHINGRIGHT-REQ-ID`，对应 LinxSci 自身错误的 `extra.request-id`；各接口命令的 `--request-id <id>` 发送独立的 `X-Request-ID`。两者用途不同。通用 `request` 的路径相对于 `/openapi/v2`，每个动态 ID 独立 URL 编码（包括 DOI 中的斜杠）；查询参数用重复的 `--param key=value`。JSON 通过 `--body @file.json` 原样传入。`upload` 可传 `--field key=value`；上游契约需要 `X-MinerU-API-Key` 时，在本机设置 `LINXSCI_MINERU_API_KEY`，`parse-pdf`、`upload`、`task`（含 `--result`）及通用 PDF `request` 都会读取它。
 
 上传会发送本地文件到配置服务，仅在用户请求解析该文件时执行。任务状态结构未定义，使用实际返回的标识和状态；不自动无限轮询或重复创建任务，确认完成后获取结果。
 
@@ -139,9 +139,9 @@ python3 <skill-dir>/scripts/cli.py --output /absolute/path/asset.bin paper 'arxi
 
 ## 输出与故障
 
-接口 stdout 默认输出紧凑 JSON 或文件元信息；`--output`（放在 `linxsci` 之后、具体动作之前）保留响应原始字节，适用于二进制资源。上游响应原样透传，LinxSci 自身错误则使用 `code/data/error/extra` 框架结构；读取 `error.code` 和 `extra.request-id`，不把它当作上游业务模型。`extra.cost` 是请求耗时（秒），不是扣费金额。不要假定列表字段或 PDF 终态。
+接口 stdout 默认输出紧凑 JSON 或文件元信息；`--output`（放在 `scripts/cli.py` 之后、具体动作之前）保留响应原始字节，适用于二进制资源。上游响应原样透传，LinxSci 自身错误则使用 `code/data/error/extra` 框架结构；读取 `error.code` 和 `extra.request-id`，不把它当作上游业务模型。`extra.cost` 是请求耗时（秒），不是扣费金额。不要假定列表字段或 PDF 终态。
 
-退出码：0 成功，1 HTTP/网络错误，2 参数/本地文件错误。CLI 的结构化 HTTP/网络诊断提供 `error_code`、`request_id`、`framework_request_id`、`execution_uncertain`。CLI 默认输出紧凑的结构化 JSON 诊断，保留可用的两种请求 ID；`--json-errors` 是兼容选项，`--human-errors` 切换文本诊断，不展示服务端错误消息全文。
+退出码：0 成功，1 HTTP/网络错误，2 参数/本地文件错误。随附脚本的结构化 HTTP/网络诊断提供 `error_code`、`request_id`、`framework_request_id`、`execution_uncertain`。随附脚本默认输出紧凑的结构化 JSON 诊断，保留可用的两种请求 ID；`--json-errors` 是兼容选项，`--human-errors` 切换文本诊断，不展示服务端错误消息全文。
 
 按 HTTP 状态和实际 `error.code` 区分故障：
 

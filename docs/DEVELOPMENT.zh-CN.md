@@ -1,10 +1,10 @@
-# 开发者指南（Python SDK）
+# Python SDK 使用指南
 
 [English](DEVELOPMENT.md)
 
 本文面向在 Python 程序中调用 LinxSci 的开发者，按当前项目的安装方式、SDK 入口和接口行为编写。首次使用按第 1 节、第 2.1 节和第 3 节操作，即可完成一次论文检索；其他章节按需阅读。
 
-SDK 的公共入口为 `linxsci`，命令行直接使用 `linxsci <动作>`。SDK 将 Python 方法转换为 LinxSci API 请求，自动附带用户的 LinxSci API Key。只使用 SDK 时，完成 Python 包安装和 Key 配置即可。
+SDK 的公共 Python 入口为 `from linxsci import LinxSciClient`。SDK 将 Python 方法转换为 LinxSci API 请求，自动附带用户的 LinxSci API Key。只使用 SDK 时，完成 Python 包安装和 Key 配置即可。
 
 ## 目录
 
@@ -15,11 +15,10 @@ SDK 的公共入口为 `linxsci`，命令行直接使用 `linxsci <动作>`。SD
 5. [使用 SDK 解析 PDF](#5-使用-sdk-解析-pdf)
 6. [调用其他接口](#6-调用其他接口)
 7. [处理响应和错误](#7-处理响应和错误)
-8. [使用 CLI](#8-使用-cli)
-9. [验证安装与更新](#9-验证安装与更新)
-10. [常见问题](#10-常见问题)
+8. [验证安装、更新与卸载](#8-验证安装更新与卸载)
+9. [常见问题](#9-常见问题)
 
-需要逐个接口调用时，直接查看 [全部 34 个接口的 SDK 对照表](#66-全部-34-个接口的-sdk-对照表)；方法签名见 [SDK 方法与参数速查](#65-sdk-方法与参数速查)。终端命令另见 [CLI 使用指南](CLI_GUIDE.zh-CN.md)。
+需要逐个接口调用时，直接查看 [全部 34 个接口的 SDK 对照表](#66-全部-34-个接口的-sdk-对照表)；方法签名见 [SDK 方法与参数速查](#65-sdk-方法与参数速查)。
 
 ## 1. 安装项目
 
@@ -28,11 +27,10 @@ SDK 的公共入口为 `linxsci`，命令行直接使用 `linxsci <动作>`。SD
 在自己的 Python 项目环境中安装本地 wheel：
 
 ```bash
-python -m pip install /path/to/linxsci-0.3.0-py3-none-any.whl
-linxsci setup
+python -m pip install /path/to/linxsci-0.3.1-py3-none-any.whl
 ```
 
-CLI 与 SDK 的 Python 安装包名为 `linxsci`。SDK 需安装到应用实际使用的解释器中；隔离的 CLI 工具环境不会自动向应用环境提供 SDK。源码安装步骤如下。
+Python 安装包名和导入名均为 `linxsci`。将 SDK 安装到应用实际使用的解释器中。源码安装步骤如下。
 
 ### 1.1 获取源码
 
@@ -65,40 +63,36 @@ python -m pip install --upgrade pip setuptools wheel
 python -m pip install -e .
 ```
 
-已有 `.venv` 时跳过创建，激活后继续。`-e .` 将当前源码安装为可编辑包，适合本地开发；修改源码后，SDK 和 CLI 使用修改后的实现。运行时依赖 Python 标准库，安装时需要获取构建工具。
+已有 `.venv` 时跳过创建，激活后继续。`-e .` 将当前源码安装为可编辑包，适合本地开发；修改源码后，SDK 使用修改后的实现。运行时依赖 Python 标准库，安装时需要获取构建工具。
 
 ### 1.3 确认安装成功
 
 ```bash
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
-linxsci --version
 ```
 
-第一条命令应输出 `SDK import OK`，第二条输出当前项目版本。两条命令均不调用远程 API。后续 Python 程序也应使用此 `.venv` 的解释器。
+该命令应输出 `SDK import OK`，不会调用远程 API。后续 Python 程序也应使用此 `.venv` 的解释器。
 
 ## 2. 配置服务地址和 API Key
 
-### 2.1 首次使用：通过配置向导保存
+### 2.1 首次使用：在 Python 中配置
 
-```bash
-linxsci setup --base-url https://linxsci.com
+本地交互运行时，通过隐藏输入读取 Key，并传入客户端：
+
+```python
+from getpass import getpass
+from linxsci import LinxSciClient
+
+client = LinxSciClient(
+    base_url="https://linxsci.com",
+    api_key=getpass("请输入 LinxSci API Key："),
+    timeout=60,
+)
 ```
 
-1. 确认服务地址为正式服务 `https://linxsci.com`。
-2. 输入已有的 LinxSci API Key，输入内容不会显示。
-3. 向导保存配置，并调用 `/meta` 检查连接。
-4. 看到“连接成功”后，进入下一节运行 SDK 示例。
+构造客户端不会发送请求，也不会将 Key 保存到磁盘。可在同一 Python 进程中继续使用 `client`。地址仅填写服务根地址，不添加 `/openapi/v2`。非交互应用应通过部署环境或秘密管理器提供凭据，见下一节。
 
-地址只填写服务根地址，末尾不添加 `/openapi/v2`，SDK 会自动补齐该前缀。发行默认地址为 `https://linxsci.com`；已有配置优先于默认值，升级不会自动切换保存的地址。原先使用测试环境的用户可运行 `linxsci setup --online` 切换正式服务，并检查是否仍有 `LINXSCI_BASE_URL` 环境变量覆盖。其他服务地址可通过 `--base-url` 或环境变量显式配置。
-
-配置成功后，Python 中直接使用 `LinxSciClient()`，SDK 会读取已保存的地址和 Key。配置向导属于配套 CLI，SDK 开发者可以用它完成本机配置；不需要额外安装 Skill。
-
-| 系统 | 默认配置文件 |
-| --- | --- |
-| macOS / Linux | `~/.config/linxsci-skills/config.json` |
-| Windows | `%LOCALAPPDATA%\linxsci-skills\config.json` |
-
-Key 保存在用户配置文件中，macOS/Linux 文件权限为 `600`。不要将配置文件或真实 Key 提交到仓库。
+已有配置文件的默认位置为 macOS/Linux 的 `~/.config/linxsci-skills/config.json`，或 Windows 的 `%LOCALAPPDATA%\linxsci-skills\config.json`。配置文件并非必需；同时显式传入 `base_url` 和 `api_key` 时不会读取该文件。不要把真实 Key 或配置文件提交到仓库。
 
 ### 2.2 按需：环境变量和显式参数
 
@@ -132,28 +126,26 @@ client = LinxSciClient(
 
 客户端只使用用户的 LinxSci API Key。服务端转发 Agent API 所需的密钥由服务管理员配置。
 
-### 2.3 按需：查看状态、复查连接和清除配置
+### 2.3 按需：检查连接与更换凭据
 
-```bash
-# 只查看本地配置状态，不显示 Key，不调用远程接口
-linxsci config
+复用已经配置的客户端：
 
-# 按需检查实际使用的地址和连接状态
-linxsci doctor --json
-
-# 需要移除保存的地址和 Key 时执行
-linxsci config --clear
+```python
+print("服务地址：", client.base_url)
+response = client.request("GET", "/meta")
+print("HTTP 状态：", response.status)
+print(response.json())
 ```
 
-`doctor` 输出中的 `base_url` 是实际连接地址，`ok: true` 表示本次 `/meta` 检查成功。`setup` 已检查成功时，无需紧接着重复运行 `doctor`。二者的连接检查都计入接口调用流程；某个接口检查通过，也不代表其他接口 action 已启用。
+不要输出 `client.api_key`。该检查会实际调用一次接口；检查成功不代表其他接口也已启用。更换地址或 Key 后，用新值重新构造客户端；删除应用中的凭据不会撤销服务端 Key。
 
-环境变量优先于保存的配置。若切换地址后仍连接到原服务，先用 `config` 检查环境变量覆盖状态。清除本地配置不会清除环境变量，也不会撤销服务端 Key。
+下文重新创建 `LinxSciClient()` 的示例，需要当前 Python 进程已设置环境变量，或已存在有效配置文件；也可以省略重新创建步骤，复用第 2.1 节的 `client`。交互输入的 Key 只在当前进程中有效。
 
 ## 3. 完成第一次 SDK 检索
 
 ### 3.1 运行仓库自带示例
 
-源码安装并配置成功后，可运行仓库示例；wheel 用户可直接使用下一节的 Python 示例：
+源码安装且运行环境已提供 Key 后，可运行仓库示例；wheel 用户可直接使用下一节的 Python 示例：
 
 ```bash
 python examples/research.py
@@ -167,10 +159,16 @@ python examples/research.py
 
 ```python
 import json
+import os
+from getpass import getpass
 from linxsci import LinxSciClient, LinxSciError
 
 try:
-    client = LinxSciClient(timeout=60)
+    client = LinxSciClient(
+        base_url=os.environ.get("LINXSCI_BASE_URL", "https://linxsci.com"),
+        api_key=os.environ.get("LINXSCI_OPENAPI_KEY") or getpass("请输入 LinxSci API Key："),
+        timeout=60,
+    )
     response = client.search("graph neural networks")
     print("HTTP 状态：", response.status)
     print(json.dumps(response.json(), ensure_ascii=False, indent=2))
@@ -306,7 +304,7 @@ print(client.pdf_task(task_id, result=True).json())
 
 便捷方法之外的接口统一使用 `request()`，可调用当前项目支持的全部 34 条路由。方法和路径见 [接口文档](API.zh-CN.md)。
 
-SDK 的 `request()` 已接入全部方法与路径；CLI 的全部 34 个接口均有便捷命令，无需填写 HTTP 方法或路径，详见 [CLI 指南](CLI_GUIDE.zh-CN.md)。PDF 文件上传使用 `upload_pdf()` / `linxsci upload`。当前接口分布为服务与健康 4 个、搜索与解析 6 个、论文详情与引用 11 个、推荐 2 个、学术实体 7 个、PDF 解析 4 个。仅调用目标接口即可，不要求先完成其他研究工作流。
+SDK 的 `request()` 已接入全部方法与路径，常用论文操作提供便捷方法。PDF 文件上传使用 `upload_pdf()`。当前接口分布为服务与健康 4 个、搜索与解析 6 个、论文详情与引用 11 个、推荐 2 个、学术实体 7 个、PDF 解析 4 个。仅调用目标接口即可，不要求先完成其他研究工作流。
 
 ### 6.1 GET 请求
 
@@ -359,7 +357,7 @@ GET 查询参数可使用 `query={字段名: 值}`；多个同名值可使用列
 
 ### 6.4 从 JSON 文件调用 POST
 
-CLI 的 `--body @文件.json` 在 SDK 中对应“读取 JSON → 传给 `payload`”。以下示例调用推荐接口，运行前按实际上游契约准备请求文件：
+使用 Python 读取 JSON 文件，再将解析后的值传给 `payload`。以下示例调用推荐接口，运行前按实际上游契约准备请求文件：
 
 ```python
 import json
@@ -495,7 +493,7 @@ SDK 返回 `Response`，保留服务原始响应：
 | --- | --- | --- |
 | 401 | `-401` | Key 无效或无法识别用户，检查 Key 和配置覆盖 |
 | 404 | `-404` | 路径/方法未匹配，核对接口路径 |
-| 503 | `-3900` | action 已登记但未启用，联系管理员配置并启用 |
+| 503 | `-3900` | 接口尚未启用，请联系管理员 |
 | 429 | `-3901` | 每日调用限额已满，额度恢复后再试或联系管理员 |
 | 503 | `-3902` | 上游地址或服务端 Key 未配置，联系管理员 |
 | 502 | `-3903` | 上游连接或传输失败，检查服务与网络；不据此保证业务没有执行 |
@@ -506,7 +504,7 @@ SDK 返回 `Response`，保留服务原始响应：
 
 LinxSci 自身框架错误采用 `code/data/error/extra` 结构，其中 `extra.cost` 是耗时（秒），不是扣费金额。包括连接检查和健康检查在内的请求都会经过调用检查；预计调用量为 1，上游 2xx 实际调用量为 1，其余状态或连接失败实际为 0，预占释放由 服务确认计量完成后确定。不能仅凭失败 HTTP 状态保证费用已释放。
 
-SDK 和 CLI 都不会自动重试。`Retry-After` 可供应用参考，但遇到 `-3905` 时，仍要先核查执行和计费结果，尤其不要直接重复上传 PDF 或创建解析任务。
+SDK 不会自动重试。`Retry-After` 可供应用参考，但遇到 `-3905` 时，仍要先核查执行和计费结果，尤其不要直接重复上传 PDF 或创建解析任务。
 
 ### 7.4 指定请求追踪 ID
 
@@ -526,92 +524,36 @@ print("HTTP 状态：", response.status)
 
 `request_id` 对应 `X-Request-ID`，用于上游/代理追踪；`framework_request_id` 对应 `X-ANYTHINGRIGHT-REQ-ID`，用于指定 LinxSci 框架的 `extra.request-id`。SDK 未指定 `request_id` 时会自动生成；框架 ID 也可以通过构造参数 `LinxSciClient(framework_request_id=...)` 设置，再按单次请求覆盖。
 
-## 8. 使用 CLI
+## 8. 验证安装、更新与卸载
 
-CLI 与 SDK 共用配置和请求实现。以下是终端调用方式；在 Python 程序里则使用前面的 SDK 方法。
-
-全部 34 个接口对应的 CLI 命令见 [LinxSci 全接口 CLI 使用指南](CLI_GUIDE.zh-CN.md)。
-
-命令格式为 `linxsci [全局选项] <动作> [动作参数]`。`linxsci` 或 `linxsci --help` 列出可用动作。安装包名称为 `linxsci`，Python 中导入 `linxsci`。
-
-源码更新在同一虚拟环境重新执行 `python -m pip install -e .`，再运行 `linxsci --version` 确认入口。已有环境变量和 `~/.config/linxsci-skills/config.json` 等本地配置继续生效。若还需要在助手中使用更新后的 Skill，执行 `linxsci install-skill --update`。
-
-### 8.1 搜索、阅读和保存内容
+下载新版 wheel，在应用实际使用的 Python 环境中安装，将 `<version>` 替换为实际版本号：
 
 ```bash
-linxsci search "graph neural networks"
-linxsci --output search.json search "graph neural networks"
-```
-
-从结果中取得 ID 后，替换下列中文占位参数再执行：
-
-```bash
-linxsci paper "实际论文ID"
-linxsci paper "实际论文ID" --resource toc
-linxsci paper "实际论文ID" --resource sections --item-id "实际章节ID"
-```
-
-### 8.2 通用调用和诊断
-
-```bash
-# 查看全部支持路由，无需 Key，不调用远程服务
-linxsci routes
-
-# 查看帮助
-linxsci --help
-
-# 查询用量
-linxsci usage
-
-# 发生错误时，将结构化诊断写到 stderr
-linxsci --json-errors search "graph neural networks"
-```
-
-JSON POST 请求用 `--body @request.json` 从文件读取，或用 `--body` 传入 JSON 文本；请求字段按目标接口契约准备。查询参数用 `--param key=value`，可重复；便捷命令接收原始 ID 并自动编码；只有通用 `request` 的动态路径需要与 SDK 的 `request()` 一样自行编码。
-
-### 8.3 PDF 和全局选项
-
-以下路径和任务 ID 需要替换为实际值；确认任务完成后才执行结果命令：
-
-```bash
-linxsci upload /实际路径/paper.pdf
-linxsci task "实际任务ID"
-linxsci task "实际任务ID" --result
-```
-
-CLI 在 PDF 命令中按其实现读取 `LINXSCI_MINERU_API_KEY`：`parse-pdf`、`upload`、`task`（含 `--result`）及通用 PDF `request` 均会发送该头。SDK 的环境变量读取行为不变，仍需显式传入 `mineru_key`。
-
-`--output`、`--timeout`、`--json-errors`、`--framework-request-id` 是全局选项，放在 `linxsci` 之后、具体动作之前。例如：
-
-```bash
-linxsci --timeout 90 --framework-request-id linxsci-trace-001 meta --request-id agent-trace-001
-```
-
-CLI 成功输出默认为紧凑 JSON，大响应及二进制返回文件引用；`--pretty` 供人工阅读，`--output` 保存原始响应字节。错误默认以结构化 JSON 写入 stderr。退出码 `0` 表示成功，`1` 表示 HTTP/网络或连接检查错误，`2` 表示输入、配置或本地文件错误。
-
-## 9. 验证安装与更新
-
-在应用实际使用的 Python 环境中检查安装：
-
-```bash
+python -m pip install --upgrade ./linxsci-<version>-py3-none-any.whl
+python -c "from importlib.metadata import version; print(version('linxsci'))"
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
-linxsci --version
 ```
 
-这两条命令均不调用远程 API。安装新版源码或 wheel 后，在同一解释器环境继续运行应用。SDK 无需安装 Skill；需要同步本工具管理的助手副本时，执行 `linxsci install-skill --update`，外部安装器管理的副本使用原工具更新。
+后两条命令仅验证本地版本和导入，不调用远程 API。源码安装更新源码后运行 `python -m pip install --upgrade .`。更新后重启长期运行的 Python 进程。
 
-CLI 参数详见 [CLI 指南](CLI_GUIDE.zh-CN.md)，接口方法与错误码见 [API 参考](API.zh-CN.md)。
+卸载使用同一个解释器环境：
 
-## 10. 常见问题
+```bash
+python -m pip uninstall linxsci
+```
+
+卸载包不会删除环境变量、已有配置文件，也不会撤销服务端 Key；这些内容由应用环境和 Key 管理设置分别管理。接口方法与错误码见 [API 参考](API.zh-CN.md)。
+
+## 9. 常见问题
 
 | 问题 | 检查和处理 |
 | --- | --- |
 | 可编辑安装提示缺少 setup.py/setup.cfg | 在当前 `.venv` 内升级 pip、setuptools、wheel，再执行 `python -m pip install -e .` |
 | `No module named linxsci` | 检查编辑器/终端解释器是否属于安装本项目的 `.venv` |
 | `No module named python3` | `-m` 后应为模块名；使用 `python -m pip ...` |
-| 找不到 `linxsci` 命令 | 激活安装本项目的虚拟环境；更新源码后重新执行 `python -m pip install -e .` 注册入口 |
-| Key 已更新但仍然鉴权失败 | 用 `config` 检查进程环境变量是否覆盖本地配置；SDK 显式参数优先级更高 |
-| 地址改了却连接到原环境 | 按显式参数、环境变量、本地配置的顺序检查覆盖 |
-| 连接检查成功但搜索提示 `-3900` | 不同接口有独立 action，需要管理员启用对应搜索接口 |
+| Key 已更新但仍然鉴权失败 | 检查当前 Python 进程的环境变量与显式 `api_key` 参数；不要打印 Key |
+| 地址改了却连接到原环境 | 查看 `client.base_url`，按显式参数、环境变量、本地配置的顺序检查覆盖 |
+| 本地配置文件无效 | 同时显式传入服务地址与 Key，或修复所选 JSON 配置文件 |
+| 连接检查成功但搜索提示 `-3900` | 对应搜索接口尚未启用，请联系管理员 |
 | `.json()` 解析失败 | 核对地址和 Content-Type；若为文件或二进制响应，读取 `body` |
 | POST 返回参数校验错误 | 按部署版本的实际业务契约填写 JSON，不把空对象当作通用模板 |

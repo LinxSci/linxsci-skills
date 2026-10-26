@@ -25,7 +25,7 @@ Choose the assistant and installation scope in that installer's prompts. This in
 
 ### Option 2: Standalone ZIP or downloaded source
 
-Extract `linxsci-skills-0.3.0.zip`. In the extracted bundle, run `python3 install.py` (Windows: `py -3 install.py`), or double-click `Install.command` / `Install.bat`. The installer copies the complete skill and starts hidden-input key setup. No pip, SDK, or Node.js is required for this option. For installation only, run `python3 install.py --no-config`.
+Extract `linxsci-skills-0.3.1.zip`. In the extracted bundle, run `python3 install.py` (Windows: `py -3 install.py`), or double-click `Install.command` / `Install.bat`. The installer copies the complete skill and starts hidden-input key setup. No pip, SDK, or Node.js is required for this option. For installation only, run `python3 install.py --no-config`.
 
 The ZIP's `install.py` accepts the following options (place them after `install.py`):
 

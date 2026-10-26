@@ -1,6 +1,19 @@
-# Python SDK and development
+# Python SDK guide
 
-[简体中文](DEVELOPMENT.zh-CN.md) · [README](../README.md)
+[简体中文](DEVELOPMENT.zh-CN.md)
+
+## Install from a wheel
+
+Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.1) and install it in the same Python environment that runs your application:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install ./linxsci-0.3.1-py3-none-any.whl
+python -c "from linxsci import LinxSciClient; print('SDK import OK')"
+```
+
+On Windows use `py -3 -m venv .venv` and `.venv\Scripts\activate.bat`.
 
 ## Install from source
 
@@ -11,40 +24,76 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install -e .
-linxsci --version
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 
-On Windows activate with `.venv\Scripts\activate`. Use the same environment for installation and execution. For a release wheel, install `linxsci-0.3.0-py3-none-any.whl`. A CLI installed by `uv tool install` lives in a separate environment.
+On Windows activate with `.venv\Scripts\activate`. Use the same environment for installation and execution. For a release wheel, install `linxsci-0.3.1-py3-none-any.whl`.
 
-The project and Skill are named `linxsci-skills`; the Python package, import and terminal command are `linxsci`.
+The Python distribution and import name are both `linxsci`. Install it in the interpreter used by your application.
 
 ## Configuration
 
-```bash
-linxsci setup --online
-linxsci config
-linxsci doctor --json
+Configure the client in Python. For a local interactive session, read the key without echoing it:
+
+```python
+from getpass import getpass
+from linxsci import LinxSciClient
+
+client = LinxSciClient(
+    base_url="https://linxsci.com",
+    api_key=getpass("LinxSci API key: "),
+    timeout=60,
+)
 ```
 
-Setup hides key input. The default root is `https://linxsci.com`, without `/openapi/v2`. Existing saved URLs are retained across upgrades. Precedence is explicit constructor arguments, environment, saved configuration, then the release URL default. A key has no default. `LINXSCI_CONFIG_FILE` selects a separate configuration file.
+This creates a client without sending a request or saving the key to disk. Reuse `client` in the same Python process. The service root must not include `/openapi/v2`.
+
+For applications and non-interactive processes, inject `LINXSCI_OPENAPI_KEY` through your deployment environment or secret manager:
+
+```python
+import os
+from linxsci import LinxSciClient
+
+client = LinxSciClient(
+    base_url=os.environ.get("LINXSCI_BASE_URL", "https://linxsci.com"),
+    api_key=os.environ["LINXSCI_OPENAPI_KEY"],
+    timeout=60,
+)
+```
 
 | Variable | Purpose |
 | --- | --- |
 | `LINXSCI_BASE_URL` | Service root override |
-| `LINXSCI_OPENAPI_KEY` | LinxSci API key override |
-| `LINXSCI_CONFIG_FILE` | Configuration file override |
-| `LINXSCI_MINERU_API_KEY` | Optional PDF key; SDK callers pass it explicitly |
+| `LINXSCI_OPENAPI_KEY` | LinxSci API key; no default |
+| `LINXSCI_CONFIG_FILE` | Optional existing configuration file override |
+| `LINXSCI_MINERU_API_KEY` | Optional PDF key; read it in Python and pass `mineru_key` explicitly |
 
-The default configuration path is `~/.config/linxsci-skills/config.json` on macOS/Linux and `%LOCALAPPDATA%\linxsci-skills\config.json` on Windows. `config` hides keys and does not call the service. `doctor` calls `/meta` and follows normal call accounting. `config --clear` deletes saved settings; environment variables remain independent.
+When constructor arguments are omitted, settings resolve from environment variables, then an existing configuration file, then the release URL default. The default file is `~/.config/linxsci-skills/config.json` on macOS/Linux or `%LOCALAPPDATA%\linxsci-skills\config.json` on Windows. A configuration file is optional; supplying both `base_url` and `api_key` bypasses it. The SDK does not automatically load `.env` files. Environment settings must belong to the process running your application.
+
+### Verify the connection
+
+```python
+print("Service root:", client.base_url)
+response = client.request("GET", "/meta")
+print("HTTP status:", response.status)
+print(response.json())
+```
+
+Do not print `client.api_key`. This check makes one real API call; a successful check does not guarantee that every endpoint is enabled. To change credentials, create a new client with the updated values. Removing an application secret does not revoke the server-side key.
 
 ## First search and reading workflow
 
 ```python
+import os
+from getpass import getpass
 from linxsci import LinxSciClient, LinxSciError
 
 try:
-    client = LinxSciClient(timeout=60)
+    client = LinxSciClient(
+        base_url=os.environ.get("LINXSCI_BASE_URL", "https://linxsci.com"),
+        api_key=os.environ.get("LINXSCI_OPENAPI_KEY") or getpass("LinxSci API key: "),
+        timeout=60,
+    )
     response = client.search("graph neural networks")
     print(response.json())
 except LinxSciError as error:
@@ -52,7 +101,7 @@ except LinxSciError as error:
     print(error.request_id, error.framework_request_id)
 ```
 
-In a source checkout, `python examples/research.py "graph neural networks"` runs the repository example. Client construction loads settings without issuing an HTTP request.
+The example above can run as a Python script. In a source checkout, `python examples/research.py "graph neural networks"` runs the repository example when the application environment supplies its key. Client construction does not issue an HTTP request. Subsequent examples reuse the configured `client`; replace placeholder IDs with values returned by the service.
 
 ```python
 paper_id = "<actual-returned-paper-id>"
@@ -175,8 +224,32 @@ response = client.request(
 
 The two IDs have different purposes. Framework IDs may also be set on the constructor. See [API errors and accounting](API.md) for all public codes. `-3905` means upstream returned but accounting completion is uncertain: query execution and billing before repeating a possible write. The client does not retry automatically. `Retry-After` does not resolve uncertain execution.
 
-## CLI and Skill
+## Update and uninstall
 
-The CLI exposes actions directly under `linxsci`; see [all commands and parameters](CLI_GUIDE.md). The Skill runs independently through its bundled scripts; see [Skill installation](../skills/linxsci-skills/SKILL.md#install-the-skill-independently). SDK applications do not need a Skill installation.
+Install a new wheel in the same Python environment that runs your application. Replace `<version>` with the downloaded release version:
 
-Install an updated source or wheel in the same Python environment. After updating the package, `linxsci install-skill --update` refreshes a managed assistant copy while retaining a backup. External-installer copies should be updated with their original installer.
+```bash
+python -m pip install --upgrade ./linxsci-<version>-py3-none-any.whl
+python -c "from importlib.metadata import version; print(version('linxsci'))"
+python -c "from linxsci import LinxSciClient; print('SDK import OK')"
+```
+
+For a source installation, update the checkout and run `python -m pip install --upgrade .`. Restart long-running Python processes after updating. To uninstall:
+
+```bash
+python -m pip uninstall linxsci
+```
+
+Uninstalling the package does not remove environment variables, existing configuration files or server-side keys. Manage those through your application environment and key management settings.
+
+## Troubleshooting
+
+| Problem | Check |
+| --- | --- |
+| `No module named linxsci` | Install the wheel in the interpreter used by your application; inspect `sys.executable` and `python -m pip show linxsci` |
+| Missing or invalid key | Supply `api_key` or inject `LINXSCI_OPENAPI_KEY` into the Python process; do not print the secret |
+| Unexpected service address | Inspect `client.base_url` and constructor/environment/configuration precedence |
+| Invalid saved configuration | Supply both constructor values explicitly, or repair the selected JSON configuration file |
+| `.json()` fails | Inspect status and Content-Type; save raw `response.body` for binary data |
+| `-3900` | The requested endpoint is not enabled; contact the service administrator |
+| `-3905` | Check execution and accounting before repeating a possible write |
