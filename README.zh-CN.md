@@ -60,7 +60,16 @@ python3 install.py --update --no-config
 
 ### 安装与配置
 
-从源码安装到 Python 环境：
+在 Python 环境中从 PyPI 安装：
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install linxsci==0.3.1
+linxsci setup
+```
+
+也可以从源码安装：
 
 ```bash
 git clone https://github.com/LinxSci/linxsci-skills.git
@@ -96,7 +105,7 @@ linxsci task "<returned-task-id>" --result
 
 ### 更新与卸载
 
-更新源码后执行 `python -m pip install --upgrade .`，或运行 `python -m pip install --upgrade /path/to/linxsci-<version>-py3-none-any.whl` 安装新版 wheel。uv 隔离安装使用 `uv tool install --force /path/to/linxsci-<version>-py3-none-any.whl`。将 `<version>` 替换为下载的实际版本号。
+PyPI 安装使用 `python -m pip install --upgrade linxsci` 更新；通过 uv 从 PyPI 安装的副本使用 `uv tool upgrade linxsci`。更新源码后执行 `python -m pip install --upgrade .`，或运行 `python -m pip install --upgrade /path/to/linxsci-<version>-py3-none-any.whl` 安装新版 wheel。uv 隔离安装使用 `uv tool install --force /path/to/linxsci-<version>-py3-none-any.whl`。将 `<version>` 替换为下载的实际版本号。
 
 在安装环境中运行 `python -m pip uninstall linxsci` 卸载；uv 隔离安装使用 `uv tool uninstall linxsci`。
 
@@ -104,12 +113,12 @@ linxsci task "<returned-task-id>" --result
 
 ### 安装
 
-将 wheel 安装到应用实际使用的 Python 环境：
+从 PyPI 安装到应用实际使用的 Python 环境：
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install /path/to/linxsci-0.3.1-py3-none-any.whl
+python -m pip install linxsci==0.3.1
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 
@@ -157,7 +166,7 @@ SDK 返回包含 HTTP 状态、响应头和原始 `body` 的 `Response`；JSON �
 
 ### 更新与卸载
 
-在应用环境中运行 `python -m pip install --upgrade /path/to/linxsci-<version>-py3-none-any.whl` 安装新版 wheel，或更新源码后运行 `python -m pip install --upgrade .`。升级后重启长期运行的 Python 进程。
+PyPI 安装使用 `python -m pip install --upgrade linxsci` 更新。也可在应用环境中运行 `python -m pip install --upgrade /path/to/linxsci-<version>-py3-none-any.whl` 安装新版 wheel，或更新源码后运行 `python -m pip install --upgrade .`。升级后重启长期运行的 Python 进程。
 
 使用 `python -c "from importlib.metadata import version; print(version('linxsci'))"` 检查已安装版本。卸载执行 `python -m pip uninstall linxsci`。删除安装包不会删除应用凭据或撤销 API Key。
 

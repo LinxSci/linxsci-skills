@@ -2,6 +2,16 @@
 
 [English](CLI_GUIDE.md)
 
+## 从 PyPI 安装
+
+需要 Python 3.9+。在实际使用的 Python 虚拟环境中运行：
+
+```bash
+python -m pip install linxsci==0.3.1
+```
+
+更新时运行 `python -m pip install --upgrade linxsci`。 已安装 uv 时，也可以用 `uv tool install linxsci==0.3.1` 隔离安装，后续使用 `uv tool upgrade linxsci` 更新。安装后运行 `linxsci setup` 配置服务。
+
 ## 安装 CLI
 
 需要 Python 3.9+。从 [发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.1) 下载 wheel，在文件所在目录运行：

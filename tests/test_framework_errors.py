@@ -11,6 +11,7 @@ import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from unittest.mock import patch
+from env_helpers import isolated_environment
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "skills/linxsci-skills/scripts"))
@@ -100,7 +101,7 @@ class FrameworkContractTests(unittest.TestCase):
                            "LINXSCI_CONFIG_FILE": str(Path(temporary) / "unused.json")}
             output, errors = io.StringIO(), io.StringIO()
             before = len(FrameworkAPI.calls)
-            with patch.dict(os.environ, environment, clear=True), contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+            with patch.dict(os.environ, isolated_environment(environment), clear=True), contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
                 status = main(["--json-errors", "--framework-request-id", "framework-cli", "search", "-3905"])
             self.assertEqual(status, 1)
             self.assertEqual(output.getvalue(), "")

@@ -60,7 +60,16 @@ See the [Skill user guide](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1
 
 ### Install and configure
 
-Install from source in a Python environment:
+Install from PyPI in a Python environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install linxsci==0.3.1
+linxsci setup
+```
+
+Alternatively, install from source:
 
 ```bash
 git clone https://github.com/LinxSci/linxsci-skills.git
@@ -96,7 +105,7 @@ Output and errors default to compact JSON. `--pretty` and `--human-errors` provi
 
 ### Update and uninstall
 
-Update the source checkout and run `python -m pip install --upgrade .`, or install a new wheel with `python -m pip install --upgrade /path/to/linxsci-<version>-py3-none-any.whl`. For an isolated uv installation, use `uv tool install --force /path/to/linxsci-<version>-py3-none-any.whl`. Replace `<version>` with the downloaded version.
+For a PyPI installation, run `python -m pip install --upgrade linxsci`; for uv use `uv tool upgrade linxsci`. Update the source checkout and run `python -m pip install --upgrade .`, or install a new wheel with `python -m pip install --upgrade /path/to/linxsci-<version>-py3-none-any.whl`. For an isolated uv installation, use `uv tool install --force /path/to/linxsci-<version>-py3-none-any.whl`. Replace `<version>` with the downloaded version.
 
 Uninstall using `python -m pip uninstall linxsci` in the installation environment, or `uv tool uninstall linxsci` for an isolated uv installation.
 
@@ -104,12 +113,12 @@ Uninstall using `python -m pip uninstall linxsci` in the installation environmen
 
 ### Install
 
-Install the wheel in the same Python environment that runs your application:
+Install from PyPI in the same Python environment that runs your application:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install /path/to/linxsci-0.3.1-py3-none-any.whl
+python -m pip install linxsci==0.3.1
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 
@@ -157,7 +166,7 @@ The SDK returns a `Response` with HTTP status, headers and raw `body`; use `.jso
 
 ### Update and uninstall
 
-Install the new wheel with `python -m pip install --upgrade /path/to/linxsci-<version>-py3-none-any.whl` in your application's environment, or update the source and run `python -m pip install --upgrade .`. Restart long-running Python processes after upgrading.
+For a PyPI installation, run `python -m pip install --upgrade linxsci` in your application environment. Install a new wheel with `python -m pip install --upgrade /path/to/linxsci-<version>-py3-none-any.whl` in your application's environment, or update the source and run `python -m pip install --upgrade .`. Restart long-running Python processes after upgrading.
 
 Check the installed version with `python -c "from importlib.metadata import version; print(version('linxsci'))"`. Uninstall with `python -m pip uninstall linxsci`. Package removal does not delete application secrets or revoke API keys.
 

@@ -2,6 +2,16 @@
 
 [English](DEVELOPMENT.md)
 
+## 从 PyPI 安装
+
+需要 Python 3.9+。在实际使用的 Python 虚拟环境中运行：
+
+```bash
+python -m pip install linxsci==0.3.1
+```
+
+更新时运行 `python -m pip install --upgrade linxsci`。 在 Python 中配置 `LinxSciClient`，方法见下文；升级后重启长期运行的应用进程。
+
 本文面向在 Python 程序中调用 LinxSci 的开发者，按当前项目的安装方式、SDK 入口和接口行为编写。首次使用按第 1 节、第 2.1 节和第 3 节操作，即可完成一次论文检索；其他章节按需阅读。
 
 SDK 的公共 Python 入口为 `from linxsci import LinxSciClient`。SDK 将 Python 方法转换为 LinxSci API 请求，自动附带用户的 LinxSci API Key。只使用 SDK 时，完成 Python 包安装和 Key 配置即可。

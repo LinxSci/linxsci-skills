@@ -2,6 +2,16 @@
 
 [简体中文](DEVELOPMENT.zh-CN.md)
 
+## Install from PyPI
+
+Requires Python 3.9+. Run in the Python virtual environment you use:
+
+```bash
+python -m pip install linxsci==0.3.1
+```
+
+Update with `python -m pip install --upgrade linxsci`. Configure `LinxSciClient` in Python as described below. Restart long-running application processes after upgrading.
+
 ## Install from a wheel
 
 Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.1) and install it in the same Python environment that runs your application:

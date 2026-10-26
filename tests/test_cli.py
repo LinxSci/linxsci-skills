@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from env_helpers import isolated_environment
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "skills/linxsci-skills/scripts"))
 import cli
@@ -20,7 +21,7 @@ class UnifiedCLITests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         environment = {"LINXSCI_CONFIG_FILE": str(self.root / "config.json"),
                        "LINXSCI_BASE_URL": "http://localhost:9000", "LINXSCI_OPENAPI_KEY": "root-test-key"}
-        self.environment = patch.dict(os.environ, environment, clear=True)
+        self.environment = patch.dict(os.environ, isolated_environment(environment), clear=True)
         self.environment.start()
         self.addCleanup(self.environment.stop)
 

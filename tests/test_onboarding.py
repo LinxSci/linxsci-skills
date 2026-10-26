@@ -8,6 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from env_helpers import isolated_environment
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/linxsci-skills/scripts"
 sys.path.insert(0, str(SCRIPTS))
@@ -22,7 +23,7 @@ class OnboardingTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.env = patch.dict(os.environ, {"LINXSCI_CONFIG_FILE": str(self.root / "settings/config.json")}, clear=True)
+        self.env = patch.dict(os.environ, isolated_environment({"LINXSCI_CONFIG_FILE": str(self.root / "settings/config.json")}), clear=True)
         self.env.start()
         self.addCleanup(self.env.stop)
 
