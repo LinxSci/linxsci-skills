@@ -9,6 +9,59 @@ description: 调用 LinxSci OpenAPI v2，支持文献检索、论文内容与引
 
 使用本 Skill 的统一入口 `scripts/cli.py`。所有示例中的 `<skill-dir>` 都替换为本文件所在目录的绝对路径；脚本仅依赖 Python 3.9+ 标准库，无需安装 SDK。
 
+## 独立安装 Skill
+
+本 Skill 不依赖终端的 `linxsci` 命令、PyPI 安装包或已安装的 SDK，直接运行随 Skill 提供的 Python 脚本。需要 Python 3.9+、支持本地 Skill 发现及脚本执行的 AI 助手；调用远程服务时还需要已有的 LinxSci API Key。
+
+### 方式一：GitHub Skill 安装器
+
+本机有 Node.js / npx 时运行：
+
+```bash
+npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-skills
+```
+
+按安装器提示选择助手及安装范围。此方式安装完整 Skill，不需要 `pip install linxsci` 或 `uv tool install linxsci`。后续使用同一个外部安装器更新该副本。
+
+### 方式二：独立 ZIP 或下载源码
+
+解压 `linxsci-skills-0.3.0.zip`，在解压后的目录运行 `python3 install.py`（Windows 使用 `py -3 install.py`），也可双击 `Install.command` / `Install.bat`。安装器复制完整 Skill 并启动隐藏输入 Key 的配置向导。此方式不需要 pip、SDK 或 Node.js。只安装、不配置时运行 `python3 install.py --no-config`。
+
+ZIP 内的 `install.py` 支持以下参数，均放在 `install.py` 之后：
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `--skills-dir PATH` | `~/.agents/skills` | 助手扫描父目录，安装器追加 `/linxsci-skills` |
+| `--update` | 关闭 | 更新本工具管理的已有副本并保留备份 |
+| `--no-config` | 关闭 | 仅复制 Skill，不启动 Key 配置向导 |
+| `--online` | 关闭 | 向导建议使用正式服务根地址 |
+| `--base-url URL` | 保存/发行地址 | 明确指定向导建议的服务根地址，优先于 `--online` |
+
+`python3 install.py --help` 可查看帮助。设置 `--no-config` 后，`--online` 和 `--base-url` 不再生效。这些是 ZIP 安装器参数；独立脚本使用 `install-skill` 完成复制，再单独使用 `setup` 配置。
+
+如果下载的是仓库源码或完整 Skill 目录，可直接运行包内脚本：
+
+```bash
+python3 /absolute/path/to/source/skills/linxsci-skills/scripts/cli.py install-skill
+```
+
+默认安装位置是 `~/.agents/skills/linxsci-skills`。助手使用其他扫描目录时，加上 `--skills-dir /absolute/path/to/assistant/skills`，参数为安装父目录，不包含末尾的 `linxsci-skills`。安装后未发现 Skill 时，刷新或重启助手。
+
+### 仅使用 Skill 完成配置与验证
+
+macOS / Linux 默认安装后：
+
+```bash
+python3 "$HOME/.agents/skills/linxsci-skills/scripts/cli.py" routes
+python3 "$HOME/.agents/skills/linxsci-skills/scripts/cli.py" setup
+```
+
+Windows 使用 `py -3 "C:\absolute\path\to\linxsci-skills\scripts\cli.py" setup`。自定义安装目录时使用对应的脚本绝对路径。`routes` 不需要 Key、不联网，可验证本地脚本能否运行；`setup` 在交互终端中隐藏输入 Key、保存配置，并检查一次连接。随后在助手中使用 `$linxsci-skills`。不要让用户将 Key 发到对话中。
+
+更新本工具管理的副本时，下载或解压新版，使用**新版本源码中的** `scripts/cli.py install-skill --update`，或在新 ZIP 内执行 `python3 install.py --update --no-config`。旧副本备份到助手扫描目录之外。手动复制或外部安装器管理的副本应按原安装方式更新。必须完整保留 `SKILL.md`、`scripts/`、`references/`、`agents/`、`service.json` 及其他配套文件；仅复制 `SKILL.md` 无法执行接口。
+
+后续所有操作均使用 Skill 内 `scripts/cli.py` 的绝对路径。[命令参考](references/cli.zh-CN.md) 逐项说明独立调用方式、全部命令、参数类型、默认值、必填条件和示例。
+
 ## 接口调用入口
 
 本 Skill 可调用 [接口文档](references/api.zh-CN.md) 中的全部 34 个接口，覆盖服务信息与健康、各来源搜索和标识解析、论文详情与引用、推荐、作者/机构/期刊及 PDF 解析。全部接口都提供便捷命令，按 [命令速查](references/cli.zh-CN.md) 选择；`request` 保留作通用调试入口。
@@ -78,9 +131,9 @@ python3 <skill-dir>/scripts/cli.py --output /absolute/path/asset.bin paper 'arxi
 
 ## 输出与故障
 
-stdout 输出 JSON 或原始响应；`--output`（放在 `linxsci` 之后、具体动作之前）保留响应原始字节，适用于二进制资源。SDK `Response` 保留 status、headers、body。上游响应原样透传，LinxSci 自身错误则使用 `code/data/error/extra` 框架结构；读取 `error.code` 和 `extra.request-id`，不把它当作上游业务模型。`extra.cost` 是请求耗时（秒），不是扣费金额。不要假定列表字段或 PDF 终态。
+stdout 输出 JSON 或原始响应；`--output`（放在 `linxsci` 之后、具体动作之前）保留响应原始字节，适用于二进制资源。上游响应原样透传，LinxSci 自身错误则使用 `code/data/error/extra` 框架结构；读取 `error.code` 和 `extra.request-id`，不把它当作上游业务模型。`extra.cost` 是请求耗时（秒），不是扣费金额。不要假定列表字段或 PDF 终态。
 
-退出码：0 成功，1 HTTP/网络错误，2 参数/本地文件错误。SDK 异常保留原始错误体，并提供 `error_code`、`request_id`、`framework_request_id`、`execution_uncertain` 属性。CLI 默认输出中文诊断和两种请求 ID；`linxsci --json-errors` 输出结构化诊断，不展示服务端错误消息全文。
+退出码：0 成功，1 HTTP/网络错误，2 参数/本地文件错误。CLI 的结构化 HTTP/网络诊断提供 `error_code`、`request_id`、`framework_request_id`、`execution_uncertain`。CLI 默认输出中文诊断和两种请求 ID；`linxsci --json-errors` 输出结构化诊断，不展示服务端错误消息全文。
 
 按 HTTP 状态和实际 `error.code` 区分故障：
 

@@ -4,7 +4,7 @@
 
 ## Install and configure
 
-Prepare Python 3.9+, your existing LinxSci API key, and an assistant with local skill/script support. Extract `linxsci-skills-0.3.0.zip`, then double-click `Install.command` on macOS or `Install.bat` on Windows. From a terminal, use:
+The Skill runs independently of the CLI and SDK: no PyPI package installation is required. Prepare Python 3.9+, your existing LinxSci API key, and an assistant with local skill/script support. Extract `linxsci-skills-0.3.0.zip`, then double-click `Install.command` on macOS or `Install.bat` on Windows. From a terminal, use:
 
 ```bash
 python3 install.py
@@ -32,17 +32,16 @@ Replace placeholders with actual returned IDs. The assistant should call the ser
 
 ## Settings and updates
 
-With only the ZIP installed, replace `linxsci` in these commands with `python3 /path/to/skill/scripts/cli.py`:
+Use the installed Skill's absolute script path; replace `<skill-dir>` with its actual directory. On Windows use `py -3` instead of `python3`:
 
 ```bash
-linxsci config
-linxsci setup --online
-linxsci doctor --json
-linxsci config --clear
-linxsci install-skill --update
+python3 "<skill-dir>/scripts/cli.py" config
+python3 "<skill-dir>/scripts/cli.py" setup --online
+python3 "<skill-dir>/scripts/cli.py" doctor --json
+python3 "<skill-dir>/scripts/cli.py" config --clear
 ```
 
-`config` hides the key. `setup --online` suggests the production service; environment overrides still take precedence. `doctor` makes a real `/meta` call, so avoid repeated checks. Clearing removes the saved URL and key, but does not unset environment variables. An update only replaces an installation managed by this installer and retains a backup outside the skill scan directory.
+`config` hides the key. `setup --online` suggests the production service; environment overrides still take precedence. `doctor` makes a real `/meta` call, so avoid repeated checks. Clearing removes the saved URL and key, but does not unset environment variables. An update only replaces an installation managed by this installer and retains a backup outside the skill scan directory. Run updates from the new downloaded source or bundle; running an old installed script would copy its old files.
 
 For a ZIP update, extract the new bundle and run `python3 install.py --update`. Use `--no-config` when configuration is already valid. Keep customized or externally installed copies under their original installer's management.
 
@@ -59,4 +58,4 @@ The current configuration uses `LINXSCI_*` variables and the `linxsci-skills` di
 | Search is empty | Adjust the query and report the empty result honestly |
 | PDF creation has an uncertain result | Inspect task and billing status before resubmitting |
 
-See [CLI commands](CLI_GUIDE.md), [error codes](API.md), and [testing](TESTING.md).
+See [independent Skill installation and installer parameters](../skills/linxsci-skills/SKILL.md#install-the-skill-independently), [standalone commands and all parameters](../skills/linxsci-skills/references/cli.md), [CLI commands](CLI_GUIDE.md), [error codes](API.md), and [testing](TESTING.md).

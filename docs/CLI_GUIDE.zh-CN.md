@@ -1,565 +1,418 @@
-# LinxSci 全接口 CLI 使用指南
+# CLI 命令与参数详细指南
 
-[English](CLI_GUIDE.md)
+[English](CLI_GUIDE.md) · [README](../README.zh-CN.md)
 
-本文逐一列出当前 [LinxSci OpenAPI v2 接口文档](API.zh-CN.md) 中的 **34 个接口**及其 CLI 调用命令。全部接口都有便捷命令，无需填写 `request`、`GET`、`POST` 或接口路径。先完成安装和配置，再选择需要的接口执行。
+## 选择调用入口
 
-接口按以下类别排列：
+使用已安装 CLI 时，可通过 `python -m pip install /path/to/linxsci-0.3.0-py3-none-any.whl` 安装发行 wheel；正式发布到 PyPI 后可使用 `uv tool install linxsci`。源码开发者可执行 `python -m pip install -e .`，终端命令为 `linxsci`。
 
-| 分类 | 接口编号 | 数量 |
-| --- | --- | --- |
-| [服务信息与健康检查](#服务信息与健康检查) | 01–04 | 4 |
-| [论文搜索与解析](#论文搜索与解析) | 05–10 | 6 |
-| [论文详情与引用](#论文详情与引用) | 11–21 | 11 |
-| [论文推荐](#论文推荐) | 22–23 | 2 |
-| [作者、机构与期刊](#作者机构与期刊) | 24–30 | 7 |
-| [PDF 解析](#pdf-解析) | 31–34 | 4 |
+Skill 可以独立运行，不需要安装 CLI 或 SDK。下载完整 Skill 后，将下文所有示例中的 `linxsci` 替换为 `python3 "/absolute/path/to/linxsci-skills/scripts/cli.py"` 即可；Windows 使用 `py -3` 和实际脚本路径。安装方式见 [Skill 说明](../skills/linxsci-skills/SKILL.zh-CN.md#独立安装-skill)。
 
-## 安装和配置
-
-### PyPI 发布后的推荐安装
-
-当前尚未完成 PyPI 发布。下面是发布成功后官网采用的主安装流程；发布前请使用本地 wheel 或源码安装。没有 uv 时先按 [uv 官方安装说明](https://docs.astral.sh/uv/getting-started/installation/) 安装。
-
-```bash
-uv tool install linxsci
-linxsci --version
-linxsci setup
-```
-
-uv 会将 CLI 安装到独立工具环境并提供 `linxsci` 命令，无需手动创建虚拟环境。若命令不在 PATH 中，运行 `uv tool update-shell` 后重新打开终端。工具安装在助手实际运行命令的环境中；安装到另一台电脑或容器不代表当前助手可以调用。使用方式见 [uv 官方工具指南](https://docs.astral.sh/uv/guides/tools/)。
-
-发布后的升级和卸载命令：
-
-```bash
-uv tool upgrade linxsci
-uv tool uninstall linxsci
-```
-
-如果已复制安装 Skill，升级 CLI 后再执行 `linxsci install-skill --update` 更新该副本。已有 pipx 的用户可使用 `pipx install linxsci` 作为备选，升级使用 `pipx upgrade linxsci`，详见 [pipx 官方说明](https://pipx.pypa.io/stable/)。
-
-固定版本临时试用命令（该版本发布到 PyPI 后可用）：
-
-```bash
-uvx --from "linxsci-skills==0.3.0" linxsci --help
-```
-
-包名是 `linxsci`，终端命令是 `linxsci`。`uv tool install` 面向 CLI；在 Python 项目中导入 SDK 时，仍需将该包安装到项目环境，见 [SDK 开发者指南](DEVELOPMENT.zh-CN.md)。
-
-安装过旧名称包的用户先按 [名称迁移说明](DEVELOPMENT.zh-CN.md#14-从旧名称迁移) 卸载旧包，再安装新包。本文所有示例使用直接命令，不需要中间的能力分组。
-
-### 从项目源码安装 CLI
-
-在项目根目录执行；已有虚拟环境时只需激活并安装。
-
-**macOS / Linux：**
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python3 -m pip install --upgrade pip setuptools wheel
-python3 -m pip install -e .
-linxsci --version
-linxsci --help
-```
-
-**Windows CMD：**
-
-```bat
-py -3 -m venv .venv
-.venv\Scripts\activate.bat
-python -m pip install --upgrade pip setuptools wheel
-python -m pip install -e .
-linxsci --version
-linxsci --help
-```
-
-后续调用均在安装了本项目的同一个虚拟环境中执行。
-
-如果拿到的是 wheel，在自己的虚拟环境中安装它：
-
-```bash
-python -m pip install /实际路径/linxsci-0.3.0-py3-none-any.whl
-```
-
-CLI 用户也可以直接用 uv 安装下载好的 wheel，无需等待 PyPI 上线：
-
-```bash
-uv tool install "/实际路径/linxsci-0.3.0-py3-none-any.whl"
-```
-
-当前尚未上传 PyPI，不能假定 `pip install linxsci` 可以安装本项目。命令名为 `linxsci`，Python 包名为 `linxsci`。
-
-### 配置服务地址和 Key
-
-```bash
-linxsci setup --base-url https://linxsci.com
-```
-
-按提示输入自己的 LinxSci API Key，输入不会显示。地址只填服务根地址，不附加 `/openapi/v2`；所有接口，包括健康检查，都自动携带 `Authorization: Bearer ...`。`setup` 默认执行一次连接检查，成功后即可调用其他接口。
-
-默认地址为正式服务 `https://linxsci.com`。已有配置时无需再次输入 Key，升级也不会自动替换保存的地址；原先使用测试环境的用户可运行 `linxsci setup --online` 切换。检查实际配置状态可运行 `linxsci config`，不会显示 Key；`LINXSCI_BASE_URL` 和 `LINXSCI_OPENAPI_KEY` 环境变量优先于保存的配置。保存位置及配置优先级见 [开发者指南](DEVELOPMENT.zh-CN.md#2-配置服务地址和-api-key)，连接测试服务见 [测试指南](TESTING.zh-CN.md)。
-
-### 只使用 ZIP 时
-
-ZIP 安装器不注册 `linxsci` 命令。在解压目录中，把下文所有命令开头的 `linxsci` 替换为：
-
-```bash
-python3 skills/linxsci-skills/scripts/cli.py
-```
-
-例如：
-
-```bash
-python3 skills/linxsci-skills/scripts/cli.py usage
-```
-
-Windows 使用 `py -3` 替换 `python3`。完整安装流程见 [普通用户指南](USER_GUIDE.zh-CN.md)。
-
-## 调用前的参数准备
-
-### 便捷命令语法
+## 调用格式与参数位置
 
 ```text
-linxsci [全局选项] <动作> [ID或检索词] [动作选项]
-linxsci [全局选项] <动作> --body @请求文件.json
+linxsci [全局选项] 命令 [命令参数]
+linxsci --help
+linxsci 命令 --help
 ```
 
-例如 `linxsci meta`、`linxsci health live`、`linxsci author "作者ID" --papers`。用 `<动作> --help` 查看参数。健康检查使用 `health live` / `health ready`，没有 `--live` / `--ready` 选项。
+不带参数运行 `linxsci` 显示帮助。`--help` 和 `--version` 无需配置、不联网。全局选项必须放在**命令之前**，命令专用参数放在**命令之后**。含空格的值使用引号。相对文件路径以当前工作目录为基准，不以 Skill 目录为基准。执行前将 `<...>` 占位参数替换成实际值。
 
-所有 34 个接口的便捷命令都支持 `--param 字段=值` 和 `--request-id 请求ID`。这些选项放在动作后面；全局选项放在动作前面。
+## 全局选项
 
-### 动态 ID
-
-下文尖括号内容是占位参数，执行前替换为真实 ID。便捷命令接收**未经 URL 编码的原始 ID**，CLI 自动编码，包括 DOI 中的 `/`、空格与中文。不要预先编码，也不要把论文标题当成 ID。
-
-| 占位参数 | 替换值来源 |
-| --- | --- |
-| `<paper-id>` | 搜索、解析等响应中的论文 ID，保留 `local:`、`arxiv:`、`openalex:`、`s2:` 或 `doi:` 前缀 |
-| `<section-id>` | 目录返回的章节 ID |
-| `<asset-id>` | 资源响应中的资源 ID |
-| `<author-id>`、`<institution-id>`、`<venue-id>` | 响应或部署契约提供的作者、机构、期刊/会议 ID |
-| `<task-id>` | PDF 创建/上传响应中的任务 ID |
-
-```bash
-linxsci paper "实际论文ID"
-linxsci paper "实际论文ID" --resource sections --item-id "实际章节ID"
-```
-
-### JSON 请求文件
-
-`--body @文件名.json` 从当前工作目录读取请求文件；也可以使用绝对路径，例如 `--body "@/实际路径/request.json"`。文件使用 UTF-8 编码。
-
-四个搜索命令（`search`、`search-openalex`、`search-semantic-scholar`、`search-google-scholar`）都将位置参数作为 JSON 的 `query` 发送，无需准备文件：
-
-```bash
-linxsci search-openalex "large language models"
-```
-
-需要附加参数时，可用 `--body` 传入 JSON 对象或文件；检索词始终以位置参数为准，覆盖附加 JSON 中的 `query`：
-
-```bash
-linxsci search-openalex "large language models" --body @openalex-search.json
-```
-
-对应的最小 JSON 请求如下（综合搜索可保存为 `papers-search.json`）：
-
-```json
-{
-  "query": "graph neural networks"
-}
-```
-
-其他 POST 接口及搜索附加参数的具体业务字段未在当前代理接口文档中展开，需要依照实际部署的 Agent API 契约准备下列文件。文件名由本文约定，方便区分不同接口；CLI 不会自动生成这些文件。
-
-| 请求文件 | 用于接口 | 内容要求 |
+| 参数 | 类型 / 默认值 | 说明 |
 | --- | --- | --- |
-| `papers-search.json` | 综合论文搜索 | 可使用上方 `query` 示例，其他选项按上游契约添加 |
-| `openalex-search.json`（可选） | OpenAlex 搜索 | 按 OpenAlex 搜索接口的上游请求模型填写 |
-| `semantic-scholar-search.json`（可选） | Semantic Scholar 搜索 | 按对应上游请求模型填写 |
-| `google-scholar-search.json`（可选） | Google Scholar 搜索 | 按对应上游请求模型填写 |
-| `papers-resolve.json` | 论文标识解析 | 按对应上游请求模型填写 |
-| `papers-batch-get.json` | 批量获取论文 | 按对应上游请求模型填写 |
-| `recommendations.json` | 论文推荐 | 按对应上游请求模型填写 |
-| `entities-resolve.json` | 实体标识解析 | 按对应上游请求模型填写 |
-| `pdf-parse.json` | JSON 创建 PDF 解析任务 | 按对应上游请求模型填写 |
+| `-h`、`--help` | 开关 | 查看总帮助；放在命令后查看该命令帮助 |
+| `--version` | 开关 | 输出版本号并退出 |
+| `--timeout SECONDS` | 数值，默认 `60` | 网络超时秒数，必须为正的有限数；不是 PDF 任务的整体完成时限 |
+| `--output PATH` | 文件路径，默认不设置 | 将接口原始响应字节写入文件而不输出到 stdout；覆盖同名文件，父目录需已存在 |
+| `--json-errors` | 开关，默认关闭 | 将结构化错误写入 stderr，不改变成功响应格式 |
+| `--framework-request-id ID` | 非空可打印 ASCII，默认不设置 | 发送 `X-ANYTHINGRIGHT-REQ-ID`，对应框架错误的 `extra.request-id`；未设置时由服务端生成框架 ID |
 
-不要把 `{}` 或检索响应当成通用有效请求，也不要推断不存在的 `ids`、`limit`、`page` 等字段。认证由 CLI 读取本机配置，无需在业务 JSON 中写入 LinxSci API Key。
+`--output` 仅保存接口响应，不用于本地配置/帮助输出或 doctor 的诊断报告。例如：
+
+```bash
+linxsci --timeout 90 --output search.json search "graph neural networks"
+linxsci --framework-request-id framework-001 meta --request-id upstream-001
+```
+
+## 接口命令共有参数
+
+下文所有接口命令均支持以下参数。`setup`、`config`、`doctor`、`routes`、`install-skill` 这些本地/管理命令不支持它们。
+
+| 参数 | 类型 / 默认值 | 说明 |
+| --- | --- | --- |
+| `--param KEY=VALUE` | 可重复字符串，默认不设置 | URL 查询参数，键不能为空；同一键重复传入会保留多个值，脚本负责 URL 编码。业务字段名以部署环境的上游契约为准 |
+| `--request-id ID` | 非空可打印 ASCII，未设置时自动生成 UUID | 发送上游/代理追踪头 `X-Request-ID`，与全局框架请求 ID 不同 |
+
+```bash
+linxsci paper "<paper-id>" --param "<contract-key>=<value>" --request-id upstream-001
+```
+
+契约支持多值查询键时，使用 `--param "KEY=VALUE1" --param "KEY=VALUE2"`。通用请求的路径中不要附加查询字符串。`--param` 是 URL 查询参数，`--body` 是 JSON 请求体，`--field` 是上传表单字段，三者不能相互替代。当前没有内置的 `--limit`、`--page`、`--year` 选项；只有上游契约明确支持时，才按其定义传递这些业务字段。
+
+## 配置与本地命令
+
+### setup
+
+保存服务根地址和 API Key，默认随后调用一次 `/meta` 检查连接，使用 `--no-check` 可跳过。
+
+```bash
+linxsci setup
+linxsci setup --online
+linxsci setup --base-url https://linxsci.com --no-check
+```
+
+| 参数 | 类型 / 默认值 | 说明 |
+| --- | --- | --- |
+| `--base-url URL` | 服务根地址，可选 | 明确指定向导建议的地址，优先于 `--online`；必须为 HTTP(S)，不能包含账号、查询串、片段或 `/openapi/v1`、`/openapi/v2` 后缀 |
+| `--online` | 开关，默认关闭 | 使用发行配置中的线上地址 `https://linxsci.com` 作为建议值，代替保存的地址；交互时仍可修改 |
+| `--api-key-stdin` | 开关，默认关闭 | 从 stdin 读取一行 Key，替代交互式隐藏输入；用于本机秘密管理器或受保护输入流，不应将真实 Key 写成 shell 历史中的字面量 |
+| `--no-check` | 开关，默认关闭 | 仅保存配置，不发起连接检查 |
+
+不使用 `--api-key-stdin` 时必须在交互终端运行；向导询问地址并隐藏输入 Key。已有保存的 Key 时，留空会保留它。未指定地址和 `--online` 时，优先建议保存的地址，否则使用发行默认值；通过参数选择的地址在交互中仍可改写。连接检查失败不会撤销已保存的配置。向导检查使用刚提供的配置，但后续命令仍可能受环境变量覆盖。
+
+### config
+
+```bash
+linxsci config
+linxsci config --clear
+```
+
+不带参数时输出 `config_file`、`saved_base_url`、`saved_key_configured`、`environment_url_override`、`environment_key_override`，不输出 Key、不调用服务。`--clear` 为可选开关，默认关闭；指定后删除保存的配置文件，不会清除环境变量。仅在用户要求时清除配置。
+
+### doctor
+
+```bash
+linxsci doctor
+linxsci doctor --json
+```
+
+`--json` 为可选开关，默认关闭；指定后将诊断报告以 JSON 输出到 stdout。报告包含 `ok`、实际 `base_url`、配置信息，以及可用时的状态、错误和请求追踪信息。本地配置缺失/无效退出码为 2，服务失败为 1，成功为 0。此操作需要已配置 Key，会实际请求 `/meta`；200 状态的 HTML 登录页不算 JSON API 连接成功。请求计入正常调用流程，已有有效检查结果时不要重复探测。
+
+### routes
+
+```bash
+linxsci routes
+```
+
+没有命令专用参数；本地输出全部 34 条支持的方法及路径模板，不需要 Key、不联网。
+
+### install-skill
+
+```bash
+linxsci install-skill
+linxsci install-skill --skills-dir /absolute/path/to/assistant/skills
+linxsci install-skill --update
+```
+
+| 参数 | 类型 / 默认值 | 说明 |
+| --- | --- | --- |
+| `--skills-dir PATH` | 目录，默认 `~/.agents/skills` | 助手扫描父目录，安装器自动追加 `/linxsci-skills`；支持展开开头的 `~` |
+| `--update` | 开关，默认关闭 | 更新由本安装器管理的副本，并将旧版备份到扫描父目录旁的 `linxsci-skill-backups`，避免被助手重复扫描 |
+
+此操作复制随包文件，不需要 Key 或网络；可通过 Skill 独立脚本运行，无需安装 CLI/SDK。更新时必须从**新版本**下载源码或安装包运行命令，确保复制的是新文件。安装器拒绝符号链接目标、不受其管理或标记不匹配的目录；外部安装器的副本请用原工具更新。此命令不配置 Key，也不注册终端命令。
+
+## 全部 34 条接口索引
+
+每行都是独立示例，不应将整表当作必须依次执行的操作。各命令详细参数见下文。
+
+| 编号 | 接口 | 示例 |
+| --- | --- | --- |
+
 
 ## 服务信息与健康检查
 
-### 01. 接口元信息
+### meta
 
-**接口：** `GET /openapi/v2/meta`
+`GET /openapi/v2/meta`。查询接口元信息，响应不保证包含完整业务 schema。
 
 ```bash
 linxsci meta
 ```
 
-返回内容以服务实际响应为准，不保证包含完整请求 schema。
+没有位置参数或专用选项，支持共有的 `--param` 和 `--request-id`，需要已配置的 Key。
 
-### 02. 用量信息
+### usage
 
-**接口：** `GET /openapi/v2/usage`
+`GET /openapi/v2/usage`。查询账号用量信息。
 
 ```bash
 linxsci usage
 ```
 
-### 03. 存活检查
+没有位置参数或专用选项，支持共有的 `--param` 和 `--request-id`，需要已配置的 Key。
 
-**接口：** `GET /openapi/v2/health/live`
+### mobile-cards
 
-```bash
-linxsci health live
-```
-
-### 04. 就绪检查
-
-**接口：** `GET /openapi/v2/health/ready`
-
-```bash
-linxsci health ready
-```
-
-## 论文搜索与解析
-
-### 05. 综合论文搜索
-
-**接口：** `POST /openapi/v2/papers/search`
-
-直接输入检索词：
-
-```bash
-linxsci search "large language models"
-```
-
-如需其他业务参数，使用 `linxsci search "large language models" --body @papers-search.json`；检索词始终以命令行位置参数为准。从响应中选择真实论文 ID，用于后续详情和阅读接口。
-
-### 06. OpenAlex 搜索
-
-**接口：** `POST /openapi/v2/search/openalex`
-
-```bash
-linxsci search-openalex "large language models"
-```
-
-### 07. Semantic Scholar 搜索
-
-**接口：** `POST /openapi/v2/search/semantic-scholar`
-
-```bash
-linxsci search-semantic-scholar "large language models"
-```
-
-### 08. Google Scholar 搜索
-
-**接口：** `POST /openapi/v2/search/google-scholar`
-
-```bash
-linxsci search-google-scholar "large language models"
-```
-
-### 09. 论文标识解析
-
-**接口：** `POST /openapi/v2/papers/resolve`
-
-```bash
-linxsci resolve --body @papers-resolve.json
-```
-
-### 10. 批量获取论文
-
-**接口：** `POST /openapi/v2/papers:batchGet`
-
-```bash
-linxsci batch-get --body @papers-batch-get.json
-```
-
-CLI 自动映射到批量获取接口，无需填写路径。
-
-## 论文详情与引用
-
-以下命令使用真实且未经编码的论文 ID；章节和资源 ID 分别从目录或资源响应中取得。
-
-### 11. 论文详情
-
-**接口：** `GET /openapi/v2/papers/{paper_id}`
-
-```bash
-linxsci paper "<paper-id>"
-```
-
-### 12. 论文内容
-
-**接口：** `GET /openapi/v2/papers/{paper_id}/content`
-
-```bash
-linxsci paper "<paper-id>" --resource content
-```
-
-### 13. 论文目录
-
-**接口：** `GET /openapi/v2/papers/{paper_id}/toc`
-
-```bash
-linxsci paper "<paper-id>" --resource toc
-```
-
-### 14. 论文章节
-
-**接口：** `GET /openapi/v2/papers/{paper_id}/sections/{section_id}`
-
-```bash
-linxsci paper "<paper-id>" --resource sections --item-id "<section-id>"
-```
-
-### 15. 论文图表
-
-**接口：** `GET /openapi/v2/papers/{paper_id}/figures`
-
-```bash
-linxsci paper "<paper-id>" --resource figures
-```
-
-### 16. 论文资源
-
-**接口：** `GET /openapi/v2/papers/{paper_id}/assets/{asset_id}`
-
-```bash
-linxsci --output asset.bin paper "<paper-id>" --resource assets --item-id "<asset-id>"
-```
-
-响应原始字节保存到当前目录的 `asset.bin`。实际文件格式取决于返回资源，可按真实格式选择文件名和扩展名。
-
-### 17. 参考文献
-
-**接口：** `GET /openapi/v2/papers/{paper_id}/references`
-
-```bash
-linxsci paper "<paper-id>" --resource references
-```
-
-### 18. 被引论文
-
-**接口：** `GET /openapi/v2/papers/{paper_id}/citations`
-
-```bash
-linxsci paper "<paper-id>" --resource citations
-```
-
-### 19. 相关论文
-
-**接口：** `GET /openapi/v2/papers/{paper_id}/related`
-
-```bash
-linxsci paper "<paper-id>" --resource related
-```
-
-### 20. 引用图谱
-
-**接口：** `GET /openapi/v2/papers/{paper_id}/graph`
-
-```bash
-linxsci paper "<paper-id>" --resource graph
-```
-
-### 21. 论文引用格式
-
-**接口：** `GET /openapi/v2/papers/{paper_id}/citation`
-
-```bash
-linxsci paper "<paper-id>" --resource citation
-```
-
-若需要指定格式等查询条件，按实际契约使用 `--param 字段名=值`，不要猜测参数名称。
-
-## 论文推荐
-
-### 22. 论文推荐
-
-**接口：** `POST /openapi/v2/recommendations`
-
-```bash
-linxsci recommend --body @recommendations.json
-```
-
-### 23. 移动端推荐卡片
-
-**接口：** `GET /openapi/v2/recommendations/mobile-cards`
+`GET /openapi/v2/recommendations/mobile-cards`。获取移动端推荐卡片。
 
 ```bash
 linxsci mobile-cards
 ```
 
-## 作者、机构与期刊
+没有位置参数或专用选项，支持共有的 `--param` 和 `--request-id`，需要已配置的 Key。
 
-### 24. 作者详情
+### health
 
-**接口：** `GET /openapi/v2/authors/{author_id}`
-
-```bash
-linxsci author "<author-id>"
-```
-
-### 25. 作者论文
-
-**接口：** `GET /openapi/v2/authors/{author_id}/papers`
+`GET /openapi/v2/health/{check}`。
 
 ```bash
-linxsci author "<author-id>" --papers
+linxsci health live
+linxsci health ready
 ```
 
-### 26. 机构详情
+位置参数 `check` 必填，只能为 `live`（存活）或 `ready`（就绪），没有默认值。两者均需要已配置 Key，并经过正常调用检查和计量，支持接口共有参数。
 
-**接口：** `GET /openapi/v2/institutions/{institution_id}`
+## 搜索命令
+
+### search
+
+`POST /openapi/v2/papers/search`，用于综合论文搜索。
 
 ```bash
-linxsci institution "<institution-id>"
+linxsci search "graph neural networks"
+linxsci search "graph neural networks" --body @search-options.json
 ```
 
-### 27. 机构论文
+| 参数 | 必填 / 默认值 | 说明 |
+| --- | --- | --- |
+| `query` | 必填位置字符串 | 检索词，以 JSON 的 `query` 字段发送，多词内容用引号括起 |
+| `--body JSON_OR_@FILE` | 可选，默认无附加字段 | 附加 JSON **对象**，可内联或从 UTF-8 文件读取；其中的 `query` 会被位置检索词覆盖 |
 
-**接口：** `GET /openapi/v2/institutions/{institution_id}/papers`
+支持接口共有参数。仅传检索词无需请求文件，例如 `"graph neural networks"` 生成 `{"query":"graph neural networks"}`。附加字段必须符合当前来源的部署契约，不应未经核对直接复用其他来源的请求模型。
+
+### search-openalex
+
+`POST /openapi/v2/search/openalex`，用于OpenAlex 搜索。
 
 ```bash
-linxsci institution "<institution-id>" --papers
+linxsci search-openalex "graph neural networks"
+linxsci search-openalex "graph neural networks" --body @search-options.json
 ```
 
-### 28. 期刊或会议详情
+| 参数 | 必填 / 默认值 | 说明 |
+| --- | --- | --- |
+| `query` | 必填位置字符串 | 检索词，以 JSON 的 `query` 字段发送，多词内容用引号括起 |
+| `--body JSON_OR_@FILE` | 可选，默认无附加字段 | 附加 JSON **对象**，可内联或从 UTF-8 文件读取；其中的 `query` 会被位置检索词覆盖 |
 
-**接口：** `GET /openapi/v2/venues/{venue_id}`
+支持接口共有参数。仅传检索词无需请求文件，例如 `"graph neural networks"` 生成 `{"query":"graph neural networks"}`。附加字段必须符合当前来源的部署契约，不应未经核对直接复用其他来源的请求模型。
+
+### search-semantic-scholar
+
+`POST /openapi/v2/search/semantic-scholar`，用于Semantic Scholar 搜索。
 
 ```bash
-linxsci venue "<venue-id>"
+linxsci search-semantic-scholar "graph neural networks"
+linxsci search-semantic-scholar "graph neural networks" --body @search-options.json
 ```
 
-### 29. 期刊或会议论文
+| 参数 | 必填 / 默认值 | 说明 |
+| --- | --- | --- |
+| `query` | 必填位置字符串 | 检索词，以 JSON 的 `query` 字段发送，多词内容用引号括起 |
+| `--body JSON_OR_@FILE` | 可选，默认无附加字段 | 附加 JSON **对象**，可内联或从 UTF-8 文件读取；其中的 `query` 会被位置检索词覆盖 |
 
-**接口：** `GET /openapi/v2/venues/{venue_id}/papers`
+支持接口共有参数。仅传检索词无需请求文件，例如 `"graph neural networks"` 生成 `{"query":"graph neural networks"}`。附加字段必须符合当前来源的部署契约，不应未经核对直接复用其他来源的请求模型。
+
+### search-google-scholar
+
+`POST /openapi/v2/search/google-scholar`，用于Google Scholar 搜索。
 
 ```bash
-linxsci venue "<venue-id>" --papers
+linxsci search-google-scholar "graph neural networks"
+linxsci search-google-scholar "graph neural networks" --body @search-options.json
 ```
 
-### 30. 实体标识解析
+| 参数 | 必填 / 默认值 | 说明 |
+| --- | --- | --- |
+| `query` | 必填位置字符串 | 检索词，以 JSON 的 `query` 字段发送，多词内容用引号括起 |
+| `--body JSON_OR_@FILE` | 可选，默认无附加字段 | 附加 JSON **对象**，可内联或从 UTF-8 文件读取；其中的 `query` 会被位置检索词覆盖 |
 
-**接口：** `POST /openapi/v2/entities:resolve`
+支持接口共有参数。仅传检索词无需请求文件，例如 `"graph neural networks"` 生成 `{"query":"graph neural networks"}`。附加字段必须符合当前来源的部署契约，不应未经核对直接复用其他来源的请求模型。
+
+## JSON POST 命令
+
+### resolve
+
+`POST /openapi/v2/papers/resolve`。解析论文标识。
+
+```bash
+linxsci resolve --body @papers-resolve.json
+```
+
+`--body JSON_OR_@FILE` 为必填选项，接收内联 JSON 或已存在的 UTF-8 JSON 文件。没有位置参数，也没有默认业务字段，支持接口共有参数。应按当前接口实际的上游 schema 准备 `papers-resolve.json`；仓库没有定义全部业务必填字段，不能假定 `{}` 有效。
+
+### batch-get
+
+`POST /openapi/v2/papers:batchGet`。批量获取论文。
+
+```bash
+linxsci batch-get --body @papers-batch-get.json
+```
+
+`--body JSON_OR_@FILE` 为必填选项，接收内联 JSON 或已存在的 UTF-8 JSON 文件。没有位置参数，也没有默认业务字段，支持接口共有参数。应按当前接口实际的上游 schema 准备 `papers-batch-get.json`；仓库没有定义全部业务必填字段，不能假定 `{}` 有效。
+
+### recommend
+
+`POST /openapi/v2/recommendations`。请求论文推荐。
+
+```bash
+linxsci recommend --body @recommendations.json
+```
+
+`--body JSON_OR_@FILE` 为必填选项，接收内联 JSON 或已存在的 UTF-8 JSON 文件。没有位置参数，也没有默认业务字段，支持接口共有参数。应按当前接口实际的上游 schema 准备 `recommendations.json`；仓库没有定义全部业务必填字段，不能假定 `{}` 有效。
+
+### resolve-entities
+
+`POST /openapi/v2/entities:resolve`。解析作者、机构或期刊/会议标识。
 
 ```bash
 linxsci resolve-entities --body @entities-resolve.json
 ```
 
-## PDF 解析
+`--body JSON_OR_@FILE` 为必填选项，接收内联 JSON 或已存在的 UTF-8 JSON 文件。没有位置参数，也没有默认业务字段，支持接口共有参数。应按当前接口实际的上游 schema 准备 `entities-resolve.json`；仓库没有定义全部业务必填字段，不能假定 `{}` 有效。
 
-### 31. 创建 PDF 解析任务
+### parse-pdf
 
-**接口：** `POST /openapi/v2/pdf/parse`
-
-先按实际契约准备 `pdf-parse.json`：
+`POST /openapi/v2/pdf/parse`。根据 JSON 请求创建 PDF 解析任务，此命令不上传本地文件。
 
 ```bash
 linxsci parse-pdf --body @pdf-parse.json
 ```
 
-记录响应中的真实任务 ID。不要自行假定 JSON 中的 PDF 地址字段或任务 ID 的响应字段名。
+`--body JSON_OR_@FILE` 为必填选项，接收内联 JSON 或已存在的 UTF-8 JSON 文件。没有位置参数，也没有默认业务字段，支持接口共有参数。应按当前接口实际的上游 schema 准备 `pdf-parse.json`；仓库没有定义全部业务必填字段，不能假定 `{}` 有效。 设置 `LINXSCI_MINERU_API_KEY` 后会转发该 PDF Key；创建后保存真实任务 ID，按返回状态确认完成后再获取结果。
 
-### 32. 上传 PDF 并创建解析任务
+## 论文资源
 
-**接口：** `POST /openapi/v2/pdf/parse/upload`
-
-```bash
-linxsci upload "/实际路径/paper.pdf"
-```
-
-这是文件上传接口，使用 `upload` 而不是 JSON `request POST`。CLI 自动构造 `multipart/form-data` 的 `file` 字段，无需手动填写 Content-Type。其他表单字段仅在上游要求时添加，例如：
+### paper
 
 ```bash
-linxsci upload "/实际路径/paper.pdf" --field "实际字段名=实际字段值"
+linxsci paper "<paper-id>"
+linxsci paper "<paper-id>" --resource toc
+linxsci paper "<paper-id>" --resource sections --item-id "<section-id>"
+linxsci --output asset.bin paper "<paper-id>" --resource assets --item-id "<asset-id>"
 ```
 
-每个字段名只能出现一次。文件大小限制以服务配置为准；调用会上传文件并创建任务，避免对同一个文件无意重复提交。
+| 参数 | 必填 / 默认值 | 说明 |
+| --- | --- | --- |
+| `paper_id` | 必填位置字符串 | 真实返回的原始论文 ID，带 `local:`、`arxiv:`、`openalex:`、`s2:` 或 `doi:` 前缀，由脚本编码 |
+| `--resource NAME` | 可选，默认论文详情 | 从下表选择资源类型 |
+| `--item-id ID` | `sections` / `assets` 必填，其他情况禁止 | 真实响应返回的原始章节/资源 ID，自动编码 |
 
-### 33. 查询 PDF 解析任务
+所有资源均使用 GET，支持接口共有参数。
 
-**接口：** `GET /openapi/v2/pdf/parse/{task_id}`
+| `--resource` | `/openapi/v2/papers/{paper_id}` 后的路径 | 返回内容 |
+| --- | --- | --- |
+| 不传 | 无 | 论文详情 |
+| `content` | `/content` | 论文正文内容 |
+| `toc` | `/toc` | 目录及真实章节 ID |
+| `sections` | `/sections/{section_id}` | 指定章节，必须传 `--item-id` |
+| `figures` | `/figures` | 图表信息 |
+| `assets` | `/assets/{asset_id}` | 指定资源，必须传 `--item-id`；二进制内容用全局 `--output` 保存 |
+| `references` | `/references` | 参考文献 |
+| `citations` | `/citations` | 引用本论文的论文 |
+| `related` | `/related` | 相关论文 |
+| `graph` | `/graph` | 引用图谱 |
+| `citation` | `/citation` | 引用格式内容 |
+
+论文、章节和资源 ID 必须来自检索、目录或图表响应，不能根据标题猜测。`doi:10.1000/example` 这样的原始 DOI ID 会自动编码；提前编码会导致 `%` 再次被编码。
+
+## 作者、机构与期刊/会议
+
+### author
 
 ```bash
-linxsci task "<task-id>"
+linxsci author "<returned-author-id>"
+linxsci author "<returned-author-id>" --papers
 ```
 
-由 CLI 编码原始 ID。任务状态以实际响应为准，不假定状态字段名和终态值。
+位置参数 `entity_id` 必填，使用真实的原始作者标识，由脚本自动 URL 编码。可选开关 `--papers` 默认关闭：不传时 GET `/openapi/v2/authors/{author_id}` 获取详情，传入后 GET `/openapi/v2/authors/{author_id}/papers` 获取论文。除非真实实体 ID 本身包含，否则不要自行添加论文来源前缀。支持共有的 `--param` 和 `--request-id`，分页字段以实际契约为准。
 
-### 34. 获取 PDF 解析结果
-
-**接口：** `GET /openapi/v2/pdf/parse/{task_id}/result`
-
-确认任务完成后执行：
+### institution
 
 ```bash
-linxsci task "<task-id>" --result
+linxsci institution "<returned-institution-id>"
+linxsci institution "<returned-institution-id>" --papers
 ```
 
-如果接口返回文件，使用 `linxsci --output result.bin task "<task-id>" --result` 保存原始数据。
+位置参数 `entity_id` 必填，使用真实的原始机构标识，由脚本自动 URL 编码。可选开关 `--papers` 默认关闭：不传时 GET `/openapi/v2/institutions/{institution_id}` 获取详情，传入后 GET `/openapi/v2/institutions/{institution_id}/papers` 获取论文。除非真实实体 ID 本身包含，否则不要自行添加论文来源前缀。支持共有的 `--param` 和 `--request-id`，分页字段以实际契约为准。
 
-PDF 接口按需使用 `X-MinerU-API-Key`。在运行 CLI 的本机环境中设置 `LINXSCI_MINERU_API_KEY` 后，`parse-pdf`、`upload`、`task`（含 `--result`）和通用 PDF `request` 都会自动附带该头。无需向 CLI 提供服务端 `AGENT_PUBLIC_API_KEY`。
-
-## 通用选项与输出
-
-### 查询参数
-
-所有接口便捷命令和 `request` 都通过 `--param 字段名=值` 传递查询参数，同名参数可以重复。字段名和值以实际接口契约为准；CLI 自动编码查询参数，无需预先 URL 编码：
+### venue
 
 ```bash
-linxsci author "<author-id>" --papers --param "实际字段名=实际值"
+linxsci venue "<returned-venue-id>"
+linxsci venue "<returned-venue-id>" --papers
 ```
 
-当前文档未定义通用分页模型，不能假定所有列表接口都使用相同的分页字段。
+位置参数 `entity_id` 必填，使用真实的原始期刊或会议标识，由脚本自动 URL 编码。可选开关 `--papers` 默认关闭：不传时 GET `/openapi/v2/venues/{venue_id}` 获取详情，传入后 GET `/openapi/v2/venues/{venue_id}/papers` 获取论文。除非真实实体 ID 本身包含，否则不要自行添加论文来源前缀。支持共有的 `--param` 和 `--request-id`，分页字段以实际契约为准。
 
-### 保存响应、超时和请求追踪
+## PDF 上传与任务
 
-`--output`、`--timeout`、`--json-errors` 和 `--framework-request-id` 是全局选项，放在 `linxsci` 之后、具体动作之前：
+### upload
+
+`POST /openapi/v2/pdf/parse/upload`，使用 multipart 表单。
 
 ```bash
-linxsci --output search-result.json search "large language models" --body @papers-search.json
-linxsci --timeout 90 meta
-linxsci --framework-request-id linxsci-trace-001 meta --request-id upstream-trace-001
-linxsci --json-errors usage
+linxsci upload "/absolute/path/paper.pdf"
+linxsci upload "/absolute/path/paper.pdf" --field "<contract-field>=<value>"
 ```
 
-`--timeout` 单位为秒，默认 60；`--output` 保存响应原始字节，并覆盖同名文件，父目录须已存在。未指定输出文件时，JSON 格式化输出到终端，其他内容原样输出。请求文件与响应文件请使用不同文件名。
+| 参数 | 必填 / 默认值 | 说明 |
+| --- | --- | --- |
+| `file` | 必填位置文件路径 | 已存在且可读的本地 PDF，以 multipart 的 `file` 字段发送，内容类型为 `application/pdf` |
+| `--field KEY=VALUE` | 可重复，默认无附加字段 | 契约定义的附加 multipart 字段，各字段名必须非空且唯一，值为字符串 |
 
-`--request-id` 是所有接口便捷命令和 `request` 的参数，对应 `X-Request-ID`；不传时自动生成。`--framework-request-id` 对应 LinxSci 框架的 `X-ANYTHINGRIGHT-REQ-ID`。CLI 不提供任意请求头参数，认证头自动添加。
+支持接口共有参数。脚本自动生成 multipart 边界，不接受 `--body`，无需手动设置 Content-Type。操作会将所选文件发送到已配置服务，文件大小及业务校验限制由服务端决定。设置了 `LINXSCI_MINERU_API_KEY` 时，会转发为 `X-MinerU-API-Key`。创建后记录实际任务 ID，结果不确定时不要自动重复上传。
 
-### 错误与退出码
+### task
 
-| 退出码 | 含义 |
-| --- | --- |
-| `0` | CLI 调用成功 |
-| `1` | HTTP、网络或连接检查失败 |
-| `2` | 配置、参数、请求文件或本地文件错误 |
+```bash
+linxsci task "<returned-task-id>"
+linxsci task "<returned-task-id>" --result
+```
 
-错误输出到 stderr，可用 `--json-errors` 获取结构化诊断。`-3900` 表示接口尚未启用，需管理员处理；`-3905` 表示上游已返回但执行与计费确认未完成，先核查结果再决定是否重试，尤其不要直接重复上传或创建任务。其他错误码见 [接口文档](API.zh-CN.md#响应与错误)。
+位置参数 `task_id` 必填，使用真实响应中的原始标识，由脚本自动编码；不能为空、`.`、`..` 或保留值 `upload`。可选开关 `--result` 默认关闭：不传时 GET `/openapi/v2/pdf/parse/{task_id}` 查询状态，传入时 GET `/openapi/v2/pdf/parse/{task_id}/result` 获取结果。支持接口共有参数，设置后会转发 `LINXSCI_MINERU_API_KEY`。
 
-本指南的命令已核对当前 CLI 的参数和路由。接口调用会经过服务端权限、用量及业务参数校验；全部路径可调用不代表所有接口已在你的部署中启用。
+根据实际状态模型确认完成后再获取结果。此命令只发起一次请求，不自动轮询或等待完成；文档未定义统一的终态字段。保存二进制结果时，将全局 `--output result.bin` 放在 `task` 之前。
 
-### 通用调试入口
+## 通用请求
 
-普通调用使用上面的便捷命令即可。开发调试仍可使用：
+### request
 
 ```bash
 linxsci request GET /meta
 linxsci request POST /papers/resolve --body @papers-resolve.json
+linxsci request POST /papers/search --body '{"query":"graph neural networks"}'
+linxsci request GET "/papers/doi:10.1000%2Fexample/toc"
 ```
 
-只有 `request` 需要指定方法及相对于 `/openapi/v2` 的路径。动态 ID 要按单个路径段 URL 编码；例如原始 `doi:10.1000/example` 编码为 `doi:10.1000%2Fexample`（仅作编码演示）。便捷命令不需要这一步。
+| 参数 | 必填 / 默认值 | 说明 |
+| --- | --- | --- |
+| `method` | 必填位置参数，只能为 `GET` / `POST` | 支持路由对应的大写 HTTP 方法 |
+| `path` | 必填位置字符串 | 以 `/` 开头、相对于 `/openapi/v2` 的已支持路径，不是完整 URL；动态路径段需自行编码 |
+| `--body JSON_OR_@FILE` | JSON POST 必填，GET 应省略 | 符合接口契约的内联 JSON 或已存在的 UTF-8 JSON 文件 |
 
-### 查看完整路由和帮助
+支持接口共有参数；PDF 路径会按需转发环境变量 `LINXSCI_MINERU_API_KEY`。仅允许文档列出的映射方法和路径。路径不能含 `?`、`#` 或未编码的动态 ID 斜杠，查询通过 `--param` 传递。DOI 中的斜杠编码为 `%2F`。通用请求不像便捷 `paper` 命令那样校验论文来源前缀，调用方必须自行提供真实标识。GET 不可携带非 null JSON 请求体。通用命令没有文件参数，因此 multipart `/pdf/parse/upload` 必须使用 `upload`。上述内联 JSON 引号示例适用于 Bash；使用 JSON 文件可避免不同 shell 的转义差异。
 
-```bash
-linxsci routes
-linxsci author --help
-linxsci upload --help
-```
+## JSON 文件、环境变量和输出
 
-以上三条命令不调用远程服务。Python SDK 的安装、配置、方法签名及全接口对照见 [SDK 开发者指南](DEVELOPMENT.zh-CN.md)，测试和联调见 [测试指南](TESTING.zh-CN.md)。
+搜索 `--body` 必须解析为对象，其他 JSON 请求体应符合所选接口的 schema。JSON 语法错误、无法读取或非 UTF-8 文件属于本地失败。示例文件名不是仓库自带的业务请求文件。已知最小搜索请求为 `{"query":"graph neural networks"}`，不能据此推断解析标识、推荐、实体或 PDF 创建任务的字段。
+
+| 环境变量 | 默认值 / 行为 |
+| --- | --- |
+| `LINXSCI_BASE_URL` | 覆盖保存的服务根地址；发行回退值为 `https://linxsci.com` |
+| `LINXSCI_OPENAPI_KEY` | 覆盖保存的客户端 Key，无默认值 |
+| `LINXSCI_CONFIG_FILE` | 覆盖配置文件路径；默认 macOS/Linux 为 `~/.config/linxsci-skills/config.json`，Windows 为 `%LOCALAPPDATA%\linxsci-skills\config.json` |
+| `LINXSCI_MINERU_API_KEY` | PDF 命令及通用 PDF 请求可选的 `X-MinerU-API-Key`，不会发送到其他接口 |
+
+保存的配置优先于发行默认值，环境变量优先于保存的配置。客户端 Key 与服务端的 `AGENT_PUBLIC_API_KEY` 不同。
+
+接口成功后，JSON 以格式化文本输出到 stdout，非 JSON 则输出原始字节。全局 `--output` 保存原始响应字节，因此文件中的 JSON 排版不一定与 stdout 相同。不要假定接口拥有统一的列表、分页或任务状态字段。
+
+| 退出码 | 含义 |
+| --- | --- |
+| `0` | 操作成功 |
+| `1` | HTTP/网络或服务诊断失败 |
+| `2` | 参数、配置、本地文件或取消操作错误 |
+
+HTTP/网络失败时，`--json-errors` 提供 `message`、HTTP `status`、`error_code`、`request_id`、`framework_request_id`、`execution_uncertain` 和 `retry_after`。本地错误可能仅包含 `message`，`doctor --json` 则使用 stdout 的诊断报告。参数解析阶段的错误仍按 argparse 默认帮助/错误格式写入 stderr。工具不自动重试，尤其 `-3905` 时应先查询执行及计费结果，再决定是否重复上传或创建任务。详见 [API 错误与计量规则](API.zh-CN.md)。

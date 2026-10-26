@@ -4,7 +4,7 @@
 
 ## 首次准备
 
-准备你的 LinxSci API Key，安装 Python 3.9 或更新版本，并使用一个支持本地 Skill 和脚本执行的 AI 助手。普通网页聊天并不一定支持读取你电脑上的 Skill。
+本 Skill 不依赖已安装的 CLI、SDK 或 PyPI 包。准备你的 LinxSci API Key，安装 Python 3.9 或更新版本，并使用一个支持本地 Skill 和脚本执行的 AI 助手。普通网页聊天并不一定支持读取你电脑上的 Skill。
 
 本包默认使用正式服务 `https://linxsci.com`，无需在你的电脑部署 LinxSci。使用其他环境时在向导中修改地址，测试环境配置见 [测试指南](TESTING.zh-CN.md)。
 
@@ -18,16 +18,16 @@
 npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-skills
 ```
 
-该方式需要 Node.js / npx；具体参数见 [skills 安装器官方命令说明](https://github.com/vercel-labs/skills/blob/main/docs/commands.zh-CN.md)。安装来源应包含 `skills/linxsci-skills/` 的完整脚本、参考资料和配置资源。只下载单个 `SKILL.md` 无法执行接口调用。
+该方式需要 Node.js / npx；具体参数见 [skills 安装器官方命令说明](https://github.com/vercel-labs/skills/blob/main/docs/commands.md)。安装来源应包含 `skills/linxsci-skills/` 的完整脚本、参考资料和配置资源。只下载单个 `SKILL.md` 无法执行接口调用。
 
-如果已安装本项目 CLI，也可使用现有命令安装同一版本随包携带的 Skill：
+下载仓库源码或完整 Skill 目录时，也可使用随附脚本独立安装并配置，无需安装 CLI / SDK：
 
 ```bash
-linxsci install-skill
-linxsci setup
+python3 /absolute/path/to/source/skills/linxsci-skills/scripts/cli.py install-skill
+python3 /absolute/path/to/installed/linxsci-skills/scripts/cli.py setup
 ```
 
-两种安装渠道按目标目录选择一种管理方式。`linxsci install-skill --update` 只更新本工具托管的副本，外部安装器管理的 Skill 使用其对应更新方式。直接下载 ZIP 的完整流程如下。
+第一条命令默认复制到 `~/.agents/skills/linxsci-skills`，第二条使用安装后脚本的实际绝对路径。通过 `--skills-dir` 可指定其他助手扫描父目录。独立安装步骤及安装器参数详见 [Skill 说明](../skills/linxsci-skills/SKILL.zh-CN.md#独立安装-skill)。本工具仅更新由其托管的副本，外部安装器管理的 Skill 使用原安装方式更新。ZIP 的完整流程如下。
 
 下载发布方提供的 ZIP，完整解压，不要直接在压缩包中执行。macOS 双击 `Install.command`，Windows 双击 `Install.bat`。向导会安装 Skill，然后提示输入服务地址和 Key，并检查连接。
 
@@ -71,7 +71,7 @@ PDF 路径替换成你的实际文件路径。上传会将该文件发送到你�
 
 本 Skill 接入文档中的全部 34 个接口，调用某个接口无需先完成论文检索或分析。POST 请求文件需按实际服务的业务参数要求准备；不要在请求文件中写入 API Key，认证自动读取本机配置。
 
-需要在终端逐个调用接口时，查看 [全接口 CLI 使用指南](CLI_GUIDE.zh-CN.md)，其中也说明了 ZIP 用户如何运行包内脚本。
+需要在终端逐个调用接口时，查看 [全接口 CLI 使用指南](CLI_GUIDE.zh-CN.md)，其中也说明了 ZIP 用户如何运行包内脚本。无需安装 CLI 的完整命令和参数参考见 [Skill 独立脚本文档](../skills/linxsci-skills/references/cli.zh-CN.md)。
 
 没有找到 Skill 时，重启助手并确认安装输出的路径。当前默认位置为 `~/.agents/skills`；可为需要其他位置的客户端指定 `python3 install.py --skills-dir /path/to/skills`。见 [官方 Skill 安装位置说明](https://learn.chatgpt.com/docs/build-skills)。不要把同一个 Skill 安装到多个会被同时扫描的位置。
 
@@ -97,7 +97,7 @@ macOS/Linux 的配置保存在 `~/.config/linxsci-skills/config.json`，Windows 
 
 ## 更新和卸载
 
-下载新版本并解压，运行：
+下载新版本并解压，在**新版本**目录运行（不要用旧安装目录中的脚本复制旧文件）：
 
 ```bash
 python3 install.py --update
