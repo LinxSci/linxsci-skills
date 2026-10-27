@@ -168,6 +168,65 @@ class OutputTests(unittest.TestCase):
         self.assertEqual(self.remove_report_file(report).read_bytes(), raw)
         self.assertEqual(request.call_count, 1)
 
+    def test_missing_fields_identify_failing_row_without_record_values(self):
+        source = self.root / "heterogeneous.json"
+        data = {"data": [{"id": "p1", "url": "first-link"},
+                         {"id": "p2", "pdf_url": "private-record-value", "title": None}]}
+        source.write_text(json.dumps(data), encoding="utf-8")
+        args = ["--select", "/data", "--fields", "id,url", "read-output", str(source)]
+        code, out, err, request = self.invoke(args)
+        self.assertEqual((code, out), (2, ""))
+        report = json.loads(err)
+        self.assertEqual(report["error_code"], "local_error")
+        self.assertEqual(report["details"], {"select": "/data", "item_index": 1,
+            "missing_fields": ["url"], "available_fields": ["id", "pdf_url", "title"]})
+        self.assertNotIn("private-record-value", err)
+        request.assert_not_called()
+        self.assertEqual(json.loads(source.read_text()), data)
+        code, out, err, request = self.invoke(["--select", "/data", "--fields", "id",
+                                              "read-output", str(source)])
+        self.assertEqual((code, err), (0, ""))
+        self.assertEqual(json.loads(out), [{"id": "p1"}, {"id": "p2"}])
+        request.assert_not_called()
+
+    def test_completed_request_field_error_can_be_repaired_without_retry(self):
+        raw = b'{"data":[{"paper_id":"p1","pdf_url":"https://example.org/paper"}]}'
+        code, out, err, request = self.invoke(["--select", "/data", "--fields", "paper_id,links,url",
+            "search", "topic"], response=Response(200, {"Content-Type": "application/json"}, raw))
+        self.assertEqual((code, out), (2, ""))
+        report = json.loads(err)
+        self.assertEqual(report["error_code"], "response_output_error")
+        self.assertTrue(report["request_completed"])
+        self.assertTrue(report["do_not_repeat"])
+        self.assertEqual(report["details"]["missing_fields"], ["links", "url"])
+        self.assertEqual(report["details"]["available_fields"], ["paper_id", "pdf_url"])
+        source = self.remove_report_file(report)
+        self.assertEqual(source.read_bytes(), raw)
+        self.assertEqual(request.call_count, 1)
+        code, out, err, request = self.invoke(["--select", "/data", "--fields", "paper_id,pdf_url",
+                                              "read-output", str(source)])
+        self.assertEqual((code, err), (0, ""))
+        self.assertEqual(json.loads(out), json.loads(raw)["data"])
+        request.assert_not_called()
+
+    def test_field_diagnostics_for_single_object_and_non_object_rows(self):
+        source = self.root / "types.json"
+        source.write_text(json.dumps({"data": [{"id": None}, "private-record-value"]}), encoding="utf-8")
+        for pointer, fields, expected in [
+            ("/data/0", "url", {"select": "/data/0", "missing_fields": ["url"], "available_fields": ["id"]}),
+            ("/data", "id", {"select": "/data", "item_index": 1, "expected_type": "object", "actual_type": "str"}),
+        ]:
+            for human in (False, True):
+                with self.subTest(pointer=pointer, human=human):
+                    args = (["--human-errors"] if human else []) + ["--select", pointer,
+                        "--fields", fields, "read-output", str(source)]
+                    code, out, err, request = self.invoke(args)
+                    self.assertEqual((code, out), (2, ""))
+                    details = json.loads(err.splitlines()[-1]) if human else json.loads(err)["details"]
+                    self.assertEqual(details, expected)
+                    self.assertNotIn("private-record-value", err)
+                    request.assert_not_called()
+
     def test_compact_errors_keep_uncertainty_and_trace_ids(self):
         error = LinxSciError("upstream-private-content", 502, {"error": {"code": -3905}, "extra": {"request-id": "framework-id"}},
                              {"X-Request-ID": "upstream-id", "Retry-After": "20"})

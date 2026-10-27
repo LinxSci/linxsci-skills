@@ -12,14 +12,14 @@ if __package__:
     from .client import ROUTES, Response, LinxSciClient, LinxSciError, paper_path, segment
     from .config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
     from .installer import install_skill
-    from .output import ResponseOutputError, json_text, write_response
+    from .output import ResponseOutputError, ResponseViewError, json_text, write_response
 else:
     from client import ROUTES, Response, LinxSciClient, LinxSciError, paper_path, segment
     from config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
     from installer import install_skill
-    from output import ResponseOutputError, json_text, write_response
+    from output import ResponseOutputError, ResponseViewError, json_text, write_response
 
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 
 SEARCH_COMMANDS = {
     "search": ("/papers/search", "综合论文搜索"),
@@ -352,6 +352,8 @@ def main(argv=None, *, prog=None):
             print(json_text(error.report), file=sys.stderr)
         else:
             print("接口已成功执行，请勿重复请求。" + str(error), file=sys.stderr)
+            if "details" in error.report:
+                print(json_text(error.report["details"]), file=sys.stderr)
             if error.report.get("file"):
                 print("原始响应：" + error.report["file"], file=sys.stderr)
         return 2
@@ -360,7 +362,12 @@ def main(argv=None, *, prog=None):
         if args.command == "doctor" and not args.text:
             print(json_text({"ok": False, "message": message}, args.pretty))
         else:
-            print(json_text({"error_code": "local_error", "message": message}) if args.json_errors else message, file=sys.stderr)
+            report = {"error_code": "local_error", "message": message}
+            if isinstance(error, ResponseViewError):
+                report["details"] = error.details
+            print(json_text(report) if args.json_errors else message, file=sys.stderr)
+            if not args.json_errors and "details" in report:
+                print(json_text(report["details"]), file=sys.stderr)
         return 2
     except (EOFError, KeyboardInterrupt):
         print(json_text({"error_code": "cancelled", "message": "操作已取消。"}) if args.json_errors else "操作已取消。", file=sys.stderr)

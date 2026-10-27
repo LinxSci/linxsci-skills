@@ -37,7 +37,7 @@ def install_skill(skills_dir=None, update=False):
     try:
         shutil.copytree(source, staging, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("__pycache__", "*.pyc", MARKER))
-        (staging / MARKER).write_text(json.dumps({"name": SKILL_NAME, "version": "0.3.1"}), encoding="utf-8")
+        (staging / MARKER).write_text(json.dumps({"name": SKILL_NAME, "version": "0.3.2"}), encoding="utf-8")
         if existing.exists():
             backup_root = parent.parent / "linxsci-skill-backups"
             backup_root.mkdir(parents=True, exist_ok=True)

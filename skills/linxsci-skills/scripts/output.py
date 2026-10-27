@@ -29,6 +29,13 @@ def select_value(value, pointer):
     return value
 
 
+class ResponseViewError(ValueError):
+    """An invalid local projection, with schema information but no record values."""
+    def __init__(self, message, details):
+        super().__init__(message)
+        self.details = details
+
+
 def response_view(value, args):
     if args.select is not None:
         value = select_value(value, args.select)
@@ -42,11 +49,19 @@ def response_view(value, args):
         fields = args.fields.split(",")
         if any(not key for key in fields) or len(set(fields)) != len(fields):
             raise ValueError("--fields requires unique, nonempty comma-separated literal field names")
-        def project(item):
-            if not isinstance(item, dict) or any(key not in item for key in fields):
-                raise ValueError("--fields requires objects containing every requested field")
+        def project(item, index=None):
+            details = {"select": args.select if args.select is not None else ""}
+            if index is not None:
+                details["item_index"] = index
+            if not isinstance(item, dict):
+                details.update(expected_type="object", actual_type=type(item).__name__)
+                raise ResponseViewError("--fields requires an object at the selected location", details)
+            missing = [key for key in fields if key not in item]
+            if missing:
+                details.update(missing_fields=missing, available_fields=list(item))
+                raise ResponseViewError("--fields references missing keys; correct the local view using details", details)
             return {key: item[key] for key in fields}
-        value = [project(item) for item in value] if isinstance(value, list) else project(value)
+        value = [project(item, index) for index, item in enumerate(value)] if isinstance(value, list) else project(value)
     if args.table:
         if not isinstance(value, list) or any(not isinstance(item, dict) for item in value):
             raise ValueError("--table requires an array of objects")
@@ -129,12 +144,14 @@ def _write_response(response, args, source_path=None):
 
 class ResponseOutputError(ValueError):
     """The request completed; output formatting failed, so do not repeat the call."""
-    def __init__(self, message, response, path=None):
+    def __init__(self, message, response, path=None, details=None):
         super().__init__(message)
         self.report = {"error_code": "response_output_error", "message": message,
                        "request_completed": True, "status": response.status, "do_not_repeat": True}
         if path is not None:
             self.report.update(file_report(path, response), raw_response=True)
+        if details is not None:
+            self.report["details"] = details
 
 
 def write_response(response, args, source_path=None):
@@ -148,4 +165,5 @@ def write_response(response, args, source_path=None):
             path = source_path or save_response(response, ".bin")
         except OSError:
             path = None
-        raise ResponseOutputError(str(error), response, path) from None
+        details = error.details if isinstance(error, ResponseViewError) else None
+        raise ResponseOutputError(str(error), response, path, details) from None

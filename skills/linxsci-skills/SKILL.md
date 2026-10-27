@@ -25,7 +25,7 @@ Choose the assistant and installation scope in that installer's prompts. This in
 
 ### Option 2: Standalone ZIP or downloaded source
 
-Extract `linxsci-skills-0.3.1.zip`. In the extracted bundle, run `python3 install.py` (Windows: `py -3 install.py`), or double-click `Install.command` / `Install.bat`. The installer copies the complete skill and starts hidden-input key setup. No pip, SDK, or Node.js is required for this option. For installation only, run `python3 install.py --no-config`.
+Extract `linxsci-skills-0.3.2.zip`. In the extracted bundle, run `python3 install.py` (Windows: `py -3 install.py`), or double-click `Install.command` / `Install.bat`. The installer copies the complete skill and starts hidden-input key setup. No pip, SDK, or Node.js is required for this option. For installation only, run `python3 install.py --no-config`.
 
 The ZIP's `install.py` accepts the following options (place them after `install.py`):
 
@@ -101,6 +101,12 @@ Use actual returned paper IDs with `local:`, `arxiv:`, `openalex:`, `s2:` or `do
 
 Synthesize research answers from content actually read. Cite returned paper IDs, links and section evidence. Distinguish abstract evidence from full text, report missing content and avoid invented numbers. There is no documented server-side ask, trends or automatic-review endpoint.
 
+When asked to select relevant papers:
+
+- Screen the received candidates by topic and the user's criteria, then compare abstracts for a small shortlist before choosing. Unless the user asks specifically for the service's top-ranked results, do not simply take the first N records. Use titles and one short summary field for screening; read full abstracts only for plausible candidates. Avoid loading both abstracts and summaries for every record.
+- Treat `score`, when present, as a service ranking signal unless its meaning is documented. Do not present it as a relevance percentage or paper quality measure. Resolve ties using the requested topic and evidence; citation counts alone do not establish relevance.
+- Retain actual source and pagination metadata separately. State the scope actually examined (for example, the first 20 results from the local index), whether more results remain, and whether selection is based on abstracts or full text. Fetch more results only when the current candidates are insufficient or the requested coverage warrants it, using the documented pagination contract. Explain each selection against the user's criteria and cite a returned source link; do not imply an exhaustive literature review.
+
 ## PDF and transport
 
 ```bash
@@ -119,6 +125,8 @@ When the upstream contract needs `X-MinerU-API-Key`, the user can set `LINXSCI_M
 ## Keep tool output small
 
 Use the default compact JSON and structured errors; `--pretty` / `--human-errors` are for terminal reading. Once the actual schema is known, use global `--select <JSON-Pointer>`, `--fields <literal,keys>` and `--limit <N>` before the action to keep only screening fields such as actual paper IDs, titles and source links. These flags only shape the local response and do not change server pagination or requests. Do not assume a `data.items` path or field aliases; derive them from the actual contract or a saved response. If metadata such as pagination is needed, retain it separately when selecting an array. Null and false values carry information and are preserved.
+
+For an unfamiliar saved response, inspect root keys, the result-array location, and record keys locally before projecting fields. A small Python standard-library inspection can report keys/counts without printing record values; one sample's keys need not be present in every row. A field error's `details` identifies the selected path, zero-based `item_index` when applicable, and missing/available fields for the first failing record. Correct the local view and reuse `read-output`. If a view spills again, reduce fields or shortlist size rather than repeating it unchanged or disabling the limit by default. Read only relevant metadata fields; an opaque pagination cursor need not appear in the answer or screening output.
 
 For repeated uniform records, `--table` encodes `columns` once and returns `rows`. Get full paper content or individual sections only when needed. Endpoint output larger than 12000 characters is automatically saved as complete original bytes in a private temporary file; read the returned absolute `file` selectively using `scripts/cli.py --select <actual-pointer> --fields <actual,keys> read-output <absolute-file>`, without another API call. `truncated:true` and `preview` do not constitute full evidence. Binary assets also return file metadata. Temporary files remain available until removed. For an explicit destination use `--output /absolute/path/response.json --output-summary`. `--max-output-chars 0` disables automatic spilling for JSON/text when full output is necessary. See [all output options](references/cli.md#compact-output-and-explicit-response-views).
 

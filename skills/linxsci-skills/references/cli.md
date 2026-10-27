@@ -70,6 +70,8 @@ python3 "<skill-dir>/scripts/cli.py" --pretty --max-output-chars 0 meta
 
 `--output-summary` requires `--output`. Raw `--output` cannot be combined with `--select`, `--fields`, `--limit`, or `--table`; it always saves the original response. If local formatting or saving fails **after a successful API call**, the stderr JSON has `error_code:"response_output_error"`, `request_completed:true`, and `do_not_repeat:true`, with the original response file if recovery succeeds. Use `read-output` on that file to correct the view locally; do not repeat an upload/task creation just to fix formatting.
 
+For field projection failures, structured error `details` includes the selected `select` path, a zero-based `item_index` for arrays (omitted for a single selected object), and `missing_fields` / `available_fields` for the first failing record. Non-object records instead report `expected_type` and `actual_type`. Diagnostics contain no record values; available fields describe that record only. Local `read-output` keeps `local_error`; formatting failures after a successful request keep `response_output_error`, the original response file and the do-not-repeat markers. Correct the view locally instead of making another API call.
+
 ## Shared endpoint options
 
 The endpoint commands below all accept these options. Local commands `setup`, `config`, `doctor`, `routes`, and `install-skill` do not accept them.

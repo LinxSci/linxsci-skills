@@ -14,7 +14,7 @@ LinxSci Skill lets you search, read and compare papers in an AI assistant using 
 
 ### Option 1: Download the installation bundle
 
-Download the [complete Skill bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.1/linxsci-skills-0.3.1.zip) and extract it fully before installing.
+Download the [complete Skill bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.2/linxsci-skills-0.3.2.zip) and extract it fully before installing.
 
 **macOS**: double-click `Install.command` in the extracted directory. If it cannot be opened that way, open a terminal in that directory and run:
 

@@ -4,20 +4,57 @@
 
 ## 从 PyPI 安装
 
-需要 Python 3.9+。在实际使用的 Python 虚拟环境中运行：
+需要 Python 3.9+。已有虚拟环境时直接激活，不要重新创建。新环境的 macOS/Linux 步骤：
 
 ```bash
-python -m pip install linxsci==0.3.1
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install --index-url https://pypi.org/simple linxsci==0.3.2
+linxsci --version
 ```
 
-更新时运行 `python -m pip install --upgrade linxsci`。 已安装 uv 时，也可以用 `uv tool install linxsci==0.3.1` 隔离安装，后续使用 `uv tool upgrade linxsci` 更新。安装后运行 `linxsci setup` 配置服务。
+Windows 的命令提示符使用以下两行创建并激活环境，再执行上方的 `python -m pip` 和验证命令：
+
+```bat
+py -3 -m venv .venv
+.venv\Scripts\activate.bat
+```
+
+验证应输出 `0.3.2`，此检查不需要 API Key。使用 `python -m pip` 能确保安装到当前解释器对应的环境。
+
+随后运行 `linxsci setup` 配置服务。已安装 uv 时，也可使用 `uv tool install linxsci==0.3.2` 隔离安装；这种方式使用 `uv tool upgrade linxsci` 更新，不使用下方虚拟环境的 pip 更新命令。
+
+使用 pip 安装时，在原环境中更新：
+
+```bash
+python -m pip install --upgrade --index-url https://pypi.org/simple linxsci
+linxsci --version
+```
+
+### 安装时出现 SSL 错误
+
+`SSLEOFError` 表示 HTTPS 连接失败，不能仅凭它断定安装包有问题。先尝试在当前环境更新 pip；如果 pip 自身无法连接，但已安装的 [uv](https://docs.astral.sh/uv/getting-started/installation/) 可以连接，可在包含 `.venv` 的目录执行：
+
+```bash
+uv pip install --python .venv/bin/python --index-url https://pypi.org/simple --upgrade pip
+.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.2
+```
+
+环境为 `.venv-1` 时替换路径；Windows 使用 `.venv/Scripts/python.exe`。若仍失败，检查网络、代理及证书配置，保持 HTTPS 验证开启，参考 [pip 证书说明](https://pip.pypa.io/en/stable/topics/https-certificates/)。也可从下文的 GitHub 发行附件下载 wheel，在已激活的环境中离线安装：
+
+```bash
+python -m pip install --no-index --no-deps ./linxsci-0.3.2-py3-none-any.whl
+```
+
+此 wheel 没有额外运行时依赖。从文件所在目录执行，安装后运行上面的版本验证命令。
 
 ## 安装 CLI
 
-需要 Python 3.9+。从 [发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.1) 下载 wheel，在文件所在目录运行：
+需要 Python 3.9+。从 [发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.2) 下载 wheel，在文件所在目录运行：
 
 ```bash
-uv tool install ./linxsci-0.3.1-py3-none-any.whl
+uv tool install ./linxsci-0.3.2-py3-none-any.whl
 linxsci --version
 ```
 
@@ -99,6 +136,8 @@ linxsci --pretty --max-output-chars 0 meta
 ```
 
 `--output-summary` 必须配合 `--output`，保存原始响应的 `--output` 不可与 `--select`、`--fields`、`--limit`、`--table` 混用。如果**接口已成功执行后**本地格式化或保存失败，stderr JSON 返回 `error_code:"response_output_error"`、`request_completed:true`、`do_not_repeat:true`，恢复保存成功时还会返回完整原始响应的文件。应读取文件在本地修正展示，不能为修正格式而重复上传或创建任务。
+
+字段筛选失败时，结构化错误的 `details` 返回所选路径 `select`、数组中从 0 开始的 `item_index`（选择单个对象时省略），以及首条出错记录的 `missing_fields` 和 `available_fields`；非对象记录则返回 `expected_type` 和 `actual_type`。诊断不包含记录值，可用字段仅描述该条记录，不保证其他记录都有。`read-output` 保持 `local_error`；接口成功后的格式错误保持 `response_output_error`、原始响应文件及禁止重复请求标记。根据诊断修正本地筛选，不重新调用接口。
 
 ## 接口命令共有参数
 

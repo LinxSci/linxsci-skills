@@ -4,20 +4,57 @@
 
 ## Install from PyPI
 
-Requires Python 3.9+. Run in the Python virtual environment you use:
+Requires Python 3.9+. Activate an existing virtual environment, or create a new one on macOS/Linux:
 
 ```bash
-python -m pip install linxsci==0.3.1
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install --index-url https://pypi.org/simple linxsci==0.3.2
+linxsci --version
 ```
 
-Update with `python -m pip install --upgrade linxsci`. With uv already installed, `uv tool install linxsci==0.3.1` provides an isolated installation; update it with `uv tool upgrade linxsci`. Run `linxsci setup` to configure the service.
+In Windows Command Prompt, create and activate the environment with these two lines, then run the `python -m pip` and verification commands above:
+
+```bat
+py -3 -m venv .venv
+.venv\Scripts\activate.bat
+```
+
+Verification should print `0.3.2` and requires no API key. Using `python -m pip` targets the active interpreter.
+
+Next, run `linxsci setup` to configure the service. With uv already installed, `uv tool install linxsci==0.3.2` is an alternative isolated installation; update that installation with `uv tool upgrade linxsci` instead of the virtual-environment pip command below.
+
+For a pip installation, update in the original environment:
+
+```bash
+python -m pip install --upgrade --index-url https://pypi.org/simple linxsci
+linxsci --version
+```
+
+### SSL errors during installation
+
+`SSLEOFError` means the HTTPS connection failed; it does not by itself identify a package defect. First try upgrading pip in the affected environment. If pip cannot connect but an installed [uv](https://docs.astral.sh/uv/getting-started/installation/) can, run from the directory containing `.venv`:
+
+```bash
+uv pip install --python .venv/bin/python --index-url https://pypi.org/simple --upgrade pip
+.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.2
+```
+
+Substitute the path for `.venv-1` or another environment; on Windows use `.venv/Scripts/python.exe`. If it still fails, check network, proxy and certificate settings while keeping HTTPS verification enabled; see [pip certificate documentation](https://pip.pypa.io/en/stable/topics/https-certificates/). Alternatively, download the wheel from the GitHub release linked below and install it offline in the activated environment:
+
+```bash
+python -m pip install --no-index --no-deps ./linxsci-0.3.2-py3-none-any.whl
+```
+
+This wheel has no additional runtime dependencies. Run from the file’s directory, then repeat the version verification above.
 
 ## Install the CLI
 
-Requires Python 3.9+. Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.1) and run from its directory:
+Requires Python 3.9+. Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.2) and run from its directory:
 
 ```bash
-uv tool install ./linxsci-0.3.1-py3-none-any.whl
+uv tool install ./linxsci-0.3.2-py3-none-any.whl
 linxsci --version
 ```
 
@@ -99,6 +136,8 @@ linxsci --pretty --max-output-chars 0 meta
 ```
 
 `--output-summary` requires `--output`. Raw `--output` cannot be combined with `--select`, `--fields`, `--limit`, or `--table`; it always saves the original response. If local formatting or saving fails **after a successful API call**, the stderr JSON has `error_code:"response_output_error"`, `request_completed:true`, and `do_not_repeat:true`, with the original response file if recovery succeeds. Use `read-output` on that file to correct the view locally; do not repeat an upload/task creation just to fix formatting.
+
+For field projection failures, structured error `details` includes the selected `select` path, a zero-based `item_index` for arrays (omitted for a single selected object), and `missing_fields` / `available_fields` for the first failing record. Non-object records instead report `expected_type` and `actual_type`. Diagnostics contain no record values; available fields describe that record only. Local `read-output` keeps `local_error`; formatting failures after a successful request keep `response_output_error`, the original response file and the do-not-repeat markers. Correct the view locally instead of making another API call.
 
 ## Shared endpoint options
 

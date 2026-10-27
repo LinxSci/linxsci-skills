@@ -1,6 +1,6 @@
 # linxsci-skills
 
-[English](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/README.md)
+[English](https://github.com/LinxSci/linxsci-skills/blob/v0.3.2/README.md)
 
 通过 LinxSci OpenAPI v2 检索学术论文、阅读章节与引用、查询学术实体并解析 PDF。选择适合自己工作方式的入口，每种方式均支持文档中的全部 34 条接口。
 
@@ -16,7 +16,7 @@
 
 ### 安装与配置
 
-下载 [Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.1/linxsci-skills-0.3.1.zip)，完整解压后，在 macOS 双击 `Install.command`，Windows 双击 `Install.bat`。也可以在解压目录打开终端并运行：
+下载 [Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.2/linxsci-skills-0.3.2.zip)，完整解压后，在 macOS 双击 `Install.command`，Windows 双击 `Install.bat`。也可以在解压目录打开终端并运行：
 
 ```bash
 python3 install.py
@@ -54,7 +54,7 @@ python3 install.py --update --no-config
 
 卸载时使用原安装器的移除功能，或删除自带安装器创建的目录，然后刷新助手。如需清除保存的配置，请在删除 Skill 前让助手协助处理。
 
-安装参数、配置、使用示例和故障排查见 [Skill 使用指南](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/docs/USER_GUIDE.zh-CN.md)。
+安装参数、配置、使用示例和故障排查见 [Skill 使用指南](https://github.com/LinxSci/linxsci-skills/blob/v0.3.2/docs/USER_GUIDE.zh-CN.md)。
 
 ## CLI
 
@@ -65,7 +65,7 @@ python3 install.py --update --no-config
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci==0.3.1
+python -m pip install linxsci==0.3.2
 linxsci setup
 ```
 
@@ -81,7 +81,7 @@ linxsci --version
 linxsci setup
 ```
 
-Windows 使用 `py -3 -m venv .venv` 创建环境，在命令提示符 CMD 中运行 `.venv\Scripts\activate.bat` 激活。也可通过 `python -m pip install /path/to/linxsci-0.3.1-py3-none-any.whl` 安装已下载的 wheel。已安装 uv 时，可用 `uv tool install /path/to/linxsci-0.3.1-py3-none-any.whl` 创建隔离的终端工具安装。
+Windows 使用 `py -3 -m venv .venv` 创建环境，在命令提示符 CMD 中运行 `.venv\Scripts\activate.bat` 激活。也可通过 `python -m pip install /path/to/linxsci-0.3.2-py3-none-any.whl` 安装已下载的 wheel。已安装 uv 时，可用 `uv tool install /path/to/linxsci-0.3.2-py3-none-any.whl` 创建隔离的终端工具安装。
 
 `linxsci setup` 通过隐藏输入读取 API Key。默认服务根地址为 `https://linxsci.com`，不添加 `/openapi/v2`。`LINXSCI_BASE_URL` 和 `LINXSCI_OPENAPI_KEY` 优先于保存的设置；`LINXSCI_CONFIG_FILE` 可指定其他配置文件。默认配置位于 macOS/Linux 的 `~/.config/linxsci-skills/config.json`，或 Windows 的 `%LOCALAPPDATA%\linxsci-skills\config.json`。
 
@@ -99,7 +99,7 @@ linxsci task "<returned-task-id>" --result
 
 使用响应返回的实际 ID，确认任务完成后才获取结果。PDF 接口需要额外解析 Key 时，相关命令读取 `LINXSCI_MINERU_API_KEY`。
 
-接口输出和错误默认使用紧凑 JSON；`--pretty` 和 `--human-errors` 提供便于人工阅读的终端输出。全局 `--select`、`--fields`、`--limit` 和 `--table` 在本地筛选响应。超过 12000 字符的输出及二进制内容保存到文件并返回 JSON 引用；`read-output` 读取已保存的响应，不再请求接口。详见 [CLI 全部命令与参数](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/docs/CLI_GUIDE.zh-CN.md)。
+接口输出和错误默认使用紧凑 JSON；`--pretty` 和 `--human-errors` 提供便于人工阅读的终端输出。全局 `--select`、`--fields`、`--limit` 和 `--table` 在本地筛选响应。超过 12000 字符的输出及二进制内容保存到文件并返回 JSON 引用；`read-output` 读取已保存的响应，不再请求接口。详见 [CLI 全部命令与参数](https://github.com/LinxSci/linxsci-skills/blob/v0.3.2/docs/CLI_GUIDE.zh-CN.md)。
 
 `linxsci config` 查看设置而不展示 Key；`linxsci doctor --json` 请求 `/meta` 检查连接，计入正常接口调用；`linxsci config --clear` 删除保存的设置，不清除环境变量或撤销服务端 Key。
 
@@ -118,7 +118,7 @@ PyPI 安装使用 `python -m pip install --upgrade linxsci` 更新；通过 uv �
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci==0.3.1
+python -m pip install linxsci==0.3.2
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 
@@ -162,7 +162,7 @@ response = client.upload_pdf(
 print(response.json())
 ```
 
-SDK 返回包含 HTTP 状态、响应头和原始 `body` 的 `Response`；JSON 使用 `.json()`，二进制内容直接保存 `body`。可选的 PDF Key 需要在 Python 中读取并显式传入。记录响应返回的实际任务 ID，用 `client.pdf_task(task_id)` 查询状态，确认完成后再调用 `client.pdf_task(task_id, result=True)`。详见 [SDK 方法、参数与错误处理](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/docs/DEVELOPMENT.zh-CN.md)。
+SDK 返回包含 HTTP 状态、响应头和原始 `body` 的 `Response`；JSON 使用 `.json()`，二进制内容直接保存 `body`。可选的 PDF Key 需要在 Python 中读取并显式传入。记录响应返回的实际任务 ID，用 `client.pdf_task(task_id)` 查询状态，确认完成后再调用 `client.pdf_task(task_id, result=True)`。详见 [SDK 方法、参数与错误处理](https://github.com/LinxSci/linxsci-skills/blob/v0.3.2/docs/DEVELOPMENT.zh-CN.md)。
 
 ### 更新与卸载
 
@@ -174,4 +174,4 @@ PyPI 安装使用 `python -m pip install --upgrade linxsci` 更新。也可在�
 
 POST 字段、分页及 PDF 任务状态应按所选接口的契约使用，保留返回的实际 ID 和请求追踪 ID。遇到 `-3905` 等执行或计费结果未确认的情况，先核查操作状态，再决定是否重复上传或创建任务。
 
-详见 [HTTP 接口、认证与错误处理](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/docs/API.zh-CN.md)。各链接指南均可切换至英文版。
+详见 [HTTP 接口、认证与错误处理](https://github.com/LinxSci/linxsci-skills/blob/v0.3.2/docs/API.zh-CN.md)。各链接指南均可切换至英文版。

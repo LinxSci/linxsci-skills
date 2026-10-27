@@ -1,0 +1,10 @@
+.env
+.venv/
+.venv-*/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+/RELEASE_GUIDE.local.md
+/RELEASE_GUIDE.local.zh-CN.md

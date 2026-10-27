@@ -14,7 +14,7 @@ LinxSci Skill 让你在 AI 助手中用自然语言检索、阅读和比较论�
 
 ### 方式一：下载安装包
 
-下载 [完整 Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.1/linxsci-skills-0.3.1.zip)，完整解压后再操作。
+下载 [完整 Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.2/linxsci-skills-0.3.2.zip)，完整解压后再操作。
 
 **macOS**：在解压目录双击 `Install.command`。如果无法双击运行，打开终端，进入解压目录后执行：
 

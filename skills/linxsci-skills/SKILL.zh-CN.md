@@ -25,7 +25,7 @@ npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-skills
 
 ### 方式二：独立 ZIP 或下载源码
 
-解压 `linxsci-skills-0.3.1.zip`，在解压后的目录运行 `python3 install.py`（Windows 使用 `py -3 install.py`），也可双击 `Install.command` / `Install.bat`。安装器复制完整 Skill 并启动隐藏输入 Key 的配置向导。此方式不需要 pip、SDK 或 Node.js。只安装、不配置时运行 `python3 install.py --no-config`。
+解压 `linxsci-skills-0.3.2.zip`，在解压后的目录运行 `python3 install.py`（Windows 使用 `py -3 install.py`），也可双击 `Install.command` / `Install.bat`。安装器复制完整 Skill 并启动隐藏输入 Key 的配置向导。此方式不需要 pip、SDK 或 Node.js。只安装、不配置时运行 `python3 install.py --no-config`。
 
 ZIP 内的 `install.py` 支持以下参数，均放在 `install.py` 之后：
 
@@ -112,6 +112,12 @@ python3 <skill-dir>/scripts/cli.py paper 'arxiv:2301.07041' --resource sections 
 
 回答研究问题时由助手综合已读取内容，附上实际返回的论文标识、链接和章节依据。区分摘要和全文证据，说明缺失内容；不要声称存在服务端 `ask`、趋势榜或自动综述接口。
 
+用户要求筛选相关论文时：
+
+- 按主题和用户条件初筛已返回的候选，再比较少量候选的摘要后选择。除非用户明确要求接口排名前 N 篇，否则不要直接取前 N 条。初筛优先读取标题和一种简短概述字段，仅对合适候选读取完整摘要，避免对每条记录同时读取摘要与概述。
+- 返回的 `score` 在没有定义说明时只作为接口排序信号，不解释为相关性百分比或论文质量。分数相同时，根据主题和证据比较；引用数本身不能证明相关性。
+- 单独保留实际来源和分页元信息。说明实际检查的范围（例如本地索引首批 20 条）、是否还有后续结果，以及筛选依据是摘要还是全文。仅当候选不足或用户要求的覆盖范围需要时，按已知分页契约继续检索。每篇解释与用户条件对应的入选理由，并附实际返回的来源链接，不暗示已完成穷尽性文献检索。
+
 ## 其他接口与 PDF
 
 全部接口优先使用 [便捷命令速查](references/cli.zh-CN.md)，无需填写 HTTP 方法和路径。各来源检索、推荐、实体和 PDF 创建任务也都有独立命令。
@@ -132,6 +138,8 @@ python3 <skill-dir>/scripts/cli.py --output /absolute/path/asset.bin paper 'arxi
 ## 控制工具输出量
 
 默认使用紧凑 JSON 和结构化错误，`--pretty` / `--human-errors` 仅用于人工终端阅读。确认真实响应模型后，可将全局 `--select <JSON-Pointer>`、`--fields <字面字段,列表>`、`--limit <N>` 放在动作之前，仅保留筛选所需的真实论文 ID、标题、来源链接等字段。这些选项只调整本地响应，不改变请求或服务端分页；不能猜测 `data.items` 路径或字段别名，应按实际契约或保存的响应选择。选择数组时如需分页等外层元信息，应另外保留。`null` 和 `false` 有语义，不会自动丢弃。
+
+面对陌生的已保存响应，先在本地检查根字段、结果数组位置和记录字段，再投影筛选。可以用简短的 Python 标准库脚本只输出字段名和数量，不输出记录值；单条样本的字段不一定存在于所有记录。字段错误的 `details` 提供所选路径、适用时从 0 开始的 `item_index`，以及首条出错记录的缺失字段和可用字段。修正本地筛选并复用 `read-output`。筛选结果再次转存时，减少字段或候选数量，不原样重复读取，也不默认关闭限制。只读取所需元信息，不必把不透明分页游标输出到回答或候选列表中。
 
 大量字段一致的记录可用 `--table`，仅声明一次 `columns` 并返回 `rows`。全文或具体章节按需获取。接口输出超过 12000 字符时自动将完整原始字节保存到私有临时文件，应通过 `scripts/cli.py --select <真实路径> --fields <真实,字段> read-output <文件绝对路径>` 按需读取，不再次调用 API。`truncated:true` 和 `preview` 不代表完整证据；二进制资源同样返回文件元信息。临时文件保留到读取后自行删除。指定路径时使用 `--output /absolute/path/response.json --output-summary`；确需完整 JSON/文本时可用 `--max-output-chars 0` 关闭自动转存。详见 [全部输出选项](references/cli.zh-CN.md#紧凑输出与显式响应筛选)。
 

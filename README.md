@@ -1,6 +1,6 @@
 # linxsci-skills
 
-[简体中文](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/README.zh-CN.md)
+[简体中文](https://github.com/LinxSci/linxsci-skills/blob/v0.3.2/README.zh-CN.md)
 
 Search academic papers, read sections and citations, explore research entities, and parse PDFs through LinxSci OpenAPI v2. Choose the interface that fits your workflow; each supports all 34 documented routes.
 
@@ -16,7 +16,7 @@ Requires **Python 3.9+** and an existing LinxSci API key for service calls. No t
 
 ### Install and configure
 
-Download the [Skill installation bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.1/linxsci-skills-0.3.1.zip), extract it fully, and double-click `Install.command` on macOS or `Install.bat` on Windows. In a terminal opened in the extracted directory, run:
+Download the [Skill installation bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.2/linxsci-skills-0.3.2.zip), extract it fully, and double-click `Install.command` on macOS or `Install.bat` on Windows. In a terminal opened in the extracted directory, run:
 
 ```bash
 python3 install.py
@@ -54,7 +54,7 @@ For a custom destination, repeat the same `--skills-dir` option. Updating preser
 
 To uninstall, use the original installer's removal feature or remove the directory created by the bundled installer, then refresh your assistant. If you also want to clear saved settings, ask the assistant to help before removing the Skill.
 
-See the [Skill user guide](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/docs/USER_GUIDE.md) for installation options, configuration, examples and troubleshooting.
+See the [Skill user guide](https://github.com/LinxSci/linxsci-skills/blob/v0.3.2/docs/USER_GUIDE.md) for installation options, configuration, examples and troubleshooting.
 
 ## CLI
 
@@ -65,7 +65,7 @@ Install from PyPI in a Python environment:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci==0.3.1
+python -m pip install linxsci==0.3.2
 linxsci setup
 ```
 
@@ -81,7 +81,7 @@ linxsci --version
 linxsci setup
 ```
 
-On Windows create the environment with `py -3 -m venv .venv` and activate it with `.venv\Scripts\activate.bat` in Command Prompt. You can instead install a downloaded wheel with `python -m pip install /path/to/linxsci-0.3.1-py3-none-any.whl`. With uv already installed, `uv tool install /path/to/linxsci-0.3.1-py3-none-any.whl` provides an isolated terminal installation.
+On Windows create the environment with `py -3 -m venv .venv` and activate it with `.venv\Scripts\activate.bat` in Command Prompt. You can instead install a downloaded wheel with `python -m pip install /path/to/linxsci-0.3.2-py3-none-any.whl`. With uv already installed, `uv tool install /path/to/linxsci-0.3.2-py3-none-any.whl` provides an isolated terminal installation.
 
 `linxsci setup` reads your API key using hidden input. The default service root is `https://linxsci.com`, without `/openapi/v2`. `LINXSCI_BASE_URL` and `LINXSCI_OPENAPI_KEY` override saved settings; `LINXSCI_CONFIG_FILE` selects another configuration file. Default settings are stored in `~/.config/linxsci-skills/config.json` on macOS/Linux or `%LOCALAPPDATA%\linxsci-skills\config.json` on Windows.
 
@@ -99,7 +99,7 @@ linxsci task "<returned-task-id>" --result
 
 Use actual IDs from responses. Fetch task results only after completion. PDF commands accept `LINXSCI_MINERU_API_KEY` when the endpoint requires an additional parsing key.
 
-Output and errors default to compact JSON. `--pretty` and `--human-errors` provide readable terminal output. Global `--select`, `--fields`, `--limit` and `--table` shape responses locally. Output over 12000 characters and binary responses are saved to files with JSON references; `read-output` reads saved responses without another API call. See [all CLI commands and parameters](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/docs/CLI_GUIDE.md).
+Output and errors default to compact JSON. `--pretty` and `--human-errors` provide readable terminal output. Global `--select`, `--fields`, `--limit` and `--table` shape responses locally. Output over 12000 characters and binary responses are saved to files with JSON references; `read-output` reads saved responses without another API call. See [all CLI commands and parameters](https://github.com/LinxSci/linxsci-skills/blob/v0.3.2/docs/CLI_GUIDE.md).
 
 `linxsci config` shows settings without exposing the key. `linxsci doctor --json` checks `/meta` and consumes a normal API call. `linxsci config --clear` removes saved settings, but leaves environment variables and server-side keys unchanged.
 
@@ -118,7 +118,7 @@ Install from PyPI in the same Python environment that runs your application:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci==0.3.1
+python -m pip install linxsci==0.3.2
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 
@@ -162,7 +162,7 @@ response = client.upload_pdf(
 print(response.json())
 ```
 
-The SDK returns a `Response` with HTTP status, headers and raw `body`; use `.json()` for JSON or save `body` for binary data. The optional PDF key must be read and passed explicitly. Record the actual task ID from the response; use `client.pdf_task(task_id)` to check its state and `client.pdf_task(task_id, result=True)` only after completion. See [SDK methods, parameters and errors](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/docs/DEVELOPMENT.md).
+The SDK returns a `Response` with HTTP status, headers and raw `body`; use `.json()` for JSON or save `body` for binary data. The optional PDF key must be read and passed explicitly. Record the actual task ID from the response; use `client.pdf_task(task_id)` to check its state and `client.pdf_task(task_id, result=True)` only after completion. See [SDK methods, parameters and errors](https://github.com/LinxSci/linxsci-skills/blob/v0.3.2/docs/DEVELOPMENT.md).
 
 ### Update and uninstall
 
@@ -174,4 +174,4 @@ Check the installed version with `python -c "from importlib.metadata import vers
 
 POST fields, pagination and PDF task states follow the selected endpoint's contract. Preserve returned IDs and request trace IDs. After an uncertain execution or billing result such as `-3905`, check the operation's status before repeating uploads or task creation.
 
-See [HTTP endpoints, authentication and errors](https://github.com/LinxSci/linxsci-skills/blob/v0.3.1/docs/API.md). Each linked guide includes its Chinese edition.
+See [HTTP endpoints, authentication and errors](https://github.com/LinxSci/linxsci-skills/blob/v0.3.2/docs/API.md). Each linked guide includes its Chinese edition.

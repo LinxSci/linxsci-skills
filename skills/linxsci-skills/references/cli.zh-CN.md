@@ -70,6 +70,8 @@ python3 "<skill-dir>/scripts/cli.py" --pretty --max-output-chars 0 meta
 
 `--output-summary` 必须配合 `--output`，保存原始响应的 `--output` 不可与 `--select`、`--fields`、`--limit`、`--table` 混用。如果**接口已成功执行后**本地格式化或保存失败，stderr JSON 返回 `error_code:"response_output_error"`、`request_completed:true`、`do_not_repeat:true`，恢复保存成功时还会返回完整原始响应的文件。应读取文件在本地修正展示，不能为修正格式而重复上传或创建任务。
 
+字段筛选失败时，结构化错误的 `details` 返回所选路径 `select`、数组中从 0 开始的 `item_index`（选择单个对象时省略），以及首条出错记录的 `missing_fields` 和 `available_fields`；非对象记录则返回 `expected_type` 和 `actual_type`。诊断不包含记录值，可用字段仅描述该条记录，不保证其他记录都有。`read-output` 保持 `local_error`；接口成功后的格式错误保持 `response_output_error`、原始响应文件及禁止重复请求标记。根据诊断修正本地筛选，不重新调用接口。
+
 ## 接口命令共有参数
 
 下文所有接口命令均支持以下参数。`setup`、`config`、`doctor`、`routes`、`install-skill` 这些本地/管理命令不支持它们。

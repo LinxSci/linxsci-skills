@@ -4,13 +4,50 @@
 
 ## 从 PyPI 安装
 
-需要 Python 3.9+。在实际使用的 Python 虚拟环境中运行：
+需要 Python 3.9+。在应用实际使用的环境中安装。已有虚拟环境时直接激活，不要重新创建。新环境的 macOS/Linux 步骤：
 
 ```bash
-python -m pip install linxsci==0.3.1
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install --index-url https://pypi.org/simple linxsci==0.3.2
+python -c "from linxsci import LinxSciClient; from importlib.metadata import version; print(version('linxsci'))"
 ```
 
-更新时运行 `python -m pip install --upgrade linxsci`。 在 Python 中配置 `LinxSciClient`，方法见下文；升级后重启长期运行的应用进程。
+Windows 的命令提示符使用以下两行创建并激活环境，再执行上方的 `python -m pip` 和验证命令：
+
+```bat
+py -3 -m venv .venv
+.venv\Scripts\activate.bat
+```
+
+验证应输出 `0.3.2`，此检查不需要 API Key。使用 `python -m pip` 能确保安装到当前解释器对应的环境。
+
+随后按下文在 Python 中配置 `LinxSciClient`。更新后重启长期运行的应用进程。
+
+使用 pip 安装时，在原环境中更新：
+
+```bash
+python -m pip install --upgrade --index-url https://pypi.org/simple linxsci
+python -c "from linxsci import LinxSciClient; from importlib.metadata import version; print(version('linxsci'))"
+```
+
+### 安装时出现 SSL 错误
+
+`SSLEOFError` 表示 HTTPS 连接失败，不能仅凭它断定安装包有问题。先尝试在当前环境更新 pip；如果 pip 自身无法连接，但已安装的 [uv](https://docs.astral.sh/uv/getting-started/installation/) 可以连接，可在包含 `.venv` 的目录执行：
+
+```bash
+uv pip install --python .venv/bin/python --index-url https://pypi.org/simple --upgrade pip
+.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.2
+```
+
+环境为 `.venv-1` 时替换路径；Windows 使用 `.venv/Scripts/python.exe`。若仍失败，检查网络、代理及证书配置，保持 HTTPS 验证开启，参考 [pip 证书说明](https://pip.pypa.io/en/stable/topics/https-certificates/)。也可从下文的 GitHub 发行附件下载 wheel，在已激活的环境中离线安装：
+
+```bash
+python -m pip install --no-index --no-deps ./linxsci-0.3.2-py3-none-any.whl
+```
+
+此 wheel 没有额外运行时依赖。从文件所在目录执行，安装后运行上面的版本验证命令。
 
 本文面向在 Python 程序中调用 LinxSci 的开发者，按当前项目的安装方式、SDK 入口和接口行为编写。首次使用按第 1 节、第 2.1 节和第 3 节操作，即可完成一次论文检索；其他章节按需阅读。
 
@@ -34,10 +71,10 @@ SDK 的公共 Python 入口为 `from linxsci import LinxSciClient`。SDK 将 Pyt
 
 ### 从安装包使用 SDK
 
-在自己的 Python 项目环境中安装本地 wheel：
+从 [GitHub 发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.2)下载 wheel，在自己的 Python 项目环境中安装：
 
 ```bash
-python -m pip install /path/to/linxsci-0.3.1-py3-none-any.whl
+python -m pip install /path/to/linxsci-0.3.2-py3-none-any.whl
 ```
 
 Python 安装包名和导入名均为 `linxsci`。将 SDK 安装到应用实际使用的解释器中。源码安装步骤如下。
