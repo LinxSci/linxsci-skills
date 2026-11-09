@@ -2,6 +2,8 @@
 
 [English](DEVELOPMENT.md)
 
+SDK 与 CLI 由同一个 `linxsci` Python 包提供。继续使用 `from linxsci import LinxSciClient`，无需拆分安装 SDK，也无需改成 `linxsci-base` 导入。`linxsci-base` 是基础 AI Skill 的名称，对应源码目录 `skills/linxsci-base/`；Python 应用使用 SDK 时无需先将 Skill 安装到助手中。
+
 ## 从 PyPI 安装
 
 需要 Python 3.9+。在应用实际使用的环境中安装。已有虚拟环境时直接激活，不要重新创建。新环境的 macOS/Linux 步骤：
@@ -10,7 +12,7 @@
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install --index-url https://pypi.org/simple linxsci==0.3.2
+python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
 python -c "from linxsci import LinxSciClient; from importlib.metadata import version; print(version('linxsci'))"
 ```
 
@@ -21,7 +23,7 @@ py -3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-验证应输出 `0.3.2`，此检查不需要 API Key。使用 `python -m pip` 能确保安装到当前解释器对应的环境。
+验证应输出 `0.3.3`，此检查不需要 API Key。使用 `python -m pip` 能确保安装到当前解释器对应的环境。
 
 随后按下文在 Python 中配置 `LinxSciClient`。更新后重启长期运行的应用进程。
 
@@ -38,13 +40,13 @@ python -c "from linxsci import LinxSciClient; from importlib.metadata import ver
 
 ```bash
 uv pip install --python .venv/bin/python --index-url https://pypi.org/simple --upgrade pip
-.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.2
+.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
 ```
 
 环境为 `.venv-1` 时替换路径；Windows 使用 `.venv/Scripts/python.exe`。若仍失败，检查网络、代理及证书配置，保持 HTTPS 验证开启，参考 [pip 证书说明](https://pip.pypa.io/en/stable/topics/https-certificates/)。也可从下文的 GitHub 发行附件下载 wheel，在已激活的环境中离线安装：
 
 ```bash
-python -m pip install --no-index --no-deps ./linxsci-0.3.2-py3-none-any.whl
+python -m pip install --no-index --no-deps ./linxsci-0.3.3-py3-none-any.whl
 ```
 
 此 wheel 没有额外运行时依赖。从文件所在目录执行，安装后运行上面的版本验证命令。
@@ -71,10 +73,10 @@ SDK 的公共 Python 入口为 `from linxsci import LinxSciClient`。SDK 将 Pyt
 
 ### 从安装包使用 SDK
 
-从 [GitHub 发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.2)下载 wheel，在自己的 Python 项目环境中安装：
+从 [GitHub 发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.3)下载 wheel，在自己的 Python 项目环境中安装：
 
 ```bash
-python -m pip install /path/to/linxsci-0.3.2-py3-none-any.whl
+python -m pip install /path/to/linxsci-0.3.3-py3-none-any.whl
 ```
 
 Python 安装包名和导入名均为 `linxsci`。将 SDK 安装到应用实际使用的解释器中。源码安装步骤如下。
@@ -84,8 +86,8 @@ Python 安装包名和导入名均为 `linxsci`。将 SDK 安装到应用实际�
 需要 Python 3.9 或以上版本。已有源码时进入项目根目录；克隆源码时执行：
 
 ```bash
-git clone https://github.com/LinxSci/linxsci-skills.git
-cd linxsci-skills
+git clone https://github.com/LinxSci/linxsci-skills.git linxsci-openapi-skills
+cd linxsci-openapi-skills
 ```
 
 后续安装、配置和运行示例的命令均在项目根目录执行。

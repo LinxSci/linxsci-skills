@@ -1,13 +1,13 @@
 ---
-name: linxsci-skills
+name: linxsci-base
 description: Use LinxSci OpenAPI v2 for academic paper search, content and citations, recommendations, research entities, PDF parsing, and explicit API health or usage queries.
 ---
 
-# linxsci-skills
+# linxsci-base
 
 [简体中文](SKILL.zh-CN.md)
 
-Use `scripts/cli.py` from this skill. Replace `<skill-dir>` with the absolute directory containing this file. Scripts require only Python 3.9+ and its standard library; no SDK installation is needed.
+Use `scripts/cli.py` from `linxsci-base`. Replace `<skill-dir>` with the absolute directory containing this file: `skills/linxsci-base/` in the source repository, or `~/.agents/skills/linxsci-base` after default installation. Scripts require only Python 3.9+ and its standard library; no SDK installation is needed. The separately installable CLI/SDK package and its Python import remain `linxsci`.
 
 ## Install the skill independently
 
@@ -18,20 +18,20 @@ This skill does not require the `linxsci` terminal command, the PyPI package, or
 If Node.js/npx is available, run:
 
 ```bash
-npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-skills
+npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base
 ```
 
 Choose the assistant and installation scope in that installer's prompts. This installs the complete skill; it does not need `pip install linxsci` or `uv tool install linxsci`. Keep this copy updated with the same external installer.
 
 ### Option 2: Standalone ZIP or downloaded source
 
-Extract `linxsci-skills-0.3.2.zip`. In the extracted bundle, run `python3 install.py` (Windows: `py -3 install.py`), or double-click `Install.command` / `Install.bat`. The installer copies the complete skill and starts hidden-input key setup. No pip, SDK, or Node.js is required for this option. For installation only, run `python3 install.py --no-config`.
+Extract `linxsci-base-<version>.zip`. In the extracted bundle, run `python3 install.py` (Windows: `py -3 install.py`), or double-click `Install.command` / `Install.bat`. The installer copies the complete skill and starts hidden-input key setup. No pip, SDK, or Node.js is required for this option. For installation only, run `python3 install.py --no-config`.
 
 The ZIP's `install.py` accepts the following options (place them after `install.py`):
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `--skills-dir PATH` | `~/.agents/skills` | Assistant scan parent directory; `/linxsci-skills` is appended |
+| `--skills-dir PATH` | `~/.agents/skills` | Assistant scan parent directory; `/linxsci-base` is appended |
 | `--update` | Off | Update a managed existing copy and retain a backup |
 | `--no-config` | Off | Copy the skill without starting key setup |
 | `--online` | Off | Suggest the production root during setup |
@@ -42,25 +42,31 @@ The ZIP's `install.py` accepts the following options (place them after `install.
 If you downloaded the repository or only the complete skill folder, run the bundled script directly:
 
 ```bash
-python3 /absolute/path/to/source/skills/linxsci-skills/scripts/cli.py install-skill
+python3 /absolute/path/to/source/skills/linxsci-base/scripts/cli.py install-skill
 ```
 
-The default destination is `~/.agents/skills/linxsci-skills`. For an assistant with another scan directory, add `--skills-dir /absolute/path/to/assistant/skills` (the parent directory, without the final `linxsci-skills`). Restart or refresh the assistant if discovery does not update.
+The default destination is `~/.agents/skills/linxsci-base`. For an assistant with another scan directory, add `--skills-dir /absolute/path/to/assistant/skills` (the parent directory, without the final `linxsci-base`). Restart or refresh the assistant if discovery does not update.
 
 ### Configure and verify using only the skill
 
 After default installation on macOS/Linux:
 
 ```bash
-python3 "$HOME/.agents/skills/linxsci-skills/scripts/cli.py" routes
-python3 "$HOME/.agents/skills/linxsci-skills/scripts/cli.py" setup
+python3 "$HOME/.agents/skills/linxsci-base/scripts/cli.py" routes
+python3 "$HOME/.agents/skills/linxsci-base/scripts/cli.py" setup
 ```
 
-On Windows, invoke `py -3 "C:\absolute\path\to\linxsci-skills\scripts\cli.py" setup`. For custom destinations, use the corresponding absolute script path. `routes` checks local execution without a key or network request. `setup` hides API key input, saves configuration, and performs one connection check. Then ask the assistant to use `$linxsci-skills`. Setup requires an interactive terminal; never ask the user to put their key in chat.
+On Windows, invoke `py -3 "C:\absolute\path\to\linxsci-base\scripts\cli.py" setup`. For custom destinations, use the corresponding absolute script path. `routes` checks local execution without a key or network request. `setup` hides API key input, saves configuration, and performs one connection check. Then ask the assistant to use `$linxsci-base`. Setup requires an interactive terminal; never ask the user to put their key in chat.
 
 To update a copy managed by the bundled installer, extract/download the new version and run **the new source's** `scripts/cli.py install-skill --update`, or the new ZIP's `python3 install.py --update --no-config`. Existing managed copies are backed up outside the scan directory. Manual or external-installer copies must be updated through their own installation method. Keep the complete `SKILL.md`, `scripts/`, `references/`, `agents/`, `service.json`, and supporting files together; copying `SKILL.md` alone cannot execute this skill.
 
 For every action below, use the absolute `scripts/cli.py` path. The [command reference](references/cli.md) documents standalone invocation, all commands, parameter types, defaults, required inputs, and examples.
+
+### Migrate an existing linxsci-skills installation
+
+Run the **new source or installer** with `--update`. A managed `linxsci-skills` copy is backed up outside the assistant scan directory, then replaced by `linxsci-base`; a failed installation restores the old directory. Existing settings remain in `~/.config/linxsci-skills/config.json` (Windows: `%LOCALAPPDATA%\linxsci-skills\config.json`).
+
+Without `--update`, an old installation is reported and no second copy is created. If both names exist, or a directory/installation marker is a symlink, unmanaged or mismatched, the installer stops without changing either copy. Use the original external installer to migrate its copies. For a manual installation, back it up and move it outside the scan directory before installing the new Skill. Refresh the assistant after migration.
 
 ## Choose the requested action
 

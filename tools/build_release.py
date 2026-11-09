@@ -15,13 +15,17 @@ def bundle(output):
     metadata = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     version = re.search(r'^version = "([^"]+)"', metadata, re.MULTILINE).group(1)
     output.mkdir(parents=True, exist_ok=True)
-    target = output / ("linxsci-skills-" + version + ".zip")
+    target = output / ("linxsci-base-" + version + ".zip")
     # Explicit allowlist prevents accidentally shipping local settings or credentials.
     files = [ROOT / name for name in ("install.py", "Install.command", "Install.bat")]
-    skill = ROOT / "skills/linxsci-skills"
+    skill = ROOT / "skills/linxsci-base"
     files += [skill / "SKILL.md", skill / "SKILL.zh-CN.md", skill / "service.json", skill / "__init__.py"]
-    for directory, pattern in (("scripts", "*.py"), ("references", "*.md"), ("agents", "*.yaml")):
-        files += list((skill / directory).glob(pattern))
+    for directory, names in (
+        ("scripts", ("__init__.py", "cli.py", "client.py", "commands.py", "config.py", "installer.py", "output.py")),
+        ("references", ("api.md", "api.zh-CN.md", "cli.md", "cli.zh-CN.md")),
+        ("agents", ("openai.yaml",)),
+    ):
+        files += [skill / directory / name for name in names]
     with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         # The standalone bundle opens with the Skill guide, not the multi-interface
         # repository README. Agent instructions and references remain complete.
@@ -29,9 +33,9 @@ def bundle(output):
             guide = (ROOT / ("docs/USER_GUIDE" + language + ".md")).read_text(encoding="utf-8")
             guide = guide.replace("(USER_GUIDE.md)", "(README.md)").replace(
                 "(USER_GUIDE.zh-CN.md)", "(README.zh-CN.md)")
-            archive.writestr("linxsci-skills-" + version + "/README" + language + ".md", guide)
+            archive.writestr("linxsci-base-" + version + "/README" + language + ".md", guide)
         for source in sorted(files):
-            name = "linxsci-skills-" + version + "/" + source.relative_to(ROOT).as_posix()
+            name = "linxsci-base-" + version + "/" + source.relative_to(ROOT).as_posix()
             info = zipfile.ZipInfo.from_file(source, name)
             # Windows builders must also produce a usable macOS launcher.
             if source.name == "Install.command":

@@ -14,7 +14,7 @@ from unittest.mock import patch
 from env_helpers import isolated_environment
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "skills/linxsci-skills/scripts"))
+sys.path.insert(0, str(ROOT / "skills/linxsci-base/scripts"))
 from commands import error_info, main
 from client import ROUTES, LinxSciClient, LinxSciError
 
@@ -73,7 +73,7 @@ class FrameworkContractTests(unittest.TestCase):
         self.assertEqual(len(documented), 34)
         self.assertEqual(set(ROUTES), set(documented))
         self.assertEqual(document.replace("(API.zh-CN.md)", "(api.zh-CN.md)").replace("(CLI_GUIDE.md#", "(cli.md#"),
-                         (ROOT / "skills/linxsci-skills/references/api.md").read_text(encoding="utf-8"))
+                         (ROOT / "skills/linxsci-base/references/api.md").read_text(encoding="utf-8"))
 
     def test_numeric_errors_and_two_distinct_ids(self):
         client = LinxSciClient(self.base_url, "test-key", framework_request_id="framework-client")

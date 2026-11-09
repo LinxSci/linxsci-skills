@@ -19,9 +19,9 @@ Use returned IDs to verify paper details, table of contents, and a relevant sect
 
 ## Verify the skill version
 
-For rapid evaluation, give the assistant the absolute path to this repository's `skills/linxsci-skills/SKILL.md` and ask it to run that directory's `scripts/cli.py`. This tests explicit use, not automatic discovery.
+For rapid evaluation, give the assistant the absolute path to this repository's `skills/linxsci-base/SKILL.md` and ask it to run that directory's `scripts/cli.py`. This tests explicit use, not automatic discovery.
 
-To test installed discovery, run `linxsci install-skill`, or `linxsci install-skill --update` for a managed existing copy. Open a new chat and invoke `$linxsci-skills`. For automatic selection, omit the skill name from the prompt. Inspect tool traces for the actual instruction and executable paths. Copied skills do not follow source changes automatically.
+To test installed discovery, run `linxsci install-skill`, or `linxsci install-skill --update` for a managed existing copy. Open a new chat and invoke `$linxsci-base`. For automatic selection, omit the skill name from the prompt. Inspect tool traces for the actual instruction and executable paths. Copied skills do not follow source changes automatically.
 
 ## Repeatable manual acceptance
 
@@ -29,7 +29,7 @@ Keep model settings and prompts fixed across runs. Use actual paper IDs establis
 
 | Case | Prompt or task | Pass criteria |
 | --- | --- | --- |
-| A1 Explicit search | Use $linxsci-skills to find three relevant graph neural network papers | Real search; returned IDs and sources match; report fewer results honestly |
+| A1 Explicit search | Use $linxsci-base to find three relevant graph neural network papers | Real search; returned IDs and sources match; report fewer results honestly |
 | A2 Automatic selection | Find academic papers on graph neural networks and explain relevance | Installed skill is selected and the service is actually called |
 | A3 Section reading | Explain the methods of an actual returned paper | Inspect contents, use returned section IDs, cite section evidence |
 | A4 Comparison | Compare methods and experiments in two returned papers | Read both sources; distinguish experimental conditions; do not invent numbers |

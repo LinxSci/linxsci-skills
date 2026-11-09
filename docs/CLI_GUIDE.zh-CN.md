@@ -2,6 +2,8 @@
 
 [English](CLI_GUIDE.md)
 
+CLI 命令和 Python 包名均为 `linxsci`。基础 AI Skill 名为 `linxsci-base`，源码位于 `skills/linxsci-base/`，默认安装到 `~/.agents/skills/linxsci-base`。CLI 与 SDK 共用一个 Python 包；终端命令可以独立运行，无需先将 Skill 安装到助手中。
+
 ## 从 PyPI 安装
 
 需要 Python 3.9+。已有虚拟环境时直接激活，不要重新创建。新环境的 macOS/Linux 步骤：
@@ -10,7 +12,7 @@
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install --index-url https://pypi.org/simple linxsci==0.3.2
+python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
 linxsci --version
 ```
 
@@ -21,9 +23,9 @@ py -3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-验证应输出 `0.3.2`，此检查不需要 API Key。使用 `python -m pip` 能确保安装到当前解释器对应的环境。
+验证应输出 `0.3.3`，此检查不需要 API Key。使用 `python -m pip` 能确保安装到当前解释器对应的环境。
 
-随后运行 `linxsci setup` 配置服务。已安装 uv 时，也可使用 `uv tool install linxsci==0.3.2` 隔离安装；这种方式使用 `uv tool upgrade linxsci` 更新，不使用下方虚拟环境的 pip 更新命令。
+随后运行 `linxsci setup` 配置服务。已安装 uv 时，也可使用 `uv tool install linxsci==0.3.3` 隔离安装；这种方式使用 `uv tool upgrade linxsci` 更新，不使用下方虚拟环境的 pip 更新命令。
 
 使用 pip 安装时，在原环境中更新：
 
@@ -38,31 +40,31 @@ linxsci --version
 
 ```bash
 uv pip install --python .venv/bin/python --index-url https://pypi.org/simple --upgrade pip
-.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.2
+.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
 ```
 
 环境为 `.venv-1` 时替换路径；Windows 使用 `.venv/Scripts/python.exe`。若仍失败，检查网络、代理及证书配置，保持 HTTPS 验证开启，参考 [pip 证书说明](https://pip.pypa.io/en/stable/topics/https-certificates/)。也可从下文的 GitHub 发行附件下载 wheel，在已激活的环境中离线安装：
 
 ```bash
-python -m pip install --no-index --no-deps ./linxsci-0.3.2-py3-none-any.whl
+python -m pip install --no-index --no-deps ./linxsci-0.3.3-py3-none-any.whl
 ```
 
 此 wheel 没有额外运行时依赖。从文件所在目录执行，安装后运行上面的版本验证命令。
 
 ## 安装 CLI
 
-需要 Python 3.9+。从 [发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.2) 下载 wheel，在文件所在目录运行：
+需要 Python 3.9+。从 [发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.3) 下载 wheel，在文件所在目录运行：
 
 ```bash
-uv tool install ./linxsci-0.3.2-py3-none-any.whl
+uv tool install ./linxsci-0.3.3-py3-none-any.whl
 linxsci --version
 ```
 
 此方式需要 [uv](https://docs.astral.sh/uv/getting-started/installation/)。找不到命令时运行 `uv tool update-shell` 并重新打开终端。也可从官方源码安装到 Python 环境：
 
 ```bash
-git clone https://github.com/LinxSci/linxsci-skills.git
-cd linxsci-skills
+git clone https://github.com/LinxSci/linxsci-skills.git linxsci-openapi-skills
+cd linxsci-openapi-skills
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install .
@@ -211,10 +213,12 @@ linxsci install-skill --update
 
 | 参数 | 类型 / 默认值 | 说明 |
 | --- | --- | --- |
-| `--skills-dir PATH` | 目录，默认 `~/.agents/skills` | 助手扫描父目录，安装器自动追加 `/linxsci-skills`；支持展开开头的 `~` |
+| `--skills-dir PATH` | 目录，默认 `~/.agents/skills` | 助手扫描父目录，安装器自动追加 `/linxsci-base`；支持展开开头的 `~` |
 | `--update` | 开关，默认关闭 | 更新由本安装器管理的副本，并将旧版备份到扫描父目录旁的 `linxsci-skill-backups`，避免被助手重复扫描 |
 
 此操作复制随包文件，不需要 Key 或网络。使用 `--update` 前先升级已安装的 CLI，确保其中包含新版随附文件。安装器拒绝符号链接目标、不受其管理或标记不匹配的目录；外部安装器的副本请用原工具更新。此命令仅复制随附的助手文件，不配置 API Key。
+
+改名后的源码支持用 `--update` 将本工具管理的 `linxsci-skills` 迁移为 `linxsci-base`，旧目录备份到扫描目录之外，失败时恢复。新旧目录并存、旧版不受管理或为符号链接时停止并保留原文件，请按原安装方式迁移。配置仍使用原有路径。
 
 ### read-output
 

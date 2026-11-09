@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 from env_helpers import isolated_environment
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "skills/linxsci-skills/scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "skills/linxsci-base/scripts"))
 import cli
 from client import LinxSciClient, LinxSciError, Response
 

@@ -62,7 +62,7 @@ linxsci paper '同一个实际论文ID' --resource sections --item-id '目录返
 
 开发调优时可以不安装 Skill，直接在一个新对话中指定当前源码文件。把下面的路径替换成自己的绝对路径：
 
-> 请读取 /你的仓库路径/skills/linxsci-skills/SKILL.md，按它的说明执行本次任务，只调用该目录下 scripts/cli.py。请搜索 graph neural networks，选出最多三篇相关论文，说明每篇与主题的关系，并提供实际返回的论文 ID 和来源。没有检索到的内容不要补写。
+> 请读取 /你的仓库路径/skills/linxsci-base/SKILL.md，按它的说明执行本次任务，只调用该目录下 scripts/cli.py。请搜索 graph neural networks，选出最多三篇相关论文，说明每篇与主题的关系，并提供实际返回的论文 ID 和来源。没有检索到的内容不要补写。
 
 这种方式适合快速修改和复测，验证的是“按指定 Skill 执行”的效果。它不证明助手能自动发现或选择 Skill。
 
@@ -78,7 +78,7 @@ linxsci install-skill
 linxsci install-skill --update
 ```
 
-新对话中再用 `$linxsci-skills` 提问。如果需要验证自动选择，不要在提示词中点名 Skill。检查助手工具记录中实际读取的 SKILL.md 和脚本绝对路径，避免测试到另一个目录里的同名旧副本。复制安装后，源码修改不会自动同步到副本，下一轮要先更新。不要同时安装多个会被扫描到的同名版本。
+新对话中再用 `$linxsci-base` 提问。如果需要验证自动选择，不要在提示词中点名 Skill。检查助手工具记录中实际读取的 SKILL.md 和脚本绝对路径，避免测试到另一个目录里的同名旧副本。复制安装后，源码修改不会自动同步到副本，下一轮要先更新。不要同时安装多个会被扫描到的同名版本。
 
 ## 4. 固定的人工验收题
 
@@ -86,14 +86,14 @@ linxsci install-skill --update
 
 | 编号 | 提问样例 | 通过标准 |
 | --- | --- | --- |
-| A1 显式搜索 | 使用 $linxsci-skills 搜索 graph neural networks，选三篇相关论文并给出 ID 和来源。 | 真正执行搜索；返回 ID/来源与工具响应一致；结果不足三篇时如实说明。 |
+| A1 显式搜索 | 使用 $linxsci-base 搜索 graph neural networks，选三篇相关论文并给出 ID 和来源。 | 真正执行搜索；返回 ID/来源与工具响应一致；结果不足三篇时如实说明。 |
 | A2 自动选择 | 帮我找 graph neural networks 的学术论文，说明相关性并提供来源。 | 在已安装 Skill 的新对话中选择本 Skill，并实际调用服务；只写背景知识不算检索成功。 |
-| A3 按章节阅读 | 使用 $linxsci-skills 阅读论文“实际ID”的方法部分，说明方法和依据。 | 先定位目录，使用真实章节 ID；答案可定位到返回内容。没有相关章节时说明缺失。 |
-| A4 论文比较 | 使用 $linxsci-skills 比较“实际ID一”和“实际ID二”的方法及实验结论，逐项列出来源。 | 读取两篇论文的相关证据；区分不同实验条件；没有证据的数值不补写。 |
-| A5 证据不足 | 使用 $linxsci-skills 核对论文“实际ID”是否报告了“待核对指标”的具体数值，给出原文依据。 | 找得到就引用实际章节；找不到就说明未发现，不把推断写成原文结果。 |
+| A3 按章节阅读 | 使用 $linxsci-base 阅读论文“实际ID”的方法部分，说明方法和依据。 | 先定位目录，使用真实章节 ID；答案可定位到返回内容。没有相关章节时说明缺失。 |
+| A4 论文比较 | 使用 $linxsci-base 比较“实际ID一”和“实际ID二”的方法及实验结论，逐项列出来源。 | 读取两篇论文的相关证据；区分不同实验条件；没有证据的数值不补写。 |
+| A5 证据不足 | 使用 $linxsci-base 核对论文“实际ID”是否报告了“待核对指标”的具体数值，给出原文依据。 | 找得到就引用实际章节；找不到就说明未发现，不把推断写成原文结果。 |
 | A6 未定义参数 | 目前只有仓库这份接口文档，请按上游引用数过滤并搜索论文。 | 不擅自编造过滤字段；指出缺少契约，可先用已知 query 搜索，再对返回的实际字段做有说明的筛选。 |
 | A7 故障解释 | 给定错误 HTTP 502、error.code=-3905，解释下一步怎么做；本题只分析错误，不调用接口。 | 说明执行与计费未确认，不声称任务未执行，不建议直接重复上传或创建任务。此题不产生服务请求。 |
-| A8 PDF（按需） | 使用 $linxsci-skills 解析 /实际路径/允许上传的样本.pdf。 | 创建任务后记录真实 task_id；不反复创建相同任务；按实际状态读取结果；未完成时不假装成功。 |
+| A8 PDF（按需） | 使用 $linxsci-base 解析 /实际路径/允许上传的样本.pdf。 | 创建任务后记录真实 task_id；不反复创建相同任务；按实际状态读取结果；未完成时不假装成功。 |
 
 A8 会把文件发送到测试服务，只使用适合该测试的文件。真实调用按服务配置计量；先跑搜索/阅读，再按需测 PDF。A5 应固定一组经人工确认的“存在指标”和“不存在或证据不足指标”，分别核对准确性。
 
@@ -133,10 +133,10 @@ A8 会把文件发送到测试服务，只使用适合该测试的文件。真�
 
 | 问题 | 优先检查 |
 | --- | --- |
-| 不会选 Skill、流程不合适、答案缺来源、读取大量无关全文 | `skills/linxsci-skills/SKILL.md` 的 description、工作流和证据要求，并结合模型的实际执行记录判断 |
-| URL、编码、请求体、上传或错误解析有问题 | `skills/linxsci-skills/scripts/client.py` |
-| `linxsci` 下能力列表或命令转发有问题 | `skills/linxsci-skills/scripts/cli.py` 的 `CAPABILITIES` 和分派逻辑；入口注册检查 `pyproject.toml` |
-| 配置、命令参数或提示不易使用 | `skills/linxsci-skills/scripts/commands.py`、`config.py` |
+| 不会选 Skill、流程不合适、答案缺来源、读取大量无关全文 | `skills/linxsci-base/SKILL.md` 的 description、工作流和证据要求，并结合模型的实际执行记录判断 |
+| URL、编码、请求体、上传或错误解析有问题 | `skills/linxsci-base/scripts/client.py` |
+| `linxsci` 下能力列表或命令转发有问题 | `skills/linxsci-base/scripts/cli.py` 的 `CAPABILITIES` 和分派逻辑；入口注册检查 `pyproject.toml` |
+| 配置、命令参数或提示不易使用 | `skills/linxsci-base/scripts/commands.py`、`config.py` |
 | 测到旧代码或安装失败 | `installer.py` 与助手实际读取路径 |
 | 接口未启用、计量或上游失败 | 服务端配置/服务日志，不能通过改提示词修复 |
 

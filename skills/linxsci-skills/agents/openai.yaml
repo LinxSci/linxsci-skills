@@ -1,4 +1,0 @@
-interface:
-  display_name: "linxsci-skills"
-  short_description: "Search papers, read citations, and parse PDFs with LinxSci"
-  default_prompt: "Use $linxsci-skills to find papers on a topic, read relevant sections, and summarize the evidence with sources."

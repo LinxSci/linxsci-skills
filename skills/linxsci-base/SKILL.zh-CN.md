@@ -1,13 +1,13 @@
 ---
-name: linxsci-skills
+name: linxsci-base
 description: 调用 LinxSci OpenAPI v2，支持文献检索、论文内容与引用、推荐、学术实体和 PDF 解析。用于 LinxSci 研究任务、指定接口调用，以及服务健康和用量查询。
 ---
 
-# linxsci-skills
+# linxsci-base
 
 [English](SKILL.md)
 
-使用本 Skill 的统一入口 `scripts/cli.py`。所有示例中的 `<skill-dir>` 都替换为本文件所在目录的绝对路径；脚本仅依赖 Python 3.9+ 标准库，无需安装 SDK。
+使用 `linxsci-base` 的统一入口 `scripts/cli.py`。所有示例中的 `<skill-dir>` 都替换为本文件所在目录的绝对路径：源码中为 `skills/linxsci-base/`，默认安装后为 `~/.agents/skills/linxsci-base`。脚本仅依赖 Python 3.9+ 标准库，无需安装 SDK。可单独安装的 CLI/SDK 包名及 Python 导入名仍为 `linxsci`。
 
 ## 独立安装 Skill
 
@@ -18,20 +18,20 @@ description: 调用 LinxSci OpenAPI v2，支持文献检索、论文内容与引
 本机有 Node.js / npx 时运行：
 
 ```bash
-npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-skills
+npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base
 ```
 
 按安装器提示选择助手及安装范围。此方式安装完整 Skill，不需要 `pip install linxsci` 或 `uv tool install linxsci`。后续使用同一个外部安装器更新该副本。
 
 ### 方式二：独立 ZIP 或下载源码
 
-解压 `linxsci-skills-0.3.2.zip`，在解压后的目录运行 `python3 install.py`（Windows 使用 `py -3 install.py`），也可双击 `Install.command` / `Install.bat`。安装器复制完整 Skill 并启动隐藏输入 Key 的配置向导。此方式不需要 pip、SDK 或 Node.js。只安装、不配置时运行 `python3 install.py --no-config`。
+解压 `linxsci-base-<version>.zip`，在解压后的目录运行 `python3 install.py`（Windows 使用 `py -3 install.py`），也可双击 `Install.command` / `Install.bat`。安装器复制完整 Skill 并启动隐藏输入 Key 的配置向导。此方式不需要 pip、SDK 或 Node.js。只安装、不配置时运行 `python3 install.py --no-config`。
 
 ZIP 内的 `install.py` 支持以下参数，均放在 `install.py` 之后：
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
-| `--skills-dir PATH` | `~/.agents/skills` | 助手扫描父目录，安装器追加 `/linxsci-skills` |
+| `--skills-dir PATH` | `~/.agents/skills` | 助手扫描父目录，安装器追加 `/linxsci-base` |
 | `--update` | 关闭 | 更新本工具管理的已有副本并保留备份 |
 | `--no-config` | 关闭 | 仅复制 Skill，不启动 Key 配置向导 |
 | `--online` | 关闭 | 向导建议使用正式服务根地址 |
@@ -42,25 +42,31 @@ ZIP 内的 `install.py` 支持以下参数，均放在 `install.py` 之后：
 如果下载的是仓库源码或完整 Skill 目录，可直接运行包内脚本：
 
 ```bash
-python3 /absolute/path/to/source/skills/linxsci-skills/scripts/cli.py install-skill
+python3 /absolute/path/to/source/skills/linxsci-base/scripts/cli.py install-skill
 ```
 
-默认安装位置是 `~/.agents/skills/linxsci-skills`。助手使用其他扫描目录时，加上 `--skills-dir /absolute/path/to/assistant/skills`，参数为安装父目录，不包含末尾的 `linxsci-skills`。安装后未发现 Skill 时，刷新或重启助手。
+默认安装位置是 `~/.agents/skills/linxsci-base`。助手使用其他扫描目录时，加上 `--skills-dir /absolute/path/to/assistant/skills`，参数为安装父目录，不包含末尾的 `linxsci-base`。安装后未发现 Skill 时，刷新或重启助手。
 
 ### 仅使用 Skill 完成配置与验证
 
 macOS / Linux 默认安装后：
 
 ```bash
-python3 "$HOME/.agents/skills/linxsci-skills/scripts/cli.py" routes
-python3 "$HOME/.agents/skills/linxsci-skills/scripts/cli.py" setup
+python3 "$HOME/.agents/skills/linxsci-base/scripts/cli.py" routes
+python3 "$HOME/.agents/skills/linxsci-base/scripts/cli.py" setup
 ```
 
-Windows 使用 `py -3 "C:\absolute\path\to\linxsci-skills\scripts\cli.py" setup`。自定义安装目录时使用对应的脚本绝对路径。`routes` 不需要 Key、不联网，可验证本地脚本能否运行；`setup` 在交互终端中隐藏输入 Key、保存配置，并检查一次连接。随后在助手中使用 `$linxsci-skills`。不要让用户将 Key 发到对话中。
+Windows 使用 `py -3 "C:\absolute\path\to\linxsci-base\scripts\cli.py" setup`。自定义安装目录时使用对应的脚本绝对路径。`routes` 不需要 Key、不联网，可验证本地脚本能否运行；`setup` 在交互终端中隐藏输入 Key、保存配置，并检查一次连接。随后在助手中使用 `$linxsci-base`。不要让用户将 Key 发到对话中。
 
 更新本工具管理的副本时，下载或解压新版，使用**新版本源码中的** `scripts/cli.py install-skill --update`，或在新 ZIP 内执行 `python3 install.py --update --no-config`。旧副本备份到助手扫描目录之外。手动复制或外部安装器管理的副本应按原安装方式更新。必须完整保留 `SKILL.md`、`scripts/`、`references/`、`agents/`、`service.json` 及其他配套文件；仅复制 `SKILL.md` 无法执行接口。
 
 后续所有操作均使用 Skill 内 `scripts/cli.py` 的绝对路径。[命令参考](references/cli.zh-CN.md) 逐项说明独立调用方式、全部命令、参数类型、默认值、必填条件和示例。
+
+### 从旧版 linxsci-skills 迁移
+
+使用**新版源码或安装器**执行 `--update`。安装器核验自己管理的 `linxsci-skills` 后，将旧目录备份到助手扫描目录之外，再安装 `linxsci-base`；安装失败时恢复旧目录。配置继续使用 `~/.config/linxsci-skills/config.json`（Windows：`%LOCALAPPDATA%\linxsci-skills\config.json`）。
+
+不带 `--update` 时发现旧版，会提示迁移并停止，不创建第二份副本。新旧目录并存、目录或安装标记是符号链接、缺少有效标记或标记不匹配时，安装器保留已有文件并停止。外部安装器管理的副本用原工具迁移；手动安装的副本先备份并移出扫描目录，再安装新版。迁移后刷新助手。
 
 ## 接口调用入口
 

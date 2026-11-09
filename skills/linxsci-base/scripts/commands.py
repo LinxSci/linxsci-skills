@@ -11,15 +11,15 @@ from pathlib import Path
 if __package__:
     from .client import ROUTES, Response, LinxSciClient, LinxSciError, paper_path, segment
     from .config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
-    from .installer import install_skill
+    from .installer import SKILL_NAME, install_skill
     from .output import ResponseOutputError, ResponseViewError, json_text, write_response
 else:
     from client import ROUTES, Response, LinxSciClient, LinxSciError, paper_path, segment
     from config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
-    from installer import install_skill
+    from installer import SKILL_NAME, install_skill
     from output import ResponseOutputError, ResponseViewError, json_text, write_response
 
-VERSION = "0.3.2"
+VERSION = "0.3.3"
 
 SEARCH_COMMANDS = {
     "search": ("/papers/search", "综合论文搜索"),
@@ -220,7 +220,7 @@ def build_parser(*, prog=None, human_errors=False):
     configuration.add_argument("--clear", action="store_true")
     installer = sub.add_parser("install-skill", help="安装自包含 Skill，无需联网")
     installer.add_argument("--skills-dir", help="Parent directory for the Skill (default: ~/.agents/skills)")
-    installer.add_argument("--update", action="store_true", help="Update a managed installation and retain a backup")
+    installer.add_argument("--update", action="store_true", help="Update or migrate a managed Skill to linxsci-base and retain a backup")
     def api_command(name, help):
         command = sub.add_parser(name, help=help, description=help)
         command.add_argument("--param", action="append", help="查询参数 key=value，可重复；字段按上游契约")
@@ -284,7 +284,7 @@ def main(argv=None, *, prog=None):
             return 0
         if args.command == "install-skill":
             destination, backup = install_skill(args.skills_dir, args.update)
-            report = {"installed": str(destination.resolve()), "skill": "linxsci-skills"}
+            report = {"installed": str(destination.resolve()), "skill": SKILL_NAME}
             if backup:
                 report["backup"] = str(backup.resolve())
             print(json_text(report, args.pretty))

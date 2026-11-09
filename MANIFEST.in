@@ -4,3 +4,16 @@ recursive-include examples *.py
 recursive-include docs *.md
 recursive-include tools *.py
 recursive-include tests *.py
+
+# Git ignore rules do not control source distributions.
+prune docs/local
+prune .local
+prune .agents
+prune .codex
+prune .claude
+prune smoke
+prune dist
+prune build
+global-exclude *.local.* *.log *.py[cod] .DS_Store ._* Thumbs.db Desktop.ini
+global-exclude .env .env.* .linxsci-install.json *.swp *.swo *~
+include .env.example

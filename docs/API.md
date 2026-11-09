@@ -2,6 +2,8 @@
 
 [简体中文](API.zh-CN.md)
 
+This API is used by the `linxsci-base` Skill and the `linxsci` CLI/Python SDK. The Skill rename does not change HTTP endpoints, authentication or request parameters.
+
 Use the service root `https://linxsci.com` with the `/openapi/v2` prefix. All endpoints require a LinxSci API key. JSON business fields, pagination and task status fields follow the selected endpoint's API contract.
 
 ## Authentication and tracing

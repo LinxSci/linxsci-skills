@@ -4,14 +4,14 @@ import argparse
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent / "skills/linxsci-skills/scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent / "skills/linxsci-base/scripts"))
 from cli import main
 
 
 def install(argv=None):
-    parser = argparse.ArgumentParser(description="安装 linxsci-skills 并配置已有 API Key")
+    parser = argparse.ArgumentParser(description="安装 linxsci-base 并配置已有 API Key")
     parser.add_argument("--skills-dir", help="可选的 Skill 安装父目录")
-    parser.add_argument("--update", action="store_true", help="更新已有版本并保留备份")
+    parser.add_argument("--update", action="store_true", help="更新或迁移本工具管理的 Skill 到 linxsci-base，并保留备份")
     parser.add_argument("--no-config", action="store_true", help="仅安装，不运行配置向导")
     parser.add_argument("--online", action="store_true", help="向导默认使用线上地址")
     parser.add_argument("--base-url", help="向导默认的服务根地址")

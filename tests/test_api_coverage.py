@@ -88,7 +88,7 @@ class SkillAPICoverageTests(unittest.TestCase):
                 is_upload = path == "/pdf/parse/upload"
                 with self.subTest(method=method, path=template):
                     output_file = directory / (str(index) + ".response")
-                    command = [sys.executable, str(ROOT / "skills/linxsci-skills/scripts/cli.py"),
+                    command = [sys.executable, str(ROOT / "skills/linxsci-base/scripts/cli.py"),
                                "--framework-request-id", "coverage-framework",
                                "--output", str(output_file)]
                     if convenient:

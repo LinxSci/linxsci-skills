@@ -2,6 +2,8 @@
 
 [简体中文](CLI_GUIDE.zh-CN.md)
 
+The CLI command and Python package are both `linxsci`. The foundational AI Skill is `linxsci-base`, with source in `skills/linxsci-base/` and a default installation at `~/.agents/skills/linxsci-base`. CLI and SDK share one Python package; terminal commands can run without installing the Skill in an assistant.
+
 ## Install from PyPI
 
 Requires Python 3.9+. Activate an existing virtual environment, or create a new one on macOS/Linux:
@@ -10,7 +12,7 @@ Requires Python 3.9+. Activate an existing virtual environment, or create a new 
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install --index-url https://pypi.org/simple linxsci==0.3.2
+python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
 linxsci --version
 ```
 
@@ -21,9 +23,9 @@ py -3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-Verification should print `0.3.2` and requires no API key. Using `python -m pip` targets the active interpreter.
+Verification should print `0.3.3` and requires no API key. Using `python -m pip` targets the active interpreter.
 
-Next, run `linxsci setup` to configure the service. With uv already installed, `uv tool install linxsci==0.3.2` is an alternative isolated installation; update that installation with `uv tool upgrade linxsci` instead of the virtual-environment pip command below.
+Next, run `linxsci setup` to configure the service. With uv already installed, `uv tool install linxsci==0.3.3` is an alternative isolated installation; update that installation with `uv tool upgrade linxsci` instead of the virtual-environment pip command below.
 
 For a pip installation, update in the original environment:
 
@@ -38,31 +40,31 @@ linxsci --version
 
 ```bash
 uv pip install --python .venv/bin/python --index-url https://pypi.org/simple --upgrade pip
-.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.2
+.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
 ```
 
 Substitute the path for `.venv-1` or another environment; on Windows use `.venv/Scripts/python.exe`. If it still fails, check network, proxy and certificate settings while keeping HTTPS verification enabled; see [pip certificate documentation](https://pip.pypa.io/en/stable/topics/https-certificates/). Alternatively, download the wheel from the GitHub release linked below and install it offline in the activated environment:
 
 ```bash
-python -m pip install --no-index --no-deps ./linxsci-0.3.2-py3-none-any.whl
+python -m pip install --no-index --no-deps ./linxsci-0.3.3-py3-none-any.whl
 ```
 
 This wheel has no additional runtime dependencies. Run from the file’s directory, then repeat the version verification above.
 
 ## Install the CLI
 
-Requires Python 3.9+. Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.2) and run from its directory:
+Requires Python 3.9+. Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.3) and run from its directory:
 
 ```bash
-uv tool install ./linxsci-0.3.2-py3-none-any.whl
+uv tool install ./linxsci-0.3.3-py3-none-any.whl
 linxsci --version
 ```
 
 This option requires [uv](https://docs.astral.sh/uv/getting-started/installation/). If the command is missing, run `uv tool update-shell` and reopen the terminal. Alternatively, install from the official source in a Python environment:
 
 ```bash
-git clone https://github.com/LinxSci/linxsci-skills.git
-cd linxsci-skills
+git clone https://github.com/LinxSci/linxsci-skills.git linxsci-openapi-skills
+cd linxsci-openapi-skills
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install .
@@ -211,10 +213,12 @@ linxsci install-skill --update
 
 | Option | Type / default | Meaning |
 | --- | --- | --- |
-| `--skills-dir PATH` | Directory, default `~/.agents/skills` | Parent scan directory; the installer appends `/linxsci-skills`. A leading `~` is expanded |
+| `--skills-dir PATH` | Directory, default `~/.agents/skills` | Parent scan directory; the installer appends `/linxsci-base`. A leading `~` is expanded |
 | `--update` | Flag, off | Replace a copy managed by this installer and keep the old version in a sibling `linxsci-skill-backups` directory outside the scan directory |
 
 This action uses local bundled files and needs no key or network. Before using `--update`, upgrade the installed CLI so that it contains the new bundled files. The installer rejects symlink destinations and unmanaged or mismatched installation markers; use the original external installer for its copies. This action only copies the bundled assistant files; it does not configure an API key.
+
+For the renamed source, `--update` also migrates a managed `linxsci-skills` directory to `linxsci-base`, keeping its backup outside the scan directory and restoring it if installation fails. Both names present or an unmanaged/symlinked old copy cause a refusal without mutation; migrate those through their original installation method. Configuration stays at its existing path.
 
 ### read-output
 

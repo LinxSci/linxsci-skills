@@ -7,15 +7,16 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 from env_helpers import isolated_environment
 
-SCRIPTS = Path(__file__).resolve().parents[1] / "skills/linxsci-skills/scripts"
+SCRIPTS = Path(__file__).resolve().parents[1] / "skills/linxsci-base/scripts"
 sys.path.insert(0, str(SCRIPTS))
 from commands import main, doctor, error_info
 from client import LinxSciClient, LinxSciError, Response
 from config import config_path, load_config, resolve_settings, save_config
-from installer import install_skill
+from installer import LEGACY_SKILL_NAME, MARKER, SKILL_NAME, install_skill
 
 
 class OnboardingTests(unittest.TestCase):
@@ -106,6 +107,7 @@ class OnboardingTests(unittest.TestCase):
     def test_install_update_and_backup(self):
         parent = self.root / "agent/skills"
         destination, backup = install_skill(parent)
+        self.assertEqual(destination.name, "linxsci-base")
         self.assertIsNone(backup)
         self.assertTrue((destination / "SKILL.md").is_file())
         self.assertTrue((destination / "scripts/config.py").is_file())
@@ -119,9 +121,122 @@ class OnboardingTests(unittest.TestCase):
         self.assertNotEqual(backup.parent, parent)
         self.assertFalse((new / "custom-note.txt").exists())
 
+    def legacy_install(self, parent):
+        legacy = parent / LEGACY_SKILL_NAME
+        legacy.mkdir(parents=True)
+        (legacy / MARKER).write_text(json.dumps({"name": LEGACY_SKILL_NAME, "version": "0.3.2"}), encoding="utf-8")
+        (legacy / "custom-note.txt").write_bytes(b"preserve old installation\x00")
+        return legacy
+
+    def test_migrate_legacy_installation_and_reuse_default_configuration(self):
+        for platform in ("posix", "nt"):
+            with self.subTest(platform=platform):
+                home = self.root / platform
+                appdata = home / "AppData/Local"
+                expected_config = (appdata if platform == "nt" else home / ".config") / "linxsci-skills/config.json"
+                expected_config.parent.mkdir(parents=True)
+                original_config = b'{"base_url":"https://saved.example","api_key":"saved-migration-secret"}'
+                expected_config.write_bytes(original_config)
+                parent = home / ".agents/skills"
+                legacy = self.legacy_install(parent)
+                old_files = {p.name: p.read_bytes() for p in legacy.iterdir()}
+                with patch.dict(os.environ, isolated_environment({"LOCALAPPDATA": str(appdata)}), clear=True), \
+                        patch("config.os", SimpleNamespace(name=platform, environ=os.environ)), \
+                        patch("pathlib.Path.home", return_value=home):
+                    status, out, err = self.invoke(["install-skill", "--update"])
+                    self.assertEqual(status, 0, err)
+                    report = json.loads(out)
+                    destination = Path(report["installed"])
+                    backup = Path(report["backup"])
+                    self.assertEqual(report["skill"], SKILL_NAME)
+                    self.assertEqual(destination, (parent / SKILL_NAME).resolve())
+                    self.assertEqual(config_path(), expected_config)
+                    self.assertEqual(resolve_settings(), ("https://saved.example", "saved-migration-secret"))
+                self.assertFalse(legacy.exists())
+                self.assertEqual(json.loads((destination / MARKER).read_text())["name"], SKILL_NAME)
+                self.assertEqual({p.name: p.read_bytes() for p in backup.iterdir()}, old_files)
+                self.assertNotEqual(backup.parent, parent)
+                self.assertEqual(expected_config.read_bytes(), original_config)
+                self.assertNotIn("saved-migration-secret", out + err)
+
+    def test_legacy_installation_requires_explicit_update(self):
+        parent = self.root / "skills"
+        legacy = self.legacy_install(parent)
+        original = (legacy / MARKER).read_bytes()
+        with self.assertRaisesRegex(ValueError, "--update"):
+            install_skill(parent)
+        self.assertEqual((legacy / MARKER).read_bytes(), original)
+        self.assertFalse((parent / SKILL_NAME).exists())
+        self.assertEqual(list(parent.iterdir()), [legacy])
+
+    def test_legacy_unmanaged_or_invalid_marker_is_preserved(self):
+        for index, marker in enumerate((None, "not json", "[]", '{"name":"another-skill"}')):
+            with self.subTest(marker=marker):
+                parent = self.root / str(index) / "skills"
+                legacy = self.legacy_install(parent)
+                marker_path = legacy / MARKER
+                if marker is None:
+                    marker_path.unlink()
+                else:
+                    marker_path.write_text(marker, encoding="utf-8")
+                original = {p.name: p.read_bytes() for p in legacy.iterdir()}
+                with self.assertRaises(ValueError):
+                    install_skill(parent, update=True)
+                self.assertEqual({p.name: p.read_bytes() for p in legacy.iterdir()}, original)
+                self.assertEqual(list(parent.iterdir()), [legacy])
+
+    def test_both_names_present_preserves_both_installations(self):
+        parent = self.root / "skills"
+        destination, _ = install_skill(parent)
+        legacy = self.legacy_install(parent)
+        for update in (False, True):
+            with self.subTest(update=update):
+                with self.assertRaisesRegex(ValueError, "同时存在"):
+                    install_skill(parent, update=update)
+                self.assertTrue((destination / "SKILL.md").is_file())
+                self.assertEqual((legacy / "custom-note.txt").read_bytes(), b"preserve old installation\x00")
+                self.assertEqual(set(parent.iterdir()), {destination, legacy})
+                self.assertFalse((parent.parent / "linxsci-skill-backups").exists())
+
+    def test_legacy_migration_failure_restores_original_path(self):
+        parent = self.root / "skills"
+        legacy = self.legacy_install(parent)
+        original = {p.name: p.read_bytes() for p in legacy.iterdir()}
+        real_replace = os.replace
+
+        def replace(source, target):
+            if Path(source).name.startswith(".linxsci-stage-"):
+                raise OSError("simulated migration failure")
+            return real_replace(source, target)
+
+        with patch("installer.os.replace", side_effect=replace), self.assertRaises(OSError):
+            install_skill(parent, update=True)
+        self.assertEqual({p.name: p.read_bytes() for p in legacy.iterdir()}, original)
+        self.assertEqual(list(parent.iterdir()), [legacy])
+
+    def test_installer_refuses_current_and_legacy_symlinks(self):
+        target = self.root / "external-copy"
+        target.mkdir()
+        (target / "user-note.txt").write_text("keep", encoding="utf-8")
+        for name in (SKILL_NAME, LEGACY_SKILL_NAME):
+            for dangling in (False, True):
+                with self.subTest(name=name, dangling=dangling):
+                    parent = self.root / (name + str(dangling)) / "skills"
+                    parent.mkdir(parents=True)
+                    link = parent / name
+                    try:
+                        link.symlink_to(target / "missing" if dangling else target, target_is_directory=True)
+                    except (OSError, NotImplementedError):
+                        self.skipTest("Directory symlinks unavailable on this platform")
+                    with self.assertRaisesRegex(ValueError, "符号链接"):
+                        install_skill(parent, update=True)
+                    self.assertTrue(link.is_symlink())
+                    self.assertEqual(list(parent.iterdir()), [link])
+                    self.assertEqual((target / "user-note.txt").read_text(), "keep")
+
     def test_install_refuses_unmanaged_directory(self):
         parent = self.root / "skills"
-        destination = parent / "linxsci-skills"
+        destination = parent / "linxsci-base"
         destination.mkdir(parents=True)
         user_file = destination / "SKILL.md"
         user_file.write_text("user content")

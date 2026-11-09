@@ -1,10 +1,59 @@
+# Public documentation and these rules belong in Git, even with global ignores.
+!/.gitignore
+!/docs/
+!/docs/**
+
+# Local settings and credentials; keep the distributable example.
 .env
+.env.*
+!.env.example
+/.local/
+*.local.*
+
+# Python environments and build output.
 .venv/
 .venv-*/
 __pycache__/
-*.pyc
+*.py[cod]
 *.egg-info/
 build/
 dist/
-/RELEASE_GUIDE.local.md
-/RELEASE_GUIDE.local.zh-CN.md
+.eggs/
+
+# Test, lint and coverage output.
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+*.log
+/test-results.txt
+/release-check.txt
+/release-smoke.txt
+/smoke/
+
+# Local Skill installation state and backups.
+.linxsci-install.json
+.linxsci-stage-*/
+linxsci-skill-backups/
+
+# Private notes and local assistant/editor settings.
+/docs/local/
+/.agents/
+/.codex/
+/.claude/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS metadata.
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini

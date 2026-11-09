@@ -6,7 +6,7 @@ import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'skills/linxsci-skills/scripts'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'skills/linxsci-base/scripts'))
 from client import LinxSciClient, LinxSciError, ROUTES
 from commands import main
 

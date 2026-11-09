@@ -51,7 +51,7 @@ def check(directory, uv=None):
     routes = re.findall(r"\| (GET|POST) \| `/openapi/v2([^`]+)` \|", document)
     assert len(routes) == 34
     wheel = directory / ("linxsci-" + version + "-py3-none-any.whl")
-    bundle = directory / ("linxsci-skills-" + version + ".zip")
+    bundle = directory / ("linxsci-base-" + version + ".zip")
     server = HTTPServer(("127.0.0.1", 0), API)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -107,14 +107,36 @@ def check(directory, uv=None):
             assert summary["file"] == str(saved_response.resolve())
             assert json.loads(run(cli[:1] + ["--select", "/data/0/id", "read-output", str(saved_response)])) == "arxiv:2301.07041"
             run(cli + ["install-skill", "--skills-dir", str(root / "wheel-skills")])
-            installed = root / "wheel-skills/linxsci-skills/scripts/cli.py"
+            installed = root / "wheel-skills/linxsci-base/scripts/cli.py"
             run([str(python), str(installed), "doctor"])
             run([str(python), "-c", "from linxsci import LinxSciClient; print(LinxSciClient().request('GET','/meta').status)"])
+            # Simulate a managed old-name copy without touching the real user's Skills.
+            old_skill = root / "wheel-skills/linxsci-skills"
+            installed.parent.parent.rename(old_skill)
+            (old_skill / ".linxsci-install.json").write_text(
+                json.dumps({"name": "linxsci-skills", "version": "0.3.2"}), encoding="utf-8")
+            (old_skill / "user-note.txt").write_text("preserve migration backup", encoding="utf-8")
+            saved_config = (root / "config.json").read_bytes()
+            refused = subprocess.run(cli + ["install-skill", "--skills-dir", str(root / "wheel-skills")],
+                                     capture_output=True, text=True, env=env, cwd=root)
+            assert refused.returncode == 2, 'Old-name copy must require --update'
+            assert old_skill.is_dir() and not installed.exists()
+            migrated = json.loads(run(cli + ["install-skill", "--skills-dir", str(root / "wheel-skills"), "--update"]))
+            assert migrated["skill"] == "linxsci-base"
+            assert Path(migrated["installed"]) == installed.parent.parent.resolve()
+            assert not old_skill.exists()
+            backup = Path(migrated["backup"])
+            assert backup.parent != old_skill.parent
+            assert (backup / "user-note.txt").read_text(encoding="utf-8") == "preserve migration backup"
+            assert json.loads((backup / ".linxsci-install.json").read_text())["name"] == "linxsci-skills"
+            assert json.loads((installed.parent.parent / ".linxsci-install.json").read_text())["name"] == "linxsci-base"
+            assert (root / "config.json").read_bytes() == saved_config
+            run([str(python), str(installed), "doctor"])
             with zipfile.ZipFile(bundle) as archive:
                 archive.extractall(root / "bundle")
             unpacked = next((root / "bundle").iterdir())
             run([str(python), str(unpacked / "install.py"), "--no-config", "--skills-dir", str(root / "zip-skills")])
-            installed = root / "zip-skills/linxsci-skills/scripts/cli.py"
+            installed = root / "zip-skills/linxsci-base/scripts/cli.py"
             check_all_routes([str(python), str(installed)])
             assert len(json.loads(run([str(python), str(installed), "routes"]))) == 34
             run([str(python), str(installed), "doctor"])
@@ -130,7 +152,7 @@ def check(directory, uv=None):
                 uv_cli = [str(uv_executable)]
                 check_all_routes(uv_cli)
                 run(uv_cli + ["install-skill", "--skills-dir", str(root / "uv-skills")])
-                uv_skill = root / "uv-skills/linxsci-skills/scripts/cli.py"
+                uv_skill = root / "uv-skills/linxsci-base/scripts/cli.py"
                 assert json.loads(run([str(python), str(uv_skill), "search", "uv topic"]))["data"][0]["query"] == "uv topic"
                 run(uv_cli + ["install-skill", "--skills-dir", str(root / "uv-skills"), "--update"])
                 run([uv, "tool", "uninstall", "linxsci"])
@@ -141,7 +163,7 @@ def check(directory, uv=None):
         server.shutdown()
         thread.join()
         server.server_close()
-    print("Fresh wheel and ZIP: all 34 convenience routes each, install, configure, connect, SDK, update and clear passed.")
+    print("Fresh wheel and ZIP: all 34 convenience routes each, install, configure, connect, SDK, update, legacy migration and clear passed.")
     if uv:
         print("uv tool install: all 34 convenience routes, bundled Skill install/update and tool uninstall passed in isolated directories.")
 

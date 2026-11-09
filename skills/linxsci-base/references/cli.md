@@ -2,7 +2,7 @@
 
 [简体中文](cli.zh-CN.md)
 
-Use only the scripts bundled in this Skill. No installed CLI, PyPI package or SDK is required. In every command below, replace `<skill-dir>` with the absolute directory containing `SKILL.md`. Windows users can replace `python3` with `py -3`. See [Skill installation](../SKILL.md#install-the-skill-independently).
+Use the scripts bundled in `linxsci-base`. No installed CLI, PyPI package or SDK is required. In every command below, replace `<skill-dir>` with the absolute directory containing `SKILL.md` (default: `~/.agents/skills/linxsci-base`). Windows users can replace `python3` with `py -3`. The optional Python package and terminal command remain `linxsci`. See [Skill installation](../SKILL.md#install-the-skill-independently).
 
 ## Invocation and option placement
 
@@ -144,10 +144,12 @@ python3 "<skill-dir>/scripts/cli.py" install-skill --update
 
 | Option | Type / default | Meaning |
 | --- | --- | --- |
-| `--skills-dir PATH` | Directory, default `~/.agents/skills` | Parent scan directory; the installer appends `/linxsci-skills`. A leading `~` is expanded |
+| `--skills-dir PATH` | Directory, default `~/.agents/skills` | Parent scan directory; the installer appends `/linxsci-base`. A leading `~` is expanded |
 | `--update` | Flag, off | Replace a copy managed by this installer and keep the old version in a sibling `linxsci-skill-backups` directory outside the scan directory |
 
 This action uses local bundled files and needs no key or network. It also works through the standalone skill script without an installed CLI/SDK. When updating, run the command from the **new** downloaded source/bundle so that the new files are copied. The installer rejects symlink destinations and unmanaged or mismatched installation markers; use the original external installer for its copies. This action does not configure a key or register a terminal command.
+
+For the renamed source, `--update` also migrates a managed `linxsci-skills` directory to `linxsci-base`, keeping its backup outside the scan directory and restoring it if installation fails. Both names present or an unmanaged/symlinked old copy cause a refusal without mutation; migrate those through their original installation method. Configuration stays at its existing path.
 
 ### read-output
 

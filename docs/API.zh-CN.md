@@ -2,6 +2,8 @@
 
 [English](API.md)
 
+`linxsci-base` Skill 与 `linxsci` CLI/Python SDK 共用此 API。Skill 改名不改变 HTTP 接口地址、认证方式或请求参数。
+
 服务根地址为 `https://linxsci.com`，接口前缀为 `/openapi/v2`，所有接口均需要 LinxSci API Key。业务 JSON 字段、分页及任务状态字段按对应接口的 API 契约使用。
 
 ## 认证与请求追踪

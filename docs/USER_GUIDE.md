@@ -2,7 +2,7 @@
 
 [简体中文](USER_GUIDE.zh-CN.md)
 
-LinxSci Skill lets you search, read and compare papers in an AI assistant using natural language. You can also submit PDFs for parsing. After installation, use `$linxsci-skills` to select this Skill.
+The `linxsci-base` Skill lets you search, read and compare papers in an AI assistant using natural language. You can also submit PDFs for parsing. After installation, use `$linxsci-base` to select this Skill. It runs its bundled Python scripts without installing the `linxsci` CLI/SDK package.
 
 ## Before you start
 
@@ -14,7 +14,7 @@ LinxSci Skill lets you search, read and compare papers in an AI assistant using 
 
 ### Option 1: Download the installation bundle
 
-Download the [complete Skill bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.2/linxsci-skills-0.3.2.zip) and extract it fully before installing.
+Download the [complete Skill bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.3/linxsci-base-0.3.3.zip) and extract it fully before installing.
 
 **macOS**: double-click `Install.command` in the extracted directory. If it cannot be opened that way, open a terminal in that directory and run:
 
@@ -30,7 +30,7 @@ py -3 install.py
 
 **Linux**: run `python3 install.py` in the extracted directory.
 
-The installer copies the Skill, guides you through hidden-input API key setup on your computer, and checks the connection once. The default destination is `~/.agents/skills/linxsci-skills`. Refresh or restart your assistant, then open a new conversation.
+The installer copies the Skill, guides you through hidden-input API key setup on your computer, and checks the connection once. The default destination is `~/.agents/skills/linxsci-base`. Refresh or restart your assistant, then open a new conversation.
 
 If your assistant scans a different location, specify its parent skills directory:
 
@@ -38,14 +38,14 @@ If your assistant scans a different location, specify its parent skills director
 python3 install.py --skills-dir /path/to/assistant/skills
 ```
 
-Do not include the final `linxsci-skills` directory in `--skills-dir`; the installer appends it. Keep the complete installation bundle. Downloading only `SKILL.md` is insufficient.
+Do not include the final `linxsci-base` directory in `--skills-dir`; the installer appends it. Keep the complete installation bundle. Downloading only `SKILL.md` is insufficient.
 
 ### Option 2: Use a Skill installer
 
 If Node.js/npx is already available, you can also run:
 
 ```bash
-npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-skills
+npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base
 ```
 
 Choose your assistant and installation scope when prompted. After installation, refresh or restart the assistant and follow “Configure and verify” below.
@@ -70,13 +70,13 @@ These options apply only to the bundle's `install.py`; place them after the file
 
 The ZIP installer guides you through configuration. If you used another installer or skipped setup, ask your assistant:
 
-> Use $linxsci-skills to check whether configuration exists. If it is missing, guide me through entering my API key safely on my computer. Do not ask me to send the key in chat.
+> Use $linxsci-base to check whether configuration exists. If it is missing, guide me through entering my API key safely on my computer. Do not ask me to send the key in chat.
 
 The default service root is `https://linxsci.com`, without `/openapi/v2`. Enter the API key only during local configuration, not in the conversation.
 
 Once configured, you can ask:
 
-> Use $linxsci-skills to check the service connection once and tell me whether I can start searching for papers.
+> Use $linxsci-base to check the service connection once and tell me whether I can start searching for papers.
 
 A connection check makes a real service request. If installation already confirmed the connection, proceed directly to your research question.
 
@@ -86,29 +86,29 @@ Settings default to `~/.config/linxsci-skills/config.json` on macOS/Linux or `%L
 
 ### Find papers
 
-> Use $linxsci-skills to find papers on graph neural networks. Select the three most relevant papers, explain why you chose them, and include source links.
+> Use $linxsci-base to find papers on graph neural networks. Select the three most relevant papers, explain why you chose them, and include source links.
 
 You can specify a topic, filtering criteria and the number of results. The assistant will use the capabilities supported by the service.
 
 ### Read a paper
 
-> Use $linxsci-skills to read the first paper we just found. Start with its table of contents, then explain the methods and experiments with source references.
+> Use $linxsci-base to read the first paper we just found. Start with its table of contents, then explain the methods and experiments with source references.
 
 Use actual paper IDs from search results or an existing paper identifier. Section names are not necessarily section IDs.
 
 ### Compare papers
 
-> Use $linxsci-skills to compare the methods, experimental settings and limitations of those two papers. Present a table and cite the evidence.
+> Use $linxsci-base to compare the methods, experimental settings and limitations of those two papers. Present a table and cite the evidence.
 
 ### Parse a PDF
 
-> Use $linxsci-skills to parse /absolute/path/paper.pdf. Record the task ID, retrieve the result after completion, and summarize the main findings.
+> Use $linxsci-base to parse /absolute/path/paper.pdf. Record the task ID, retrieve the result after completion, and summarize the main findings.
 
 Replace the path with a real PDF that the assistant can access. Parsing uploads the file to your configured service. While a task is pending, ask the assistant to check that task rather than upload the file again.
 
 ### Check usage
 
-> Use $linxsci-skills to check my API usage and briefly explain the result.
+> Use $linxsci-base to check my API usage and briefly explain the result.
 
 ### Choose the response format
 
@@ -132,11 +132,17 @@ On Windows, use `py -3 install.py --update --no-config`. For a custom destinatio
 
 To change settings, ask:
 
-> Use $linxsci-skills to guide me through changing my service address or API key locally. Do not show the key in chat.
+> Use $linxsci-base to guide me through changing my service address or API key locally. Do not show the key in chat.
+
+### Migrate an existing linxsci-skills installation
+
+Run the **new source or installer** with `--update`. A managed `linxsci-skills` copy is backed up outside the assistant scan directory, then replaced by `linxsci-base`; a failed installation restores the old directory. Existing settings remain in `~/.config/linxsci-skills/config.json` (Windows: `%LOCALAPPDATA%\linxsci-skills\config.json`).
+
+Without `--update`, an old installation is reported and no second copy is created. If both names exist, or a directory/installation marker is a symlink, unmanaged or mismatched, the installer stops without changing either copy. Use the original external installer to migrate its copies. For a manual installation, back it up and move it outside the scan directory before installing the new Skill. Refresh the assistant after migration.
 
 ## Uninstall the Skill
 
-For a copy managed by an external installer, use its removal feature. For a copy installed by the bundled installer, remove the `linxsci-skills` directory reported during installation, then refresh or restart your assistant.
+For a copy managed by an external installer, use its removal feature. For a copy installed by the bundled installer, remove the `linxsci-base` directory reported during installation, then refresh or restart your assistant.
 
 If you also want to remove saved local settings, ask the assistant to help clear them before uninstalling. Clearing local settings does not revoke the server-side key or remove environment variables.
 

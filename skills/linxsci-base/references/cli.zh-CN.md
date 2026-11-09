@@ -2,7 +2,7 @@
 
 [English](cli.md)
 
-直接使用本 Skill 随附脚本，无需安装 CLI、PyPI 包或 SDK。执行下文命令前，将 `<skill-dir>` 替换为 `SKILL.md` 所在目录的绝对路径；Windows 可将 `python3` 改为 `py -3`。安装方式见 [Skill 安装说明](../SKILL.zh-CN.md#独立安装-skill)。
+直接使用 `linxsci-base` 随附脚本，无需安装 CLI、PyPI 包或 SDK。执行下文命令前，将 `<skill-dir>` 替换为 `SKILL.md` 所在目录的绝对路径（默认 `~/.agents/skills/linxsci-base`）；Windows 可将 `python3` 改为 `py -3`。可选的 Python 包和终端命令仍为 `linxsci`。安装方式见 [Skill 安装说明](../SKILL.zh-CN.md#独立安装-skill)。
 
 ## 调用格式与参数位置
 
@@ -144,10 +144,12 @@ python3 "<skill-dir>/scripts/cli.py" install-skill --update
 
 | 参数 | 类型 / 默认值 | 说明 |
 | --- | --- | --- |
-| `--skills-dir PATH` | 目录，默认 `~/.agents/skills` | 助手扫描父目录，安装器自动追加 `/linxsci-skills`；支持展开开头的 `~` |
+| `--skills-dir PATH` | 目录，默认 `~/.agents/skills` | 助手扫描父目录，安装器自动追加 `/linxsci-base`；支持展开开头的 `~` |
 | `--update` | 开关，默认关闭 | 更新由本安装器管理的副本，并将旧版备份到扫描父目录旁的 `linxsci-skill-backups`，避免被助手重复扫描 |
 
 此操作复制随包文件，不需要 Key 或网络；可通过 Skill 独立脚本运行，无需安装 CLI/SDK。更新时必须从**新版本**下载源码或安装包运行命令，确保复制的是新文件。安装器拒绝符号链接目标、不受其管理或标记不匹配的目录；外部安装器的副本请用原工具更新。此命令不配置 Key，也不注册终端命令。
+
+改名后的源码支持用 `--update` 将本工具管理的 `linxsci-skills` 迁移为 `linxsci-base`，旧目录备份到扫描目录之外，失败时恢复。新旧目录并存、旧版不受管理或为符号链接时停止并保留原文件，请按原安装方式迁移。配置仍使用原有路径。
 
 ### read-output
 
