@@ -31,7 +31,14 @@ def entrypoint(directory, command):
 
 def discover_skills(reserved=()):
     """List runnable folders without importing or executing their contents."""
-    directory = skills_directory()
+    try:
+        directory = skills_directory()
+    except SkillDispatchError:
+        if os.environ.get(SKILLS_DIR_ENV):
+            raise
+        # A minimal Windows environment may not provide a user home directory.
+        # Optional discovery must not prevent access to the built-in CLI help.
+        return []
     try:
         children = list(directory.iterdir())
     except FileNotFoundError:

@@ -67,6 +67,22 @@ class SkillDispatchTests(unittest.TestCase):
             self.assertEqual(error.exception.code, 0)
             self.assertEqual(output.getvalue().strip(), cli.VERSION)
 
+    def test_help_without_user_home_keeps_builtin_commands_available(self):
+        self.skill("sample")
+        with patch.object(Path, "home", side_effect=RuntimeError("No user home")):
+            with patch.dict(os.environ, {"LINXSCI_SKILLS_DIR": ""}):
+                self.assertEqual(skill_dispatch.discover_skills(), [])
+                with contextlib.redirect_stdout(io.StringIO()) as output:
+                    self.assertEqual(cli.main([]), 0)
+                self.assertIn("search", output.getvalue())
+                with self.assertRaises(skill_dispatch.SkillDispatchError):
+                    skill_dispatch.run_skill("sample", [])
+            # An explicit absolute parent works without a user home.
+            self.assertEqual(skill_dispatch.discover_skills(), ["sample"])
+            with patch.dict(os.environ, {"LINXSCI_SKILLS_DIR": "relative/skills"}):
+                with self.assertRaises(skill_dispatch.SkillDispatchError):
+                    skill_dispatch.discover_skills()
+
     def test_help_lists_complete_skills_without_executing_them(self):
         self.skill("paper-qa", "raise RuntimeError('must not run during discovery')\n")
         self.skill("survey")
