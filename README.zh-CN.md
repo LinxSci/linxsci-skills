@@ -64,14 +64,21 @@ python3 install.py --update --no-config
 
 ### 安装与配置
 
-在 Python 环境中从 PyPI 安装：
+需要 Python 3.9+。已有虚拟环境时直接激活；仅在需要新环境时执行下面的创建命令：
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci==0.3.4
+python -m pip install -U linxsci==0.3.4
+linxsci --version
 linxsci setup
 ```
+
+`linxsci --version` 应输出 `0.3.4`，不需要 API Key，也不调用 API。CLI 和 SDK 随同一个包安装。
+
+从 PyPI 安装可在任意目录执行，安装目标由当前 `python` 对应的环境决定，切换目录不会切换虚拟环境。使用 `python -c "import sys; print(sys.executable)"` 查看解释器；要明确使用 Python 3.10，可将命令中的 `python` 替换为 `python3.10`。
+
+SSL 或代理错误、pip 自身版本检查警告的处理方式，以及禁用缓存验证远程下载的步骤，见 [CLI 安装指南](docs/CLI_GUIDE.zh-CN.md#从-pypi-安装)。
 
 也可以从源码安装：
 
@@ -124,9 +131,11 @@ CLI 与 SDK 通过 `linxsci` 一起安装。应用环境中已有该包时，无
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci==0.3.4
-python -c "from linxsci import LinxSciClient; print('SDK import OK')"
+python -m pip install -U linxsci==0.3.4
+python -c "import linxsci; print(linxsci.__version__)"
 ```
+
+已有应用环境时，激活后直接执行安装和验证两条命令。验证应输出 `0.3.4`，确认 SDK 可导入及其版本；此检查不需要 API Key，也不调用 API。安装排查与远程下载验证见 [SDK 安装指南](docs/DEVELOPMENT.zh-CN.md#从-pypi-安装)。
 
 Windows 使用 `py -3 -m venv .venv`，并在命令提示符 CMD 中运行 `.venv\Scripts\activate.bat`。从源码安装时，下载或克隆本仓库，在仓库根目录使用应用的 Python 环境执行 `python -m pip install .`。
 
@@ -174,7 +183,7 @@ SDK 返回包含 HTTP 状态、响应头和原始 `body` 的 `Response`；JSON �
 
 PyPI 安装使用 `python -m pip install --upgrade linxsci` 更新。也可在应用环境中运行 `python -m pip install --upgrade /path/to/linxsci-<version>-py3-none-any.whl` 安装新版 wheel，或更新源码后运行 `python -m pip install --upgrade .`。升级后重启长期运行的 Python 进程。
 
-使用 `python -c "from importlib.metadata import version; print(version('linxsci'))"` 检查已安装版本。卸载执行 `python -m pip uninstall linxsci`。删除安装包不会删除应用凭据或撤销 API Key。
+使用 `python -c "import linxsci; print(linxsci.__version__)"` 检查 SDK 导入和版本。卸载执行 `python -m pip uninstall linxsci`。删除安装包不会删除应用凭据或撤销 API Key。
 
 ## API 参考
 

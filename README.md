@@ -64,14 +64,21 @@ See the [Skill user guide](docs/USER_GUIDE.md) for installation options, configu
 
 ### Install and configure
 
-Install from PyPI in a Python environment:
+Requires Python 3.9+. Activate an existing virtual environment; run the creation command below only when you need a new environment:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci==0.3.4
+python -m pip install -U linxsci==0.3.4
+linxsci --version
 linxsci setup
 ```
+
+`linxsci --version` should print `0.3.4`. It requires no API key and makes no API call. The same package installs both the CLI and SDK.
+
+PyPI installation works from any directory. The active `python` determines the installation environment; changing directories does not change virtual environments. Check the interpreter with `python -c "import sys; print(sys.executable)"`. To explicitly use Python 3.10, replace `python` in these commands with `python3.10`.
+
+See the [CLI installation guide](docs/CLI_GUIDE.md#install-from-pypi) for SSL and proxy troubleshooting, pip version-check warnings, and verification of a fresh remote download without cached files.
 
 Alternatively, install from source:
 
@@ -124,9 +131,11 @@ Install from PyPI in the same Python environment that runs your application:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci==0.3.4
-python -c "from linxsci import LinxSciClient; print('SDK import OK')"
+python -m pip install -U linxsci==0.3.4
+python -c "import linxsci; print(linxsci.__version__)"
 ```
+
+If your application already has an environment, activate it and run only the installation and verification commands. Verification should print `0.3.4`, confirming that the SDK imports and reports the expected version. It requires no API key and makes no API call. See the [SDK installation guide](docs/DEVELOPMENT.md#install-from-pypi) for troubleshooting and remote download verification.
 
 On Windows use `py -3 -m venv .venv` and `.venv\Scripts\activate.bat` in Command Prompt. For a source installation, download or clone this repository and run `python -m pip install .` from its root in your application environment.
 
@@ -174,7 +183,7 @@ The SDK returns a `Response` with HTTP status, headers and raw `body`; use `.jso
 
 For a PyPI installation, run `python -m pip install --upgrade linxsci` in your application environment. Install a new wheel with `python -m pip install --upgrade /path/to/linxsci-<version>-py3-none-any.whl` in your application's environment, or update the source and run `python -m pip install --upgrade .`. Restart long-running Python processes after upgrading.
 
-Check the installed version with `python -c "from importlib.metadata import version; print(version('linxsci'))"`. Uninstall with `python -m pip uninstall linxsci`. Package removal does not delete application secrets or revoke API keys.
+Check the SDK import and version with `python -c "import linxsci; print(linxsci.__version__)"`. Uninstall with `python -m pip uninstall linxsci`. Package removal does not delete application secrets or revoke API keys.
 
 ## API reference
 

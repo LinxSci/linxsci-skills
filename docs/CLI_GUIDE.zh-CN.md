@@ -11,8 +11,7 @@ CLI 命令和 Python 包名均为 `linxsci`。基础 AI Skill 名为 `linxsci-ba
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install --index-url https://pypi.org/simple linxsci==0.3.4
+python -m pip install -U linxsci==0.3.4
 linxsci --version
 ```
 
@@ -23,33 +22,62 @@ py -3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-验证应输出 `0.3.4`，此检查不需要 API Key。使用 `python -m pip` 能确保安装到当前解释器对应的环境。
+验证应输出 `0.3.4`，此检查不需要 API Key，也不调用远程 API。`-U` 是 `--upgrade` 的简写。
+
+从 PyPI 安装可在任意目录执行，无需进入源码仓库。安装目标由 `python` 对应的环境决定；切换目录不会切换虚拟环境。查看当前解释器：
+
+```bash
+python -c "import sys; print(sys.executable)"
+```
+
+要明确使用 Python 3.10，将安装和验证命令中的 `python` 替换为 `python3.10`，例如 `python3.10 -m pip install -U linxsci==0.3.4`。始终使用同一解释器安装和运行。
+
+若 `linxsci --version` 提示命令不存在或版本不符，可用 `python -m linxsci.scripts.cli --version` 检查同一 Python 环境，并确认终端命令来自该环境。
 
 随后运行 `linxsci setup` 配置服务。已安装 uv 时，也可使用 `uv tool install linxsci==0.3.4` 隔离安装；这种方式使用 `uv tool upgrade linxsci` 更新，不使用下方虚拟环境的 pip 更新命令。
 
 使用 pip 安装时，在原环境中更新：
 
 ```bash
-python -m pip install --upgrade --index-url https://pypi.org/simple linxsci
+python -m pip install -U linxsci
 linxsci --version
 ```
 
-### 安装时出现 SSL 错误
+### 验证远程下载
 
-`SSLEOFError` 表示 HTTPS 连接失败，不能仅凭它断定安装包有问题。先尝试在当前环境更新 pip；如果 pip 自身无法连接，但已安装的 [uv](https://docs.astral.sh/uv/getting-started/installation/) 可以连接，可在包含 `.venv` 的目录执行：
+需要确认安装包确实从官方 PyPI 下载时，在当前环境执行：
 
 ```bash
-uv pip install --python .venv/bin/python --index-url https://pypi.org/simple --upgrade pip
-.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.4
+python -m pip install --index-url https://pypi.org/simple --no-cache-dir --force-reinstall linxsci==0.3.4
 ```
 
-环境为 `.venv-1` 时替换路径；Windows 使用 `.venv/Scripts/python.exe`。若仍失败，检查网络、代理及证书配置，保持 HTTPS 验证开启，参考 [pip 证书说明](https://pip.pypa.io/en/stable/topics/https-certificates/)。也可从下文的 GitHub 发行附件下载 wheel，在已激活的环境中离线安装：
+`--no-cache-dir` 禁用 pip 缓存；`--force-reinstall` 让已有相同版本的环境也重新下载安装。看到 `Downloading linxsci-0.3.4-py3-none-any.whl` 和 `Successfully installed linxsci-0.3.4` 后，运行上面的版本验证命令。日常安装或升级使用前面的简短命令即可。
+
+### 安装时出现 SSL 错误
+
+`SSLEOFError` 表示 HTTPS 连接失败，不能仅凭它断定安装包有问题。先检查网络、系统代理、代理环境变量及证书配置。`--index-url` 只指定包源，`--no-cache-dir` 只禁用缓存，两者都不会绕过代理；升级 pip 本身也需要可用的下载连接。
+
+如果代理连接异常，且当前网络允许直连官方 PyPI，可在 macOS/Linux 的 Bash 或 Zsh 终端中执行：
+
+```bash
+export NO_PROXY="pypi.org,files.pythonhosted.org${NO_PROXY:+,$NO_PROXY}"
+export no_proxy="pypi.org,files.pythonhosted.org${no_proxy:+,$no_proxy}"
+python -m pip install -U linxsci==0.3.4
+```
+
+前两行将 PyPI 索引和文件下载域名加入代理绕过列表，保留已有条目及 HTTPS 证书验证。它们仅对当前终端及其子进程生效，后续在同一终端可直接使用简短安装命令。需要长期生效时，将两行 `export` 加入当前 shell 的启动文件，例如 Bash 登录 shell 的 `~/.bash_profile` 或 Zsh 的 `~/.zshrc`。普通安装无需默认配置这些变量；网络必须通过代理才能访问 PyPI 时，应修复代理连接。
+
+若仍失败，继续检查网络、代理和证书，参考 [pip 证书说明](https://pip.pypa.io/en/stable/topics/https-certificates/)。也可从下文的 GitHub 发行附件下载 wheel，在已激活的环境中离线安装：
 
 ```bash
 python -m pip install --no-index --no-deps ./linxsci-0.3.4-py3-none-any.whl
 ```
 
-此 wheel 没有额外运行时依赖。从文件所在目录执行，安装后运行上面的版本验证命令。
+此 wheel 没有额外运行时依赖。使用上方相对路径时，从文件所在目录执行；也可换成 wheel 的绝对路径，在任意目录执行。安装后运行上面的版本验证命令。
+
+### pip 自身版本检查警告
+
+如果已经显示 `Successfully installed linxsci-0.3.4`，随后出现 `WARNING: There was an error checking the latest version of pip.`，表示 pip 检查自身更新失败，不会撤销已成功完成的安装。使用上面的命令确认 CLI 或 SDK 版本即可；这项警告不等于 LinxSci API 调用失败。
 
 ## 安装 CLI
 

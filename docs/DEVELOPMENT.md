@@ -11,9 +11,8 @@ Requires Python 3.9+. Install in the environment used by your application. Activ
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install --index-url https://pypi.org/simple linxsci==0.3.4
-python -c "from linxsci import LinxSciClient; from importlib.metadata import version; print(version('linxsci'))"
+python -m pip install -U linxsci==0.3.4
+python -c "import linxsci; print(linxsci.__version__)"
 ```
 
 In Windows Command Prompt, create and activate the environment with these two lines, then run the `python -m pip` and verification commands above:
@@ -23,33 +22,62 @@ py -3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-Verification should print `0.3.4` and requires no API key. Using `python -m pip` targets the active interpreter.
+Verification should print `0.3.4`. It requires no API key and makes no remote API call. `-U` is short for `--upgrade`.
+
+PyPI installation works from any directory and does not require a source checkout. The selected `python` determines the installation environment; changing directories does not change virtual environments. Check the active interpreter:
+
+```bash
+python -c "import sys; print(sys.executable)"
+```
+
+To explicitly use Python 3.10, replace `python` in the installation and verification commands with `python3.10`, for example `python3.10 -m pip install -U linxsci==0.3.4`. Use the same interpreter for installation and execution.
+
+The one-line command above verifies the SDK import and version. CLI and SDK share the same `linxsci` package and need only one installation. There is no separate `linxsci sdk --version` subcommand.
 
 Next, configure `LinxSciClient` in Python as described below. Restart long-running application processes after upgrading.
 
 For a pip installation, update in the original environment:
 
 ```bash
-python -m pip install --upgrade --index-url https://pypi.org/simple linxsci
-python -c "from linxsci import LinxSciClient; from importlib.metadata import version; print(version('linxsci'))"
+python -m pip install -U linxsci
+python -c "import linxsci; print(linxsci.__version__)"
 ```
+
+### Verify a remote download
+
+To confirm that the package is downloaded from official PyPI, run in the active environment:
+
+```bash
+python -m pip install --index-url https://pypi.org/simple --no-cache-dir --force-reinstall linxsci==0.3.4
+```
+
+`--no-cache-dir` disables pip's cache; `--force-reinstall` downloads and installs the package again even when the same version is already installed. After seeing `Downloading linxsci-0.3.4-py3-none-any.whl` and `Successfully installed linxsci-0.3.4`, repeat the version verification above. Use the shorter commands above for routine installation or upgrades.
 
 ### SSL errors during installation
 
-`SSLEOFError` means the HTTPS connection failed; it does not by itself identify a package defect. First try upgrading pip in the affected environment. If pip cannot connect but an installed [uv](https://docs.astral.sh/uv/getting-started/installation/) can, run from the directory containing `.venv`:
+`SSLEOFError` means the HTTPS connection failed; it does not by itself identify a package defect. Check the network, system proxy, proxy environment variables and certificates first. `--index-url` only selects the package index, and `--no-cache-dir` only disables the cache; neither bypasses a proxy. Upgrading pip itself also needs a working download connection.
+
+If a proxy connection is failing and your network allows direct access to official PyPI, run the following in a Bash or Zsh terminal on macOS/Linux:
 
 ```bash
-uv pip install --python .venv/bin/python --index-url https://pypi.org/simple --upgrade pip
-.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.4
+export NO_PROXY="pypi.org,files.pythonhosted.org${NO_PROXY:+,$NO_PROXY}"
+export no_proxy="pypi.org,files.pythonhosted.org${no_proxy:+,$no_proxy}"
+python -m pip install -U linxsci==0.3.4
 ```
 
-Substitute the path for `.venv-1` or another environment; on Windows use `.venv/Scripts/python.exe`. If it still fails, check network, proxy and certificate settings while keeping HTTPS verification enabled; see [pip certificate documentation](https://pip.pypa.io/en/stable/topics/https-certificates/). Alternatively, download the wheel from the GitHub release linked below and install it offline in the activated environment:
+The first two lines add the PyPI index and file download domains to the proxy bypass lists, preserving existing entries and HTTPS certificate verification. They apply only to the current terminal and its child processes; subsequent installations in that terminal can use the short command. To persist them, add both `export` lines to your shell's startup file, such as `~/.bash_profile` for a Bash login shell or `~/.zshrc` for Zsh. Normal installations do not require these variables. If your network requires a proxy to reach PyPI, repair that proxy connection.
+
+If the failure persists, continue checking the network, proxy and certificates; see [pip certificate documentation](https://pip.pypa.io/en/stable/topics/https-certificates/). Alternatively, download the wheel from the GitHub release linked below and install it offline in the activated environment:
 
 ```bash
 python -m pip install --no-index --no-deps ./linxsci-0.3.4-py3-none-any.whl
 ```
 
-This wheel has no additional runtime dependencies. Run from the file’s directory, then repeat the version verification above.
+This wheel has no additional runtime dependencies. The relative path above requires running from the file's directory; an absolute wheel path works from any directory. Repeat the version verification after installation.
+
+### pip version-check warnings
+
+If `Successfully installed linxsci-0.3.4` is followed by `WARNING: There was an error checking the latest version of pip.`, pip failed to check for its own updates. This does not undo the successful installation. Verify the CLI or SDK version with the commands above; this warning does not indicate a LinxSci API call failure.
 
 ## Install from a wheel
 
