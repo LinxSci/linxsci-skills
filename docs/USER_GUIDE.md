@@ -8,13 +8,13 @@ The `linxsci-base` Skill lets you search, read and compare papers in an AI assis
 
 - Python 3.9 or newer.
 - An AI assistant that supports local skills and tool execution.
-- An existing LinxSci API key.
+- A LinxSci API key, available after signing in to the [API key page](https://linxsci.com/open-api?tab=keys). Enter it locally during setup; reuse an existing valid key and configuration.
 
 ## Install the Skill
 
 ### Option 1: Download the installation bundle
 
-Download the [complete Skill bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.3/linxsci-base-0.3.3.zip) and extract it fully before installing.
+Download the [complete Skill bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.4/linxsci-base-0.3.4.zip) and extract it fully before installing.
 
 **macOS**: double-click `Install.command` in the extracted directory. If it cannot be opened that way, open a terminal in that directory and run:
 

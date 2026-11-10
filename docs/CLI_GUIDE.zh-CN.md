@@ -12,7 +12,7 @@ CLI 命令和 Python 包名均为 `linxsci`。基础 AI Skill 名为 `linxsci-ba
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
+python -m pip install --index-url https://pypi.org/simple linxsci==0.3.4
 linxsci --version
 ```
 
@@ -23,9 +23,9 @@ py -3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-验证应输出 `0.3.3`，此检查不需要 API Key。使用 `python -m pip` 能确保安装到当前解释器对应的环境。
+验证应输出 `0.3.4`，此检查不需要 API Key。使用 `python -m pip` 能确保安装到当前解释器对应的环境。
 
-随后运行 `linxsci setup` 配置服务。已安装 uv 时，也可使用 `uv tool install linxsci==0.3.3` 隔离安装；这种方式使用 `uv tool upgrade linxsci` 更新，不使用下方虚拟环境的 pip 更新命令。
+随后运行 `linxsci setup` 配置服务。已安装 uv 时，也可使用 `uv tool install linxsci==0.3.4` 隔离安装；这种方式使用 `uv tool upgrade linxsci` 更新，不使用下方虚拟环境的 pip 更新命令。
 
 使用 pip 安装时，在原环境中更新：
 
@@ -40,23 +40,23 @@ linxsci --version
 
 ```bash
 uv pip install --python .venv/bin/python --index-url https://pypi.org/simple --upgrade pip
-.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
+.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.4
 ```
 
 环境为 `.venv-1` 时替换路径；Windows 使用 `.venv/Scripts/python.exe`。若仍失败，检查网络、代理及证书配置，保持 HTTPS 验证开启，参考 [pip 证书说明](https://pip.pypa.io/en/stable/topics/https-certificates/)。也可从下文的 GitHub 发行附件下载 wheel，在已激活的环境中离线安装：
 
 ```bash
-python -m pip install --no-index --no-deps ./linxsci-0.3.3-py3-none-any.whl
+python -m pip install --no-index --no-deps ./linxsci-0.3.4-py3-none-any.whl
 ```
 
 此 wheel 没有额外运行时依赖。从文件所在目录执行，安装后运行上面的版本验证命令。
 
 ## 安装 CLI
 
-需要 Python 3.9+。从 [发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.3) 下载 wheel，在文件所在目录运行：
+需要 Python 3.9+。从 [发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.4) 下载 wheel，在文件所在目录运行：
 
 ```bash
-uv tool install ./linxsci-0.3.3-py3-none-any.whl
+uv tool install ./linxsci-0.3.4-py3-none-any.whl
 linxsci --version
 ```
 
@@ -82,6 +82,54 @@ linxsci 命令 --help
 ```
 
 不带参数运行 `linxsci` 显示帮助。`--help` 和 `--version` 无需配置、不联网。全局选项必须放在**命令之前**，命令专用参数放在**命令之后**。含空格的值使用引号。相对文件路径以当前工作目录为基准。执行前将 `<...>` 占位参数替换成实际值。
+
+## 自动发现与调用扩展 Skill
+
+从 `0.3.4` 起，基础 CLI 支持按目录约定调用已安装的 Skill。安装支持该机制的基础包后，新增符合约定的 Skill 不需要重新发布基础包，也不需要为 Skill 新增 Python 打包或插件注册文件。
+
+默认父目录为 `~/.agents/skills`。目录必须直接包含完整的 Skill 文件夹及可直接执行的 Python 入口，例如：
+
+```text
+~/.agents/skills/
+  linxsci-paper-qa/
+    SKILL.md
+    scripts/paper_qa.py
+  linxsci-survey/
+    SKILL.md
+    scripts/survey.py
+```
+
+命令名 `<name>` 对应 `linxsci-<name>/scripts/<name>.py`，脚本文件名中的连字符转换为下划线。名称使用小写字母开头，可包含数字和单个连字符分隔的片段。脚本须能直接由 Python 执行。CLI 不递归扫描子目录，也不按当前工作目录搜索。
+
+安装所需 Skill 及其运行依赖后，可从任意目录调用：
+
+```bash
+linxsci paper-qa "<paper_id>" --question "方法如何工作？" --toc-only
+linxsci paper-qa --help
+linxsci --help
+```
+
+总帮助列出发现的可运行 Skill；发现过程不加载或执行 Skill 代码。扩展命令后的参数原样传递，参数名称和含义由 Skill 自己决定。基础 CLI 的 `--pretty` 等全局参数不作用于扩展脚本。
+
+自定义安装位置时，将 `LINXSCI_SKILLS_DIR` 设为包含各 Skill 文件夹的父目录，使用绝对路径。此设置替代默认目录，不是额外增加一个搜索目录。macOS/Linux：
+
+```bash
+export LINXSCI_SKILLS_DIR="/absolute/path/to/skills"
+linxsci paper-qa --help
+```
+
+Windows PowerShell：
+
+```powershell
+$env:LINXSCI_SKILLS_DIR = "C:\path\to\skills"
+linxsci paper-qa --help
+```
+
+基础命令优先。例如 `linxsci paper` 继续读取基础论文接口；调用 `linxsci-paper` Skill 时使用通用入口 `linxsci skill paper ...`。`linxsci skill paper-qa ...` 也可使用；名称之后的参数仍原样交给对应脚本。查看该入口帮助用 `linxsci skill --help`。
+
+CLI 使用当前 Python 解释器执行脚本，保留当前工作目录、标准输入输出、环境配置和退出状态；相对输出路径仍相对于调用目录。扩展依赖应安装在提供当前 `linxsci` 命令的同一环境。基础 CLI 不自动安装依赖；仅复制 Skill 文件不等于安装其 Python 依赖。缺少 Skill 或约定脚本时给出对应路径与安装提示。
+
+已有 Skill 若将基础依赖固定为旧版本，同步其依赖后需确认 `linxsci --version` 仍支持分发；兼容性通过后再更新该 Skill 的依赖约束。首次本地验证可先装 Skill 依赖，再安装支持分发的基础 wheel。
 
 ## 全局选项
 
@@ -159,6 +207,8 @@ linxsci paper "<paper-id>" --param "<contract-key>=<value>" --request-id upstrea
 ## 配置与本地命令
 
 ### setup
+
+尚无 API Key 时，登录 [LinxSci API Key 管理页](https://linxsci.com/open-api?tab=keys) 获取，再通过下面的配置向导在本机输入。已有有效配置可继续复用。
 
 保存服务根地址和 API Key，默认随后调用一次 `/meta` 检查连接，使用 `--no-check` 可跳过。
 

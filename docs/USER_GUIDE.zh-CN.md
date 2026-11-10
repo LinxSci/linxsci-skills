@@ -8,13 +8,13 @@
 
 - Python 3.9 或更新版本。
 - 支持本地 Skill 和工具执行的 AI 助手。
-- 已有的 LinxSci API Key。
+- LinxSci API Key：登录 [API Key 管理页](https://linxsci.com/open-api?tab=keys) 获取，在本机配置时输入；已有有效 Key 和配置可直接复用。
 
 ## 安装 Skill
 
 ### 方式一：下载安装包
 
-下载 [完整 Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.3/linxsci-base-0.3.3.zip)，完整解压后再操作。
+下载 [完整 Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.4/linxsci-base-0.3.4.zip)，完整解压后再操作。
 
 **macOS**：在解压目录双击 `Install.command`。如果无法双击运行，打开终端，进入解压目录后执行：
 

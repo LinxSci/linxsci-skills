@@ -12,13 +12,15 @@ Search academic papers, read sections and citations, explore research entities, 
 
 Requires **Python 3.9+** and an existing LinxSci API key for service calls. No third-party Python runtime dependencies are required. This project (`linxsci-openapi-skills`) provides the `linxsci-base` Skill from `skills/linxsci-base/` and the shared `linxsci` Python package for the CLI and SDK. The public Git repository is `LinxSci/linxsci-skills`; repository, Skill and Python package names serve different purposes.
 
+Sign in to the [LinxSci API key page](https://linxsci.com/open-api?tab=keys) to obtain an API key. Follow the installation and configuration steps below to enter it locally; you can reuse an existing valid key and configuration.
+
 ## AI Skill
 
 The Skill runs its bundled Python scripts independently. Installing the `linxsci` Python package is optional.
 
 ### Install and configure
 
-Download the [Skill installation bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.3/linxsci-base-0.3.3.zip), extract it fully, and double-click `Install.command` on macOS or `Install.bat` on Windows. In a terminal opened in the extracted directory, run:
+Download the [Skill installation bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.4/linxsci-base-0.3.4.zip), extract it fully, and double-click `Install.command` on macOS or `Install.bat` on Windows. In a terminal opened in the extracted directory, run:
 
 ```bash
 python3 install.py
@@ -67,7 +69,7 @@ Install from PyPI in a Python environment:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci==0.3.3
+python -m pip install linxsci==0.3.4
 linxsci setup
 ```
 
@@ -83,7 +85,7 @@ linxsci --version
 linxsci setup
 ```
 
-On Windows create the environment with `py -3 -m venv .venv` and activate it with `.venv\Scripts\activate.bat` in Command Prompt. You can instead install a downloaded wheel with `python -m pip install /path/to/linxsci-0.3.3-py3-none-any.whl`. With uv already installed, `uv tool install /path/to/linxsci-0.3.3-py3-none-any.whl` provides an isolated terminal installation.
+On Windows create the environment with `py -3 -m venv .venv` and activate it with `.venv\Scripts\activate.bat` in Command Prompt. You can instead install a downloaded wheel with `python -m pip install /path/to/linxsci-0.3.4-py3-none-any.whl`. With uv already installed, `uv tool install /path/to/linxsci-0.3.4-py3-none-any.whl` provides an isolated terminal installation.
 
 `linxsci setup` reads your API key using hidden input. The default service root is `https://linxsci.com`, without `/openapi/v2`. `LINXSCI_BASE_URL` and `LINXSCI_OPENAPI_KEY` override saved settings; `LINXSCI_CONFIG_FILE` selects another configuration file. Default settings are stored in `~/.config/linxsci-skills/config.json` on macOS/Linux or `%LOCALAPPDATA%\linxsci-skills\config.json` on Windows.
 
@@ -122,7 +124,7 @@ Install from PyPI in the same Python environment that runs your application:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci==0.3.3
+python -m pip install linxsci==0.3.4
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 

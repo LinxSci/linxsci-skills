@@ -13,13 +13,15 @@ if __package__:
     from .config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
     from .installer import SKILL_NAME, install_skill
     from .output import ResponseOutputError, ResponseViewError, json_text, write_response
+    from .skill_dispatch import run_skill
 else:
     from client import ROUTES, Response, LinxSciClient, LinxSciError, paper_path, segment
     from config import config_path, clear_config, load_config, save_config, service_defaults, validate_url
     from installer import SKILL_NAME, install_skill
     from output import ResponseOutputError, ResponseViewError, json_text, write_response
+    from skill_dispatch import run_skill
 
-VERSION = "0.3.3"
+VERSION = "0.3.4"
 
 SEARCH_COMMANDS = {
     "search": ("/papers/search", "综合论文搜索"),
@@ -174,7 +176,7 @@ def validate_output_options(args):
         raise ValueError("--output-summary requires --output")
     if args.output and transforms:
         raise ValueError("--output saves raw bytes and cannot be combined with --select, --fields, --limit or --table")
-    if args.command in ("setup", "config", "doctor", "routes", "install-skill"):
+    if args.command in ("setup", "config", "doctor", "routes", "install-skill", "skill"):
         if transforms or args.output or args.output_summary:
             raise ValueError("Response selection and file output apply only to endpoint commands")
     if args.select is not None and args.select != "" and not args.select.startswith("/"):
@@ -204,6 +206,11 @@ def build_parser(*, prog=None, human_errors=False):
     parser.add_argument("--framework-request-id", help="设置 X-ANYTHINGRIGHT-REQ-ID，用于定位 LinxSci 框架请求")
     sub = parser.add_subparsers(dest="command", required=True,
                                 parser_class=partial(CLIArgumentParser, human_errors=human_errors))
+    # Share built-in names with the dispatcher instead of maintaining a second list.
+    parser.command_names = sub.choices
+    skill = sub.add_parser("skill", help="运行已安装 Skill，可用于与基础命令重名的扩展")
+    skill.add_argument("skill_name", help="Skill 名称去掉 linxsci- 前缀，例如 paper-qa 或 paper")
+    skill.add_argument("skill_args", nargs=argparse.REMAINDER, help="原样传给 Skill 脚本的参数")
     sub.add_parser("routes", help="列出已知接口，无需配置 Key")
     reader = sub.add_parser("read-output", help="Read and filter a saved response locally; no API call")
     reader.add_argument("file", help="Path of a saved response file")
@@ -267,6 +274,8 @@ def main(argv=None, *, prog=None):
     args = parser.parse_args(argv)
     try:
         validate_output_options(args)
+        if args.command == "skill":
+            return run_skill(args.skill_name, args.skill_args)
         if args.command == "setup":
             return setup(args)
         if args.command == "config":

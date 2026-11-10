@@ -12,7 +12,7 @@ Requires Python 3.9+. Activate an existing virtual environment, or create a new 
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
+python -m pip install --index-url https://pypi.org/simple linxsci==0.3.4
 linxsci --version
 ```
 
@@ -23,9 +23,9 @@ py -3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-Verification should print `0.3.3` and requires no API key. Using `python -m pip` targets the active interpreter.
+Verification should print `0.3.4` and requires no API key. Using `python -m pip` targets the active interpreter.
 
-Next, run `linxsci setup` to configure the service. With uv already installed, `uv tool install linxsci==0.3.3` is an alternative isolated installation; update that installation with `uv tool upgrade linxsci` instead of the virtual-environment pip command below.
+Next, run `linxsci setup` to configure the service. With uv already installed, `uv tool install linxsci==0.3.4` is an alternative isolated installation; update that installation with `uv tool upgrade linxsci` instead of the virtual-environment pip command below.
 
 For a pip installation, update in the original environment:
 
@@ -40,23 +40,23 @@ linxsci --version
 
 ```bash
 uv pip install --python .venv/bin/python --index-url https://pypi.org/simple --upgrade pip
-.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
+.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.4
 ```
 
 Substitute the path for `.venv-1` or another environment; on Windows use `.venv/Scripts/python.exe`. If it still fails, check network, proxy and certificate settings while keeping HTTPS verification enabled; see [pip certificate documentation](https://pip.pypa.io/en/stable/topics/https-certificates/). Alternatively, download the wheel from the GitHub release linked below and install it offline in the activated environment:
 
 ```bash
-python -m pip install --no-index --no-deps ./linxsci-0.3.3-py3-none-any.whl
+python -m pip install --no-index --no-deps ./linxsci-0.3.4-py3-none-any.whl
 ```
 
 This wheel has no additional runtime dependencies. Run from the file’s directory, then repeat the version verification above.
 
 ## Install the CLI
 
-Requires Python 3.9+. Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.3) and run from its directory:
+Requires Python 3.9+. Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.4) and run from its directory:
 
 ```bash
-uv tool install ./linxsci-0.3.3-py3-none-any.whl
+uv tool install ./linxsci-0.3.4-py3-none-any.whl
 linxsci --version
 ```
 
@@ -82,6 +82,54 @@ linxsci COMMAND --help
 ```
 
 `linxsci` without arguments shows help. `--help` and `--version` exit without configuration or network access. Global options go **before** the command; command-specific options go **after** it. Quote values containing spaces. Relative file paths are resolved against the current working directory. Replace `<...>` placeholders before execution.
+
+## Discover and invoke installed Skills
+
+Starting with `0.3.4`, the base CLI invokes installed Skills by a directory convention. Once a compatible base package is installed, adding a conforming Skill requires neither a new base release nor Python packaging or plugin registration files in the Skill.
+
+The default parent directory is `~/.agents/skills`. It must directly contain complete Skill folders and executable Python entry scripts, for example:
+
+```text
+~/.agents/skills/
+  linxsci-paper-qa/
+    SKILL.md
+    scripts/paper_qa.py
+  linxsci-survey/
+    SKILL.md
+    scripts/survey.py
+```
+
+A command `<name>` maps to `linxsci-<name>/scripts/<name>.py`, replacing hyphens with underscores in the script filename. Names start with a lowercase letter and contain lowercase letters, digits, and single hyphen separators. Scripts must support direct Python execution. Discovery is not recursive and does not search the current working directory.
+
+After installing the Skill and its runtime dependencies, invoke it from any directory:
+
+```bash
+linxsci paper-qa "<paper_id>" --question "How does the method work?" --toc-only
+linxsci paper-qa --help
+linxsci --help
+```
+
+Root help lists discovered runnable Skills without loading or executing their code. Arguments after the extension command are forwarded unchanged; each Skill defines its own options. Base global options such as `--pretty` do not apply to extension scripts.
+
+For a custom location, set `LINXSCI_SKILLS_DIR` to the absolute parent directory containing the Skill folders. This replaces the default directory rather than adding another search location. On macOS/Linux:
+
+```bash
+export LINXSCI_SKILLS_DIR="/absolute/path/to/skills"
+linxsci paper-qa --help
+```
+
+On Windows PowerShell:
+
+```powershell
+$env:LINXSCI_SKILLS_DIR = "C:\path\to\skills"
+linxsci paper-qa --help
+```
+
+Built-in commands take precedence. For example, `linxsci paper` continues to call the base paper API. Invoke the `linxsci-paper` Skill with `linxsci skill paper ...`. The explicit form `linxsci skill paper-qa ...` also works; arguments after the name go to the script unchanged. Use `linxsci skill --help` for help with this routing command.
+
+The dispatcher uses the current Python interpreter and preserves the caller's working directory, standard streams, environment configuration, and exit status. Relative output paths remain relative to the caller's directory. Install extension dependencies in the environment providing the current `linxsci` command. The CLI does not install dependencies automatically; copying Skill files does not install their Python dependencies. Missing Skills or entry scripts produce installation and path guidance.
+
+If a Skill pins an older base package, check `linxsci --version` after synchronizing its dependencies. Update that Skill's version constraint only after compatibility validation. For an initial local check, install the Skill dependencies first, then the base wheel with dispatch support.
 
 ## Global options
 
@@ -159,6 +207,8 @@ For a contract-defined multi-value key, repeat `--param "KEY=VALUE1" --param "KE
 ## Configuration and local commands
 
 ### setup
+
+If you do not have an API key, sign in to the [LinxSci API key page](https://linxsci.com/open-api?tab=keys) to obtain one, then enter it locally through the setup command below. Reuse an existing valid configuration.
 
 Save a service root and API key, then check `/meta` unless `--no-check` is supplied.
 

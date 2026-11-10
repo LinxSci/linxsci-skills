@@ -12,13 +12,15 @@
 
 需要 **Python 3.9+**；调用服务时需要已有的 LinxSci API Key。Python 运行时无需第三方依赖。本项目（`linxsci-openapi-skills`）在 `skills/linxsci-base/` 中提供基础 Skill `linxsci-base`，CLI 和 SDK 则由同一个 `linxsci` Python 包提供。公开 Git 仓库为 `LinxSci/linxsci-skills`；仓库名、Skill 名和 Python 包名分别用于不同入口。
 
+登录 [LinxSci API Key 管理页](https://linxsci.com/open-api?tab=keys) 获取 API Key。随后按下方安装与配置说明，在本机输入 Key；已有有效 Key 和配置可直接复用。
+
 ## AI Skill
 
 Skill 可独立运行随附的 Python 脚本，无需先安装 `linxsci` Python 包。
 
 ### 安装与配置
 
-下载 [Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.3/linxsci-base-0.3.3.zip)，完整解压后，在 macOS 双击 `Install.command`，Windows 双击 `Install.bat`。也可以在解压目录打开终端并运行：
+下载 [Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.4/linxsci-base-0.3.4.zip)，完整解压后，在 macOS 双击 `Install.command`，Windows 双击 `Install.bat`。也可以在解压目录打开终端并运行：
 
 ```bash
 python3 install.py
@@ -67,7 +69,7 @@ python3 install.py --update --no-config
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci==0.3.3
+python -m pip install linxsci==0.3.4
 linxsci setup
 ```
 
@@ -83,7 +85,7 @@ linxsci --version
 linxsci setup
 ```
 
-Windows 使用 `py -3 -m venv .venv` 创建环境，在命令提示符 CMD 中运行 `.venv\Scripts\activate.bat` 激活。也可通过 `python -m pip install /path/to/linxsci-0.3.3-py3-none-any.whl` 安装已下载的 wheel。已安装 uv 时，可用 `uv tool install /path/to/linxsci-0.3.3-py3-none-any.whl` 创建隔离的终端工具安装。
+Windows 使用 `py -3 -m venv .venv` 创建环境，在命令提示符 CMD 中运行 `.venv\Scripts\activate.bat` 激活。也可通过 `python -m pip install /path/to/linxsci-0.3.4-py3-none-any.whl` 安装已下载的 wheel。已安装 uv 时，可用 `uv tool install /path/to/linxsci-0.3.4-py3-none-any.whl` 创建隔离的终端工具安装。
 
 `linxsci setup` 通过隐藏输入读取 API Key。默认服务根地址为 `https://linxsci.com`，不添加 `/openapi/v2`。`LINXSCI_BASE_URL` 和 `LINXSCI_OPENAPI_KEY` 优先于保存的设置；`LINXSCI_CONFIG_FILE` 可指定其他配置文件。默认配置位于 macOS/Linux 的 `~/.config/linxsci-skills/config.json`，或 Windows 的 `%LOCALAPPDATA%\linxsci-skills\config.json`。
 
@@ -122,7 +124,7 @@ CLI 与 SDK 通过 `linxsci` 一起安装。应用环境中已有该包时，无
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install linxsci==0.3.3
+python -m pip install linxsci==0.3.4
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 

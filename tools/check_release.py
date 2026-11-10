@@ -51,7 +51,7 @@ def check(directory):
         'SKILL.md', 'SKILL.zh-CN.md', 'references/api.zh-CN.md', 'references/cli.zh-CN.md', 'service.json', 'agents/openai.yaml', 'references/api.md', 'references/cli.md',
         '__init__.py', 'scripts/__init__.py', 'scripts/commands.py',
         'scripts/client.py', 'scripts/config.py', 'scripts/installer.py',
-        'scripts/cli.py', 'scripts/output.py',
+        'scripts/cli.py', 'scripts/output.py', 'scripts/skill_dispatch.py',
     }
     wheel = directory / ('linxsci-' + version + '-py3-none-any.whl')
     sdist = directory / ('linxsci-' + version + '.tar.gz')

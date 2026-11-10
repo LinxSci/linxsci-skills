@@ -21,7 +21,7 @@ def bundle(output):
     skill = ROOT / "skills/linxsci-base"
     files += [skill / "SKILL.md", skill / "SKILL.zh-CN.md", skill / "service.json", skill / "__init__.py"]
     for directory, names in (
-        ("scripts", ("__init__.py", "cli.py", "client.py", "commands.py", "config.py", "installer.py", "output.py")),
+        ("scripts", ("__init__.py", "cli.py", "client.py", "commands.py", "config.py", "installer.py", "output.py", "skill_dispatch.py")),
         ("references", ("api.md", "api.zh-CN.md", "cli.md", "cli.zh-CN.md")),
         ("agents", ("openai.yaml",)),
     ):

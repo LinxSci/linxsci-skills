@@ -12,7 +12,7 @@ Requires Python 3.9+. Install in the environment used by your application. Activ
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
+python -m pip install --index-url https://pypi.org/simple linxsci==0.3.4
 python -c "from linxsci import LinxSciClient; from importlib.metadata import version; print(version('linxsci'))"
 ```
 
@@ -23,7 +23,7 @@ py -3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-Verification should print `0.3.3` and requires no API key. Using `python -m pip` targets the active interpreter.
+Verification should print `0.3.4` and requires no API key. Using `python -m pip` targets the active interpreter.
 
 Next, configure `LinxSciClient` in Python as described below. Restart long-running application processes after upgrading.
 
@@ -40,25 +40,25 @@ python -c "from linxsci import LinxSciClient; from importlib.metadata import ver
 
 ```bash
 uv pip install --python .venv/bin/python --index-url https://pypi.org/simple --upgrade pip
-.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
+.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.4
 ```
 
 Substitute the path for `.venv-1` or another environment; on Windows use `.venv/Scripts/python.exe`. If it still fails, check network, proxy and certificate settings while keeping HTTPS verification enabled; see [pip certificate documentation](https://pip.pypa.io/en/stable/topics/https-certificates/). Alternatively, download the wheel from the GitHub release linked below and install it offline in the activated environment:
 
 ```bash
-python -m pip install --no-index --no-deps ./linxsci-0.3.3-py3-none-any.whl
+python -m pip install --no-index --no-deps ./linxsci-0.3.4-py3-none-any.whl
 ```
 
 This wheel has no additional runtime dependencies. Run from the file’s directory, then repeat the version verification above.
 
 ## Install from a wheel
 
-Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.3) and install it in the same Python environment that runs your application:
+Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.4) and install it in the same Python environment that runs your application:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install ./linxsci-0.3.3-py3-none-any.whl
+python -m pip install ./linxsci-0.3.4-py3-none-any.whl
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 
@@ -76,7 +76,7 @@ python -m pip install -e .
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 
-On Windows activate with `.venv\Scripts\activate`. Use the same environment for installation and execution. For a release wheel, install `linxsci-0.3.3-py3-none-any.whl`.
+On Windows activate with `.venv\Scripts\activate`. Use the same environment for installation and execution. For a release wheel, install `linxsci-0.3.4-py3-none-any.whl`.
 
 The Python distribution and import name are both `linxsci`. Install it in the interpreter used by your application.
 

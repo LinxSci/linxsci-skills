@@ -15,4 +15,4 @@ Choose the guide for the interface you use. In this `linxsci-openapi-skills` pro
 
 The Skill guide uses its standalone installer and assistant workflow. The CLI guide uses terminal commands. The SDK guide uses Python installation and code. Each user guide includes its own update instructions. Publishing credentials are needed only by maintainers, not by users installing packages.
 
-The release guide describes public file exclusions, package contents, build validation, GitHub publication and PyPI uploads. Installation examples use `0.3.3`, which includes the renamed `linxsci-base` Skill. CLI and SDK users upgrade the `linxsci` package; copied Skill installations require a separate update using their original installer.
+The release guide describes public file exclusions, package contents, build validation, GitHub publication and PyPI uploads. Installation examples use `0.3.4`, which includes the renamed `linxsci-base` Skill. CLI and SDK users upgrade the `linxsci` package; copied Skill installations require a separate update using their original installer.

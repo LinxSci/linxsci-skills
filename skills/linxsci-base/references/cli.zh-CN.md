@@ -14,6 +14,56 @@ python3 "<skill-dir>/scripts/cli.py" 命令 --help
 
 不带参数运行 `python3 "<skill-dir>/scripts/cli.py"` 显示帮助。`--help` 和 `--version` 无需配置、不联网。全局选项必须放在**命令之前**，命令专用参数放在**命令之后**。含空格的值使用引号。相对文件路径以当前工作目录为基准，不以 Skill 目录为基准。执行前将 `<...>` 占位参数替换成实际值。
 
+## 自动发现与调用扩展 Skill
+
+从 `0.3.4` 起，基础 CLI 支持按目录约定调用已安装的 Skill。安装支持该机制的基础包后，新增符合约定的 Skill 不需要重新发布基础包，也不需要为 Skill 新增 Python 打包或插件注册文件。
+
+默认父目录为 `~/.agents/skills`。目录必须直接包含完整的 Skill 文件夹及可直接执行的 Python 入口，例如：
+
+```text
+~/.agents/skills/
+  linxsci-paper-qa/
+    SKILL.md
+    scripts/paper_qa.py
+  linxsci-survey/
+    SKILL.md
+    scripts/survey.py
+```
+
+命令名 `<name>` 对应 `linxsci-<name>/scripts/<name>.py`，脚本文件名中的连字符转换为下划线。名称使用小写字母开头，可包含数字和单个连字符分隔的片段。脚本须能直接由 Python 执行。CLI 不递归扫描子目录，也不按当前工作目录搜索。
+
+安装所需 Skill 及其运行依赖后，可从任意目录调用：
+
+```bash
+linxsci paper-qa "<paper_id>" --question "方法如何工作？" --toc-only
+linxsci paper-qa --help
+linxsci --help
+```
+
+总帮助列出发现的可运行 Skill；发现过程不加载或执行 Skill 代码。扩展命令后的参数原样传递，参数名称和含义由 Skill 自己决定。基础 CLI 的 `--pretty` 等全局参数不作用于扩展脚本。
+
+自定义安装位置时，将 `LINXSCI_SKILLS_DIR` 设为包含各 Skill 文件夹的父目录，使用绝对路径。此设置替代默认目录，不是额外增加一个搜索目录。macOS/Linux：
+
+```bash
+export LINXSCI_SKILLS_DIR="/absolute/path/to/skills"
+linxsci paper-qa --help
+```
+
+Windows PowerShell：
+
+```powershell
+$env:LINXSCI_SKILLS_DIR = "C:\path\to\skills"
+linxsci paper-qa --help
+```
+
+基础命令优先。例如 `linxsci paper` 继续读取基础论文接口；调用 `linxsci-paper` Skill 时使用通用入口 `linxsci skill paper ...`。`linxsci skill paper-qa ...` 也可使用；名称之后的参数仍原样交给对应脚本。查看该入口帮助用 `linxsci skill --help`。
+
+CLI 使用当前 Python 解释器执行脚本，保留当前工作目录、标准输入输出、环境配置和退出状态；相对输出路径仍相对于调用目录。扩展依赖应安装在提供当前 `linxsci` 命令的同一环境。基础 CLI 不自动安装依赖；仅复制 Skill 文件不等于安装其 Python 依赖。缺少 Skill 或约定脚本时给出对应路径与安装提示。
+
+已有 Skill 若将基础依赖固定为旧版本，同步其依赖后需确认 `linxsci --version` 仍支持分发；兼容性通过后再更新该 Skill 的依赖约束。首次本地验证可先装 Skill 依赖，再安装支持分发的基础 wheel。
+
+上述扩展调用也可将 `linxsci` 替换为 `python3 "<skill-dir>/scripts/cli.py"`；扩展所需的 SDK 和其他 Python 依赖仍须安装在该解释器环境中。
+
 ## 全局选项
 
 | 参数 | 类型 / 默认值 | 说明 |
@@ -90,6 +140,8 @@ python3 "<skill-dir>/scripts/cli.py" paper "<paper-id>" --param "<contract-key>=
 ## 配置与本地命令
 
 ### setup
+
+尚无 API Key 时，登录 [LinxSci API Key 管理页](https://linxsci.com/open-api?tab=keys) 获取，再通过下面的配置向导在本机输入。已有有效配置可继续复用。
 
 保存服务根地址和 API Key，默认随后调用一次 `/meta` 检查连接，使用 `--no-check` 可跳过。
 

@@ -13,6 +13,8 @@ Use `scripts/cli.py` from `linxsci-base`. Replace `<skill-dir>` with the absolut
 
 This skill does not require the `linxsci` terminal command, the PyPI package, or an installed SDK. It runs its bundled Python scripts directly. You need Python 3.9+, an assistant with local skill discovery and script execution, and a LinxSci API key for service calls.
 
+Sign in to the [LinxSci API key page](https://linxsci.com/open-api?tab=keys) to obtain an API key. Follow the installation and configuration steps below to enter it locally; you can reuse an existing valid key and configuration.
+
 ### Option 1: GitHub skill installer
 
 If Node.js/npx is available, run:

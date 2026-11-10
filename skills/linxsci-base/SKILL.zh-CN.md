@@ -13,6 +13,8 @@ description: 调用 LinxSci OpenAPI v2，支持文献检索、论文内容与引
 
 本 Skill 不依赖终端的 `linxsci` 命令、PyPI 安装包或已安装的 SDK，直接运行随 Skill 提供的 Python 脚本。需要 Python 3.9+、支持本地 Skill 发现及脚本执行的 AI 助手；调用远程服务时还需要已有的 LinxSci API Key。
 
+登录 [LinxSci API Key 管理页](https://linxsci.com/open-api?tab=keys) 获取 API Key。随后按下方安装与配置说明，在本机输入 Key；已有有效 Key 和配置可直接复用。
+
 ### 方式一：GitHub Skill 安装器
 
 本机有 Node.js / npx 时运行：

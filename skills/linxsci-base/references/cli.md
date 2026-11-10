@@ -14,6 +14,56 @@ python3 "<skill-dir>/scripts/cli.py" COMMAND --help
 
 `python3 "<skill-dir>/scripts/cli.py"` without arguments shows help. `--help` and `--version` exit without configuration or network access. Global options go **before** the command; command-specific options go **after** it. Quote values containing spaces. Relative file paths are resolved against the current working directory, not the skill directory. Replace `<...>` placeholders before execution.
 
+## Discover and invoke installed Skills
+
+Starting with `0.3.4`, the base CLI invokes installed Skills by a directory convention. Once a compatible base package is installed, adding a conforming Skill requires neither a new base release nor Python packaging or plugin registration files in the Skill.
+
+The default parent directory is `~/.agents/skills`. It must directly contain complete Skill folders and executable Python entry scripts, for example:
+
+```text
+~/.agents/skills/
+  linxsci-paper-qa/
+    SKILL.md
+    scripts/paper_qa.py
+  linxsci-survey/
+    SKILL.md
+    scripts/survey.py
+```
+
+A command `<name>` maps to `linxsci-<name>/scripts/<name>.py`, replacing hyphens with underscores in the script filename. Names start with a lowercase letter and contain lowercase letters, digits, and single hyphen separators. Scripts must support direct Python execution. Discovery is not recursive and does not search the current working directory.
+
+After installing the Skill and its runtime dependencies, invoke it from any directory:
+
+```bash
+linxsci paper-qa "<paper_id>" --question "How does the method work?" --toc-only
+linxsci paper-qa --help
+linxsci --help
+```
+
+Root help lists discovered runnable Skills without loading or executing their code. Arguments after the extension command are forwarded unchanged; each Skill defines its own options. Base global options such as `--pretty` do not apply to extension scripts.
+
+For a custom location, set `LINXSCI_SKILLS_DIR` to the absolute parent directory containing the Skill folders. This replaces the default directory rather than adding another search location. On macOS/Linux:
+
+```bash
+export LINXSCI_SKILLS_DIR="/absolute/path/to/skills"
+linxsci paper-qa --help
+```
+
+On Windows PowerShell:
+
+```powershell
+$env:LINXSCI_SKILLS_DIR = "C:\path\to\skills"
+linxsci paper-qa --help
+```
+
+Built-in commands take precedence. For example, `linxsci paper` continues to call the base paper API. Invoke the `linxsci-paper` Skill with `linxsci skill paper ...`. The explicit form `linxsci skill paper-qa ...` also works; arguments after the name go to the script unchanged. Use `linxsci skill --help` for help with this routing command.
+
+The dispatcher uses the current Python interpreter and preserves the caller's working directory, standard streams, environment configuration, and exit status. Relative output paths remain relative to the caller's directory. Install extension dependencies in the environment providing the current `linxsci` command. The CLI does not install dependencies automatically; copying Skill files does not install their Python dependencies. Missing Skills or entry scripts produce installation and path guidance.
+
+If a Skill pins an older base package, check `linxsci --version` after synchronizing its dependencies. Update that Skill's version constraint only after compatibility validation. For an initial local check, install the Skill dependencies first, then the base wheel with dispatch support.
+
+The extension examples also work by replacing `linxsci` with `python3 "<skill-dir>/scripts/cli.py"`; install any SDK and other Python dependencies required by the extension in that interpreter environment.
+
 ## Global options
 
 | Option | Type / default | Meaning |
@@ -90,6 +140,8 @@ For a contract-defined multi-value key, repeat `--param "KEY=VALUE1" --param "KE
 ## Configuration and local commands
 
 ### setup
+
+If you do not have an API key, sign in to the [LinxSci API key page](https://linxsci.com/open-api?tab=keys) to obtain one, then enter it locally through the setup command below. Reuse an existing valid configuration.
 
 Save a service root and API key, then check `/meta` unless `--no-check` is supplied.
 

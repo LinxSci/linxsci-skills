@@ -60,7 +60,7 @@ def check(directory, uv=None):
         with tempfile.TemporaryDirectory(prefix="linxsci-smoke-") as temporary:
             root = Path(temporary)
             env = dict(os.environ)
-            for name in ("LINXSCI_BASE_URL", "LINXSCI_OPENAPI_KEY", "LINXSCI_MINERU_API_KEY", "PYTHONPATH"):
+            for name in ("LINXSCI_BASE_URL", "LINXSCI_OPENAPI_KEY", "LINXSCI_MINERU_API_KEY", "LINXSCI_SKILLS_DIR", "PYTHONPATH"):
                 env.pop(name, None)
             env["LINXSCI_CONFIG_FILE"] = str(root / "config.json")
             def run(command, stdin=None):
@@ -87,12 +87,29 @@ def check(directory, uv=None):
                         assert response["data"][0]["query"] == "release coverage"
                     else:
                         assert response["data"]["path"] == "/openapi/v2" + path
+            def check_skill_dispatch(command):
+                # A new folder becomes callable without a Python distribution or registration.
+                parent = root / "extension skills"
+                skill = parent / "linxsci-release-probe"
+                (skill / "scripts").mkdir(parents=True, exist_ok=True)
+                (skill / "SKILL.md").write_text("# Release fixture\n", encoding="utf-8")
+                (skill / "scripts/release_probe.py").write_text(
+                    "import json,os,sys\nprint(json.dumps({'argv':sys.argv[1:],'cwd':os.getcwd()}))\n",
+                    encoding="utf-8")
+                env["LINXSCI_SKILLS_DIR"] = str(parent)
+                arguments = ["--question", "quoted text 中文 $VALUE", "--output", "relative file.json"]
+                assert "release-probe" in run(command + ["--help"])
+                for route in (["release-probe"], ["skill", "release-probe"]):
+                    response = json.loads(run(command + route + arguments))
+                    assert response["argv"] == arguments
+                    assert Path(response["cwd"]).resolve() == root.resolve()
             venv.EnvBuilder(with_pip=True).create(root / "venv")
             python = root / "venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
             run([str(python), "-m", "pip", "install", "--no-index", "--no-deps", str(wheel.resolve())])
             executable = root / "venv" / ("Scripts/linxsci.exe" if os.name == "nt" else "bin/linxsci")
             assert run([str(executable), "--version"]).strip() == version
             cli = [str(executable)]
+            check_skill_dispatch(cli)
             run(cli + ["setup", "--api-key-stdin", "--base-url", base_url], "release-smoke-key\n")
             check_all_routes(cli)
             assert json.loads(run(cli + ["doctor", "--json"]))["ok"]
@@ -137,6 +154,7 @@ def check(directory, uv=None):
             unpacked = next((root / "bundle").iterdir())
             run([str(python), str(unpacked / "install.py"), "--no-config", "--skills-dir", str(root / "zip-skills")])
             installed = root / "zip-skills/linxsci-base/scripts/cli.py"
+            check_skill_dispatch([str(python), str(installed)])
             check_all_routes([str(python), str(installed)])
             assert len(json.loads(run([str(python), str(installed), "routes"]))) == 34
             run([str(python), str(installed), "doctor"])
@@ -150,6 +168,7 @@ def check(directory, uv=None):
                 uv_executable = root / "uv-bin" / ("linxsci.exe" if os.name == "nt" else "linxsci")
                 assert run([str(uv_executable), "--version"]).strip() == version
                 uv_cli = [str(uv_executable)]
+                check_skill_dispatch(uv_cli)
                 check_all_routes(uv_cli)
                 run(uv_cli + ["install-skill", "--skills-dir", str(root / "uv-skills")])
                 uv_skill = root / "uv-skills/linxsci-base/scripts/cli.py"
@@ -163,7 +182,7 @@ def check(directory, uv=None):
         server.shutdown()
         thread.join()
         server.server_close()
-    print("Fresh wheel and ZIP: all 34 convenience routes each, install, configure, connect, SDK, update, legacy migration and clear passed.")
+    print("Fresh wheel and ZIP: Skill discovery/dispatch, all 34 convenience routes each, install, configure, connect, SDK, update, legacy migration and clear passed.")
     if uv:
         print("uv tool install: all 34 convenience routes, bundled Skill install/update and tool uninstall passed in isolated directories.")
 

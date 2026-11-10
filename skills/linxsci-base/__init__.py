@@ -1,5 +1,5 @@
 """LinxSci SDK and self-contained Agent Skill."""
 from .scripts.client import Response, LinxSciClient, LinxSciError
 
-__version__ = "0.3.3"
+__version__ = "0.3.4"
 __all__ = ["Response", "LinxSciClient", "LinxSciError"]

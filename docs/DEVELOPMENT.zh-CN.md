@@ -12,7 +12,7 @@ SDK 与 CLI 由同一个 `linxsci` Python 包提供。继续使用 `from linxsci
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
+python -m pip install --index-url https://pypi.org/simple linxsci==0.3.4
 python -c "from linxsci import LinxSciClient; from importlib.metadata import version; print(version('linxsci'))"
 ```
 
@@ -23,7 +23,7 @@ py -3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-验证应输出 `0.3.3`，此检查不需要 API Key。使用 `python -m pip` 能确保安装到当前解释器对应的环境。
+验证应输出 `0.3.4`，此检查不需要 API Key。使用 `python -m pip` 能确保安装到当前解释器对应的环境。
 
 随后按下文在 Python 中配置 `LinxSciClient`。更新后重启长期运行的应用进程。
 
@@ -40,13 +40,13 @@ python -c "from linxsci import LinxSciClient; from importlib.metadata import ver
 
 ```bash
 uv pip install --python .venv/bin/python --index-url https://pypi.org/simple --upgrade pip
-.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.3
+.venv/bin/python -m pip install --index-url https://pypi.org/simple linxsci==0.3.4
 ```
 
 环境为 `.venv-1` 时替换路径；Windows 使用 `.venv/Scripts/python.exe`。若仍失败，检查网络、代理及证书配置，保持 HTTPS 验证开启，参考 [pip 证书说明](https://pip.pypa.io/en/stable/topics/https-certificates/)。也可从下文的 GitHub 发行附件下载 wheel，在已激活的环境中离线安装：
 
 ```bash
-python -m pip install --no-index --no-deps ./linxsci-0.3.3-py3-none-any.whl
+python -m pip install --no-index --no-deps ./linxsci-0.3.4-py3-none-any.whl
 ```
 
 此 wheel 没有额外运行时依赖。从文件所在目录执行，安装后运行上面的版本验证命令。
@@ -73,10 +73,10 @@ SDK 的公共 Python 入口为 `from linxsci import LinxSciClient`。SDK 将 Pyt
 
 ### 从安装包使用 SDK
 
-从 [GitHub 发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.3)下载 wheel，在自己的 Python 项目环境中安装：
+从 [GitHub 发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.4)下载 wheel，在自己的 Python 项目环境中安装：
 
 ```bash
-python -m pip install /path/to/linxsci-0.3.3-py3-none-any.whl
+python -m pip install /path/to/linxsci-0.3.4-py3-none-any.whl
 ```
 
 Python 安装包名和导入名均为 `linxsci`。将 SDK 安装到应用实际使用的解释器中。源码安装步骤如下。
