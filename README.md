@@ -28,11 +28,40 @@ python3 install.py
 
 On Windows use `py -3 install.py`. The installer copies the complete Skill to `~/.agents/skills/linxsci-base` and guides you through hidden-input key setup. Use `--skills-dir <parent-directory>` for another assistant location. Refresh or restart your assistant after installation.
 
-With Node.js/npx and a compatible Skill installer, you can also run:
+### Install into Codex or another agent with Skills CLI
+
+The [Skills CLI](https://github.com/vercel-labs/skills#readme) requires Node.js 22.20+ and npx. Install from the public repository for your Codex user:
 
 ```bash
-npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base
+npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base -g -a codex
 ```
+
+To install from a downloaded copy of this project, run from its root:
+
+```bash
+npx skills add ./skills/linxsci-base --skill linxsci-base -g -a codex
+```
+
+`-g` makes the Skill available across projects. Omit it for installation into the current project. Replace the agent or specify several:
+
+| Agent | Option |
+| --- | --- |
+| Codex | `-a codex` |
+| Claude Code | `-a claude-code` |
+| Cursor | `-a cursor` |
+| Gemini CLI | `-a gemini-cli` |
+
+```bash
+npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base -g -a codex claude-code cursor
+```
+
+For multiple agents, choose the default Symlink method to share one Skill copy. Use the directories shown by the installer. You can also send this request to an agent with terminal access:
+
+```text
+Install the base Skill using npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base -g -a codex. Check for an existing installation and preserve local changes. Then use the bundled scripts to check configuration; enter the API key interactively on this machine.
+```
+
+`linxsci-base` runs its bundled scripts without installing the Python package. For terminal commands or extension Skills, install `linxsci==0.3.4` using the CLI instructions below. Reload the assistant after installation.
 
 If cloning times out, use the ZIP above. After installation, ask your assistant:
 
@@ -47,6 +76,14 @@ If cloning times out, use the ZIP above. After installation, ask your assistant:
 Replace the PDF path with an accessible local file. Parsing uploads it to your configured service. Ask for the number of papers, response length and language you need; the assistant handles retrieval and presentation.
 
 ### Update and uninstall
+
+For a user installation managed by Skills CLI from the repository:
+
+```bash
+npx skills update linxsci-base -g
+```
+
+For a local installation, update the source project, then repeat the original install command from its root with the same agents and scope. Preserve local changes in the installed copy before replacement.
 
 For copies managed by the bundled installer, extract the new bundle and run from that **new** directory:
 

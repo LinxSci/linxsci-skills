@@ -28,11 +28,40 @@ python3 install.py
 
 Windows 使用 `py -3 install.py`。安装器将完整 Skill 复制到 `~/.agents/skills/linxsci-base`，并引导你在本机隐藏输入 Key。其他助手目录可使用 `--skills-dir <父目录>` 指定。安装后刷新或重启助手。
 
-已有 Node.js/npx 和兼容的 Skill 安装器时，也可以运行：
+### 通过 Skills CLI 安装到 Codex 或其他 Agent
+
+[Skills CLI](https://github.com/vercel-labs/skills#readme) 需要 Node.js 22.20+ 和 npx。从公开仓库安装为 Codex 用户级 Skill：
 
 ```bash
-npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base
+npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base -g -a codex
 ```
+
+从已下载的本项目根目录安装：
+
+```bash
+npx skills add ./skills/linxsci-base --skill linxsci-base -g -a codex
+```
+
+`-g` 表示跨项目的用户级安装，去掉后安装到当前项目。可替换或同时指定多个 Agent：
+
+| Agent | 参数 |
+| --- | --- |
+| Codex | `-a codex` |
+| Claude Code | `-a claude-code` |
+| Cursor | `-a cursor` |
+| Gemini CLI | `-a gemini-cli` |
+
+```bash
+npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base -g -a codex claude-code cursor
+```
+
+多 Agent 安装时可选择默认的 Symlink 方式，共用一份 Skill，以安装器显示的目录为准。也可以在具备终端权限的 Agent 中发送：
+
+```text
+请使用 npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base -g -a codex 安装基础 Skill。检查同名安装并保留已有修改；完成后使用 Skill 随附脚本检查配置，API Key 在本机交互输入。
+```
+
+`linxsci-base` 使用随附脚本，不需要安装 Python 包；需要终端短命令或扩展 Skill 时，再按下方 CLI 部分安装 `linxsci==0.3.4`。安装后重新加载助手。
 
 克隆超时时可改用上方 ZIP。安装后向助手提出：
 
@@ -47,6 +76,14 @@ npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base
 将 PDF 路径替换为助手可以访问的实际文件。解析会将文件上传至配置的服务。说明所需论文数量、回答长度和语言，助手负责检索与整理。
 
 ### 更新与卸载
+
+从仓库通过 Skills CLI 安装的用户级副本，使用：
+
+```bash
+npx skills update linxsci-base -g
+```
+
+本地目录安装的副本，先更新源项目，再从源项目根目录重新执行原安装命令，并沿用 Agent 和安装范围。替换前保留安装目标中的本地修改。
 
 对于自带安装器管理的副本，解压新版安装包，在**新版**目录执行：
 
