@@ -4,6 +4,8 @@
 
 This guide covers source builds, artifact validation and package uploads. User installation and usage are documented in the [README](../README.md).
 
+This guide covers SDK/CLI `0.3.4` and the legacy base installer ZIP. The separately versioned eight-Skill suite uses the [fixed-commit build and suite publication guide](SKILL_RELEASES.md); suite tags use `suite-v<suite-version>` and a separate manifest, independent of the SDK tag workflow below. The flat base ZIP has no root `install.py`; the full suite and source snapshot also differ from the legacy base bundle.
+
 ## Versions and artifacts
 
 This guide uses version `0.3.4`. Before a later release, choose a version not already used on GitHub or PyPI and update the examples and release notes. Never replace published assets or move a published version tag.

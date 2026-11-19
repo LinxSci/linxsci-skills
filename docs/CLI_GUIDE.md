@@ -283,6 +283,10 @@ No command-specific parameters. Print all 34 supported method/path templates loc
 
 ### install-skill
 
+Extension packages use the separate [package installer](SKILL_INSTALLATION.md); it is not a new SDK command.
+
+The current `linxsci install-skill` copies only `linxsci-base` bundled with the installed Python package. It accepts no extension-name argument and does not download Release extensions or install dependencies automatically. Install extensions from matching Release/local packages following their READMEs; installing the SDK does not install extensions.
+
 ```bash
 linxsci install-skill
 linxsci install-skill --skills-dir /absolute/path/to/assistant/skills

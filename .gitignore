@@ -3,6 +3,10 @@
 !/docs/
 !/docs/**
 
+# Extension Skills are independent local repositories; only base belongs here.
+/skills/*
+!/skills/linxsci-base/
+
 # Local settings and credentials; keep the distributable example.
 .env
 .env.*

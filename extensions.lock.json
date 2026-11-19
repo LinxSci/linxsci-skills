@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "purpose": "development-baseline",
+  "extensions": [
+    {
+      "name": "linxsci-idea",
+      "path": "skills/linxsci-idea",
+      "commit": "7586b8921d1cae64590bbeff8a89e6565f26a716",
+      "branch": "main"
+    },
+    {
+      "name": "linxsci-survey",
+      "path": "skills/linxsci-survey",
+      "commit": "3941fff6f9e64f0f192a67e28b03bd40d260cbab",
+      "branch": "main"
+    },
+    {
+      "name": "linxsci-paper-qa",
+      "path": "skills/linxsci-paper-qa",
+      "commit": "9225352b34a7912160564429884f62c86e875f75",
+      "branch": "main"
+    },
+    {
+      "name": "linxsci-paper",
+      "path": "skills/linxsci-paper",
+      "commit": "ee6d3127fb4284c3f72632980ad4190eddd5ab02",
+      "branch": "main"
+    },
+    {
+      "name": "linxsci-ppt",
+      "path": "skills/linxsci-ppt",
+      "commit": "3c445059dfc543e8c9458349004965375636663e",
+      "branch": "main"
+    },
+    {
+      "name": "linxsci-reproduce",
+      "path": "skills/linxsci-reproduce",
+      "commit": "428df3800a176783776a1793f46fae785623e9fa",
+      "branch": "main"
+    },
+    {
+      "name": "linxsci-xiaohongshu",
+      "path": "skills/linxsci-xiaohongshu",
+      "commit": "639c59a41c9c67195927e69909b41348b65f6ee0",
+      "branch": "main"
+    }
+  ]
+}
