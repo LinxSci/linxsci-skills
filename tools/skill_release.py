@@ -258,6 +258,8 @@ def validate_config(lock, recipe, base_commit, sources):
         require(re.fullmatch(r'\d+\.\d+\.\d+', recipe['suite_version']),
                 'Final releases require a stable suite version.')
     require(recipe.get('github_repository') == 'LinxSci/linxsci-skills', 'Unexpected public release repository.')
+    if 'license' in recipe:
+        require(recipe['license'] == {'spdx': 'MIT', 'file': 'LICENSE'}, 'Unsupported suite license.')
     require(set(recipe.get('skills', {})) == set(NAMES), 'Recipe must describe all eight Skills.')
     require(isinstance(sources, dict) and set(sources) == set(NAMES), 'Private mapping must contain all eight source repositories.')
     require(all(isinstance(value, str) and value and not value.startswith('-')
@@ -320,7 +322,18 @@ def sdk_check(data, recipe, base_tree):
     return files
 
 
-def package_note(name, version, entrypoint):
+def license_note(license_spec):
+    if not license_spec:
+        return ''
+    return ('\n## License / 许可\n\n'
+            'Code and Skill instructions use the [MIT License](LICENSE), allowing use, modification, commercial use and redistribution. '
+            'Retain the copyright and permission notice, including when redistributing the SDK wheel. '
+            'API access still requires a valid key and follows service access rules. Third-party materials retain their own licenses.\n\n'
+            '代码与 Skill 指令采用 [MIT 许可证](LICENSE)，允许使用、修改、商业使用和再分发。'
+            '再分发（包括 SDK wheel）时保留版权声明和许可文本。API 仍需有效 Key 并遵守服务访问规则，第三方材料保留其原许可。\n')
+
+
+def package_note(name, version, entrypoint, license_spec=None):
     return (f"# {name} — {version}\n\n"
             "Obtain the fixed suite assets from "
             "https://github.com/LinxSci/linxsci-skills/releases. Verify its manifest, SHA256SUMS and ZIP identity. "
@@ -357,7 +370,7 @@ def package_note(name, version, entrypoint):
             "packages omit tests. Third-party libraries, fonts and production tools are not bundled.\n\n"
             "更新重新取得并核验包、保护已有修改；不用 git pull，不承诺本地 npx 自动更新。符号链接目标长期保留。"
             "测试需要源码快照或维护者源码，单项/完整包不含测试，也不包含第三方库、字体或外部制作环境。\n\n"
-            "See [Skill instructions](SKILL.md).\n").encode('utf-8')
+            "See [Skill instructions](SKILL.md).\n" + license_note(license_spec)).encode('utf-8')
 
 
 def make_skill(name, tree, main_tree, commit, recipe, manifest_url, installer_data=None):
@@ -368,6 +381,9 @@ def make_skill(name, tree, main_tree, commit, recipe, manifest_url, installer_da
         tree = {path[len(prefix):]: item for path, item in main_tree.items() if path.startswith(prefix)}
     files = {path: item for path, item in tree.items()
              if path in SINGLE_FILES or path.split('/')[0] in SINGLE_DIRS}
+    if recipe.get('license'):
+        require('LICENSE' in main_tree and files.get('LICENSE') == main_tree['LICENSE'],
+                'Missing or inconsistent Skill LICENSE: ' + name)
     generated = {}
     if installer_data is not None:
         require(INSTALLER_PATH not in files, 'Generated installer path conflicts with source.')
@@ -376,7 +392,7 @@ def make_skill(name, tree, main_tree, commit, recipe, manifest_url, installer_da
     require('SKILL.md' in files and spec['entrypoint'] in files, 'Incomplete Skill: ' + name)
     require(re.search(r'^name:\s*' + re.escape(name) + r'\s*$', files['SKILL.md'][0].decode(), re.M),
             'SKILL.md name mismatch: ' + name)
-    note = package_note(name, version, spec['entrypoint'])
+    note = package_note(name, version, spec['entrypoint'], recipe.get('license'))
     if name == 'linxsci-base':
         files['README.md'] = (note, 0o644)
         files['README.zh-CN.md'] = (note, 0o644)
@@ -399,6 +415,8 @@ def make_skill(name, tree, main_tree, commit, recipe, manifest_url, installer_da
                 'files': inventory(files)}
     if generated:
         identity['generated_files'] = generated
+    if recipe.get('license'):
+        identity['license'] = recipe['license']
     files['release.json'] = (encoded(identity), 0o644)
     markdown_links(files)
     return files, identity
@@ -411,6 +429,7 @@ def build(lock_path, recipe_path, sources_path, base_commit, sdk_wheel, output, 
     validate_config(lock, recipe, base_commit, sources)
     require((recipe['status'] == 'release') == release_mode,
             'Final recipe requires --release; candidate recipe must not use --release.')
+    require(not release_mode or recipe.get('license'), 'Final releases require an explicit license.')
     require(not output.exists(), 'Output already exists; select a new asset directory.')
     require(sdk_wheel.name == recipe['sdk']['file'], 'Unexpected wheel filename.')
     wheel_data = sdk_wheel.read_bytes()
@@ -443,6 +462,10 @@ def build(lock_path, recipe_path, sources_path, base_commit, sdk_wheel, output, 
         sdk_files = sdk_check(wheel_data, recipe, main_tree)
         check_private(sdk_files, markers)
         assets = {sdk_wheel.name: wheel_data}
+        if recipe.get('license'):
+            require('LICENSE' in main_tree and main_tree['LICENSE'][0].startswith(b'MIT License\n'),
+                    'Missing main MIT LICENSE.')
+            assets['LICENSE'] = main_tree['LICENSE'][0]
         records, packages = {}, {}
         for name in NAMES:
             files, identity = make_skill(name, trees[name], main_tree, commits[name], recipe, manifest_url,
@@ -462,6 +485,8 @@ def build(lock_path, recipe_path, sources_path, base_commit, sdk_wheel, output, 
                     'skills': records,
                     'bundles': {'full': 'linxsci-skills-' + version + '-full.zip',
                                 'source': 'linxsci-skills-' + version + '-source.zip'}}
+        if recipe.get('license'):
+            manifest['license'] = {**recipe['license'], 'artifact': artifact('LICENSE', assets['LICENSE'], root_url)}
         manifest_data = encoded(manifest)
         assets['release-manifest.json'] = manifest_data
         guide = ('# LinxSci suite ' + version + '\n\n'
@@ -489,9 +514,12 @@ def build(lock_path, recipe_path, sources_path, base_commit, sdk_wheel, output, 
                  'promise remote updates; Symlink targets must persist. Help checks do not prove research completion.\n\n'
                  '平铺包无根目录 install.py；开发测试需源码快照或维护者源码。完整套件不是第三方依赖、字体和实验工具的离线环境。'
                  '更新重新核验包，不用 git pull，不承诺本地 npx 自动更新；链接目标长期保留，帮助通过不等于业务完成。\n').encode()
+        guide += license_note(recipe.get('license')).encode('utf-8')
         full = {'README.md': (guide, 0o644), 'README.zh-CN.md': (guide, 0o644),
                 'release-manifest.json': (manifest_data, 0o644),
                 'wheels/' + sdk_wheel.name: (wheel_data, 0o644)}
+        if recipe.get('license'):
+            full['LICENSE'] = main_tree['LICENSE']
         for name, files in packages.items():
             full.update({'skills/' + name + '/' + path: item for path, item in files.items()})
             filename = records[name]['artifact']['file']
@@ -557,7 +585,15 @@ def check(directory):
     require(all(SHA.fullmatch(commit) for commit in manifest['sources'].values()), 'Invalid source commit.')
     expected = {'release-manifest.json', 'SHA256SUMS', manifest['sdk']['artifact']['file'], *manifest['bundles'].values()}
     expected.update(record['artifact']['file'] for record in manifest['skills'].values())
-    require(len(expected) == 13 and {p.name for p in directory.iterdir()} == expected, 'Wrong candidate asset set.')
+    license_spec = None
+    if 'license' in manifest:
+        notice = manifest['license']
+        require(isinstance(notice, dict) and set(notice) == {'spdx', 'file', 'artifact'}
+                and notice['spdx'] == 'MIT' and notice['file'] == 'LICENSE', 'Invalid suite license identity.')
+        license_spec = {'spdx': notice['spdx'], 'file': notice['file']}
+        expected.add('LICENSE')
+    require(len(expected) == (14 if license_spec else 13)
+            and {p.name for p in directory.iterdir()} == expected, 'Wrong candidate asset set.')
     sums = {}
     for line in (directory / 'SHA256SUMS').read_text().splitlines():
         fields = line.split('  ', 1)
@@ -567,6 +603,11 @@ def check(directory):
         require(sha256((directory / name).read_bytes()) == digest, 'Checksum mismatch: ' + name)
         sums[name] = digest
     require(set(sums) == expected - {'SHA256SUMS'}, 'Incomplete checksums.')
+    license_data = None
+    if license_spec:
+        license_data = (directory / 'LICENSE').read_bytes()
+        require(manifest['license']['artifact'] == artifact('LICENSE', license_data, root_url)
+                and license_data.startswith(b'MIT License\n'), 'License artifact mismatch.')
     packages = {}
     for name, record in manifest['skills'].items():
         asset = record['artifact']
@@ -584,6 +625,9 @@ def check(directory):
                 and record['name'] == name and record['version'] == version and record['suite_version'] == version
                 and record['source']['commit'] == manifest['sources'][name]
                 and record['manifest_url'] == manifest['manifest_url'], 'Skill provenance mismatch.')
+        require(record.get('license') == license_spec, 'Skill license metadata mismatch.')
+        if license_spec:
+            require(files.get('LICENSE') == (license_data, 0o644), 'Skill license differs from suite notice.')
         markdown_links(files)
         packages[name] = files
     sdk_asset = manifest['sdk']['artifact']
@@ -596,6 +640,9 @@ def check(directory):
     require(full['release-manifest.json'][0] == (directory / 'release-manifest.json').read_bytes(), 'Full bundle manifest mismatch.')
     require(full['wheels/' + sdk_asset['file']][0] == wheel_data, 'Full bundle wheel mismatch.')
     expected_full = {'README.md', 'README.zh-CN.md', 'release-manifest.json', 'wheels/' + sdk_asset['file']}
+    if license_spec:
+        expected_full.add('LICENSE')
+        require(full.get('LICENSE') == (license_data, 0o644), 'Full bundle license mismatch.')
     for name, files in packages.items():
         filename = manifest['skills'][name]['artifact']['file']
         require(full['packages/' + filename][0] == (directory / filename).read_bytes(), 'Embedded package mismatch.')
@@ -610,12 +657,15 @@ def check(directory):
     prefix = 'linxsci-skills-' + version + '-source/'
     require(all(path.startswith(prefix) for path in source), 'Wrong source snapshot root.')
     source = {path[len(prefix):]: item for path, item in source.items()}
+    if license_spec:
+        require(source.get('LICENSE') == (license_data, 0o644), 'Source license mismatch.')
     require(source['release-manifest.json'][0] == (directory / 'release-manifest.json').read_bytes(), 'Source manifest mismatch.')
     inputs = {path[len('release/build-inputs/'):]: item for path, item in source.items() if path.startswith('release/build-inputs/')}
     require(inventory(inputs) == manifest['build_inputs'], 'Build recipe snapshot mismatch.')
     lock = json_bytes(inputs['extensions.lock.json'][0])
     recipe = json_bytes(inputs['suite.json'][0])
     validate_config(lock, recipe, manifest['sources']['linxsci-base'], {name: 'unused' for name in NAMES})
+    require(recipe.get('license') == license_spec, 'Recipe license mismatch.')
     require(recipe['status'] == manifest['status'] and recipe['suite_version'] == version
             and recipe['sdk'] == {k: v for k, v in manifest['sdk'].items() if k != 'artifact'}, 'Recipe metadata mismatch.')
     require({row['name']: row['commit'] for row in lock['extensions']} == {name: commit for name, commit in manifest['sources'].items() if name != 'linxsci-base'}, 'Source lock mismatch.')

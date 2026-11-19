@@ -17,9 +17,9 @@ def bundle(output):
     output.mkdir(parents=True, exist_ok=True)
     target = output / ("linxsci-base-" + version + ".zip")
     # Explicit allowlist prevents accidentally shipping local settings or credentials.
-    files = [ROOT / name for name in ("install.py", "Install.command", "Install.bat")]
+    files = [ROOT / name for name in ("install.py", "Install.command", "Install.bat", "LICENSE")]
     skill = ROOT / "skills/linxsci-base"
-    files += [skill / "SKILL.md", skill / "SKILL.zh-CN.md", skill / "service.json", skill / "__init__.py"]
+    files += [skill / name for name in ("SKILL.md", "SKILL.zh-CN.md", "service.json", "__init__.py", "LICENSE")]
     for directory, names in (
         ("scripts", ("__init__.py", "cli.py", "client.py", "commands.py", "config.py", "installer.py", "output.py", "skill_dispatch.py")),
         ("references", ("api.md", "api.zh-CN.md", "cli.md", "cli.zh-CN.md")),

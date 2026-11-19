@@ -23,6 +23,7 @@ def plan(directory, installation_report, notes):
     require(summary['status'] == 'release' and summary['published'], 'Publication requires final release assets.')
     manifest_data = (directory / 'release-manifest.json').read_bytes()
     manifest = json_bytes(manifest_data)
+    require(manifest.get('license', {}).get('spdx') == 'MIT', 'Publication requires the suite MIT license asset.')
     files = sorted(p.name for p in directory.iterdir())
     asset_hashes = {name: sha256((directory / name).read_bytes()) for name in files}
     report = json_bytes(installation_report.read_bytes())

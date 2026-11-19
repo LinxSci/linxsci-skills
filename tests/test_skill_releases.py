@@ -26,6 +26,7 @@ class ReleaseTests(unittest.TestCase):
         cls.fixture = tempfile.TemporaryDirectory(prefix='linxsci-release-fixture-')
         cls.fixture_root = Path(cls.fixture.name)
         cls.recipe_template = json.loads((release.ROOT / 'release/suite.json').read_text())
+        cls.license_text = (release.ROOT / 'LICENSE').read_text()
         cls.commits = {}
         for name in release.NAMES:
             repo = cls.fixture_root / name
@@ -33,6 +34,7 @@ class ReleaseTests(unittest.TestCase):
             cls.git(repo, 'init', '--quiet')
             root = repo / 'skills/linxsci-base' if name == 'linxsci-base' else repo
             files = {
+                'LICENSE': cls.license_text,
                 'SKILL.md': '---\nname: ' + name + '\n---\n[Guide](references/guide.md)\n',
                 'references/guide.md': '# Guide\n[Instructions](../SKILL.md)\n',
                 cls.recipe_template['skills'][name]['entrypoint']: 'print("fixture help")\n',
@@ -48,6 +50,7 @@ class ReleaseTests(unittest.TestCase):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(content)
             if name == 'linxsci-base':
+                (repo / 'LICENSE').write_text(cls.license_text)
                 (repo / 'pyproject.toml').write_text('[project]\nname = "linxsci"\nversion = "0.3.4"\n')
                 (repo / 'README.md').write_text('[Base](skills/linxsci-base/SKILL.md)\n')
             cls.git(repo, 'add', '.')
@@ -113,7 +116,7 @@ class ReleaseTests(unittest.TestCase):
         self.build(second)
         self.assertEqual({p.name: p.read_bytes() for p in self.output.iterdir()},
                          {p.name: p.read_bytes() for p in second.iterdir()})
-        self.assertEqual(release.check(self.output)['assets'], 13)
+        self.assertEqual(release.check(self.output)['assets'], 14)
         for name, source in self.sources.items():
             self.assertEqual(before[name], (Path(source, '.git/index').read_bytes(),
                                            self.git(source, 'rev-parse', 'HEAD')))
@@ -150,6 +153,60 @@ class ReleaseTests(unittest.TestCase):
         row['commit'] = self.git(repo, 'rev-parse', 'HEAD').strip()
         with self.assertRaisesRegex(release.ReleaseError, 'conflicts with source'):
             self.build()
+
+    def test_license_travels_with_every_distribution_without_rewriting_sdk(self):
+        manifest = self.build()
+        notice = self.license_text.encode()
+        self.assertEqual((self.output / 'LICENSE').read_bytes(), notice)
+        self.assertEqual(manifest['license']['artifact']['sha256'], release.sha256(notice))
+        self.assertEqual((self.output / self.wheel.name).read_bytes(), self.wheel.read_bytes())
+        for name, record in manifest['skills'].items():
+            files = release.zip_items((self.output / record['artifact']['file']).read_bytes())
+            with self.subTest(skill=name):
+                self.assertEqual(files['LICENSE'][0], notice)
+                self.assertEqual(record['license'], {'spdx': 'MIT', 'file': 'LICENSE'})
+                self.assertIn(b'[MIT License](LICENSE)', files['PACKAGE.md'][0])
+        full = release.zip_items((self.output / manifest['bundles']['full']).read_bytes())
+        source = release.zip_items((self.output / manifest['bundles']['source']).read_bytes())
+        prefix = 'linxsci-skills-' + manifest['suite_version'] + '-source/'
+        self.assertEqual(full['LICENSE'][0], notice)
+        self.assertEqual(source[prefix + 'LICENSE'][0], notice)
+        for name in release.NAMES:
+            self.assertEqual(source[prefix + 'skills/' + name + '/LICENSE'][0], notice)
+
+    def test_missing_or_different_skill_license_rejects_fixed_source(self):
+        repo = Path(self.sources['linxsci-idea'])
+        row = next(r for r in self.lock['extensions'] if r['name'] == 'linxsci-idea')
+        for notice in (None, 'Different terms\n'):
+            if notice is None:
+                (repo / 'LICENSE').unlink()
+            else:
+                (repo / 'LICENSE').write_text(notice)
+            self.git(repo, 'add', '-A')
+            self.git(repo, 'commit', '--quiet', '-m', 'Invalid license fixture')
+            row['commit'] = self.git(repo, 'rev-parse', 'HEAD').strip()
+            with self.subTest(notice=notice), self.assertRaisesRegex(release.ReleaseError, 'Skill LICENSE'):
+                self.build()
+            self.assertFalse(self.output.exists())
+
+    def test_license_artifact_cannot_be_replaced_with_only_new_checksums(self):
+        self.build()
+        (self.output / 'LICENSE').write_text(self.license_text + '\nChanged terms\n')
+        self.refresh_sums()
+        with self.assertRaisesRegex(release.ReleaseError, 'License artifact mismatch'):
+            release.check(self.output)
+
+    def test_final_build_requires_license(self):
+        self.recipe.update(status='release', suite_version='0.0.1')
+        self.recipe.pop('license')
+        with self.assertRaisesRegex(release.ReleaseError, 'explicit license'):
+            self.build(release_mode=True)
+        self.assertFalse(self.output.exists())
+
+    def test_legacy_candidate_without_license_metadata_remains_checkable(self):
+        self.recipe.pop('license')
+        self.build()
+        self.assertEqual(release.check(self.output)['assets'], 13)
 
     def test_final_assets_have_consistent_state_and_are_reproducible(self):
         self.recipe.update(status='release', suite_version='0.0.1')

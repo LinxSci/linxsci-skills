@@ -31,11 +31,16 @@ def synthetic_assets(root):
         spec = recipe['skills'][name]
         tree = {'SKILL.md': (('---\nname: ' + name + '\n---\n').encode(), 0o644),
                 spec['entrypoint']: (b'import argparse\nargparse.ArgumentParser().parse_args()\n', 0o644)}
+        if recipe.get('license'):
+            tree['LICENSE'] = ((release.ROOT / 'LICENSE').read_bytes(), 0o644)
         if name != 'linxsci-base':
             tree['requirements.txt'] = (b'linxsci==0.3.4\n', 0o644)
         if name == 'linxsci-survey':
             tree['scripts/survey_workflow.py'] = (b'def prepare_survey(): pass\ndef record(): pass\ndef paper_path(): pass\n', 0o644)
-        files, identity = release.make_skill(name, tree, {'skills/linxsci-base/' + k: v for k, v in tree.items()},
+        main_tree = {'skills/linxsci-base/' + k: v for k, v in tree.items()}
+        if 'LICENSE' in tree:
+            main_tree['LICENSE'] = tree['LICENSE']
+        files, identity = release.make_skill(name, tree, main_tree,
                                              '0' * 40, recipe, url + 'release-manifest.json')
         filename = name + ('-skill-' if name == 'linxsci-base' else '-') + recipe['suite_version'] + '.zip'
         data = release.zip_bytes(files)

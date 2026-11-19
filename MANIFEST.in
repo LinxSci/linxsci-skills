@@ -1,3 +1,5 @@
+include LICENSE
+include skills/linxsci-base/LICENSE
 include install.py Install.command Install.bat
 include README.zh-CN.md .env.example
 include extensions.lock.json

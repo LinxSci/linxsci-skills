@@ -3,6 +3,7 @@
   "suite_version": "0.1.0-rc.1",
   "status": "candidate",
   "github_repository": "LinxSci/linxsci-skills",
+  "license": {"spdx": "MIT", "file": "LICENSE"},
   "sdk": {
     "name": "linxsci",
     "version": "0.3.4",

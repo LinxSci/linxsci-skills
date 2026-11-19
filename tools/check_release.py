@@ -90,8 +90,12 @@ def check(directory):
         expected_bundle = {prefix + 'skills/linxsci-base/' + name for name in expected}
         expected_bundle.update(prefix + name for name in (
             'install.py', 'Install.command', 'Install.bat', 'README.md', 'README.zh-CN.md',
+            'LICENSE', 'skills/linxsci-base/LICENSE',
         ))
         assert names == expected_bundle, 'Unexpected or missing standalone bundle files'
+        notice = (ROOT / 'LICENSE').read_bytes()
+        assert archive.read(prefix + 'LICENSE') == notice, 'Missing or stale bundle license'
+        assert archive.read(prefix + 'skills/linxsci-base/LICENSE') == notice, 'Inconsistent base Skill license'
         assert not any(name.startswith(prefix + 'docs/') for name in names), 'Skill ZIP must not include CLI/SDK or maintainer guides'
         for language in ('', '.zh-CN'):
             guide = (ROOT / ('docs/USER_GUIDE' + language + '.md')).read_text(encoding='utf-8')

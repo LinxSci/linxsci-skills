@@ -36,7 +36,7 @@ If the development checkout retains changes deferred from this release, use a cl
 
 ZIP ordering, timestamps, modes and compression settings are fixed. Identical inputs reproduce identical bytes with the same Python/zlib toolchain; cross-toolchain compression equivalence has not been verified. Intermediate failures leave no candidate directory. Only a completely validated set is moved into the output location.
 
-## Output: 13 files
+## Output: 14 files
 
 | Asset | Contents |
 | --- | --- |
@@ -46,17 +46,20 @@ ZIP ordering, timestamps, modes and compression settings are fixed. Identical in
 | `linxsci-skills-0.1.0-rc.1-source.zip` | One root directory containing the eight pinned source trees, allowed tests/tools and a separate build-input snapshot |
 | `linxsci-0.3.4-py3-none-any.whl` | Existing SDK/CLI, unchanged |
 | `release-manifest.json` | Public version, commits, dependency conditions, asset sizes, planned URLs and individual checksums |
-| `SHA256SUMS` | SHA256 of the other 12 assets |
+| `LICENSE` | MIT copyright and permission notice; retain it with standalone SDK wheel downloads and redistributions |
+| `SHA256SUMS` | SHA256 of the other 13 assets |
 
 Single packages explicitly select root instructions, READMEs, requirements, licenses and related files, plus `scripts/`, `references/`, `agents/`, `assets/` and `tools/`. Tests are source-snapshot only. Snapshots select tracked Git files and exclude Git metadata, local configuration, environments, caches, build output and `docs/local/`. Links, nested repositories and unsafe/conflicting archive paths are rejected; actual private source addresses are scanned. `.env.example` is allowed, real environment files are excluded.
 
 `release/build-inputs/` in the source snapshot preserves the exact lock, recipe, build, check, smoke, package-installation acceptance and publication tools plus shared `tools/skill_install.py`, with hashes in manifest `build_inputs`. These are explicitly separate from the pinned main commit, allowing review of a candidate built with uncommitted new tooling. To rebuild, use that builder with explicit `--lock`, `--recipe` and all other inputs. Private-source access remains necessary for rebuilding. Git history and uncommitted developer changes are absent.
 
+The final recipe declares `license: {"spdx": "MIT", "file": "LICENSE"}`. The builder requires matching MIT notices in the main repository, base Skill and seven extensions. Single packages, the full suite and source snapshot retain them. A separate Release `LICENSE` accompanies the unchanged SDK 0.3.4 wheel; the old wheel is not rewritten. API access rules and third-party material licenses remain separate from the project's MIT license.
+
 ## Metadata and verification
 
 The public manifest and each package's `release.json` use schema 1. They record source commits, package identity, Python/SDK requirements and conditional Skill dependencies. Idea's `feature / fresh-evidence` dependency on Survey applies when fresh evidence is needed. `workflow` relationships apply to the specified collaboration, rather than making every collaborator an unconditional installation dependency.
 
-The manifest hashes the eight individual ZIPs and wheel, and names both bundles. Because bundles embed the manifest, their final hashes live in outer `SHA256SUMS` to avoid circular hashes. The checker verifies the complete asset set, individual inventories, embedded packages, expanded directories, source files, build-input snapshots and SDK consistency. Markdown relative file targets are checked; anchor names and public network availability are not. Checksums are integrity checks, not publisher signatures.
+The manifest hashes the eight individual ZIPs, wheel and standalone LICENSE, and names both bundles. Because bundles embed the manifest, their final hashes live in outer `SHA256SUMS` to avoid circular hashes. The checker verifies the complete asset set, individual inventories, embedded packages, expanded directories, source files, build-input snapshots and SDK consistency. Markdown relative file targets are checked; anchor names and public network availability are not. Checksums are integrity checks, not publisher signatures.
 
 Candidate recipes use `status: candidate` and produce `published: false`. Final recipes use `status: release`, a stable suite version and an explicit `--release` build flag; all final assets consistently use `status: release` / `published: true`. This describes the payload prepared for publication: build output still reports `uploaded: false` and does not claim remote availability. The checker and installer reject contradictory states; public installation requires final metadata. Package identities, embedded manifests and checksums are produced together, never by manually changing only the outer JSON.
 
@@ -85,7 +88,7 @@ python tools/verify_skill_installation.py "dist/suite-$SUITE_VERSION" \
   --report ".local/release-checks/install-$SUITE_VERSION.json"
 ```
 
-The installation verifier also accepts newly built candidates. It first runs all eight Skills' help/discovery checks in single packages, the full bundle and source snapshot. It then starts outside the source tree from the single Idea ZIP, installs the bundled SDK offline and obtains Survey through the explicit loopback HTTP test entry. It checks refusal, suite identity, 404/timeouts/interruption, corrupt/unsafe ZIPs, rollback, local edits, download-free reuse, original-task continuation and follow-up using a local mock API. Existing evidence must remain reusable without Survey or downloads. Required scenarios fail instead of skipping. The report binds the manifest and all 13 asset hashes.
+The installation verifier also accepts newly built candidates. It first runs all eight Skills' help/discovery checks in single packages, the full bundle and source snapshot. It then starts outside the source tree from the single Idea ZIP, installs the bundled SDK offline and obtains Survey through the explicit loopback HTTP test entry. It checks refusal, suite identity, 404/timeouts/interruption, corrupt/unsafe ZIPs, rollback, local edits, download-free reuse, original-task continuation and follow-up using a local mock API. Existing evidence must remain reusable without Survey or downloads. Required scenarios fail instead of skipping. The report binds the manifest and all 14 asset hashes.
 
 Production HTTPS source selection is exercised with local transport substitution, not anonymous network downloads. User subprocesses need no Git, private credentials or development source. Reports must be new files outside the assets directory. Running the verifier requires Python 3.10+, venv and loopback listeners. Run it from the main project or source snapshot; single packages omit tests.
 
@@ -101,7 +104,7 @@ python tools/publish_skill_releases.py "dist/suite-$SUITE_VERSION" \
   --notes-file "docs/releases/suite-v$SUITE_VERSION.md"
 ```
 
-Once publication is authorized, push the real main-project commit and matching `suite-v<version>` tag to the public repository. The tag must resolve to the manifest's base source commit. With GitHub CLI installed and maintainer authentication configured, append `--upload-draft` to the command: it creates a new draft, uploads 13 files, downloads them and verifies the complete asset set and bytes. Existing releases are not overwritten. If an upload fails, inspect the remaining draft; the tool does not delete or replace it.
+Once publication is authorized, push the real main-project commit and matching `suite-v<version>` tag to the public repository. The tag must resolve to the manifest's base source commit. With GitHub CLI installed and maintainer authentication configured, append `--upload-draft` to the command: it creates a new draft, uploads 14 files, downloads them and verifies the complete asset set and bytes. Existing releases are not overwritten. If an upload fails, inspect the remaining draft; the tool does not delete or replace it.
 
 After draft review, append `--publish` to the same command. It rechecks the tag and remote draft bytes before making it public. Already public releases are rejected, and SDK latest is not moved. The two write flags are mutually exclusive; without either, the command only plans locally.
 

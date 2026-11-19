@@ -7,6 +7,7 @@ name = "linxsci"
 version = "0.3.4"
 description = "LinxSci OpenAPI v2 CLI and Python client"
 readme = "README.md"
+license = {file = "LICENSE"}
 requires-python = ">=3.9"
 dependencies = []
 

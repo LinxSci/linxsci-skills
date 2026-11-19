@@ -259,3 +259,9 @@ Check the SDK import and version with `python -c "import linxsci; print(linxsci.
 POST fields, pagination and PDF task states follow the selected endpoint's contract. Preserve returned IDs and request trace IDs. After an uncertain execution or billing result such as `-3905`, check the operation's status before repeating uploads or task creation.
 
 See [HTTP endpoints, authentication and errors](docs/API.md). Each linked guide includes its Chinese edition.
+
+## License
+
+The code and Skill instructions are licensed under the [MIT License](LICENSE), allowing use, modification, commercial use and redistribution. Retain the copyright and permission notice when redistributing.
+
+LinxSci API access requires a valid API key and remains subject to the service's access rules; this software license does not change API authorization, quotas or billing. Third-party dependencies and retrieved papers, images and other materials retain their own licenses.
