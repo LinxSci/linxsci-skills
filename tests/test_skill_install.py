@@ -78,7 +78,7 @@ class AssetsHandler(BaseHTTPRequestHandler):
         self.end_headers()
         try:
             self.wfile.write(data[:10] if self.server.mode == 'interrupted' else data)
-        except (BrokenPipeError, ConnectionResetError):
+        except ConnectionError:
             pass
 
 

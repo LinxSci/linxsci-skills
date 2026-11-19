@@ -14,6 +14,7 @@ import stat
 import subprocess
 import tempfile
 from urllib.parse import unquote, urlsplit
+from urllib.request import url2pathname
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -167,7 +168,8 @@ def git(repo, *arguments, env=None, input=None):
 
 
 def check_local_source(source):
-    local = Path(unquote(urlsplit(source).path) if source.startswith('file://') else source)
+    # File URLs contain /C:/... on Windows; unquoting alone is not a native path.
+    local = Path(url2pathname(urlsplit(source).path) if source.startswith('file://') else source)
     if not local.is_dir():
         return
     if git(local, 'rev-parse', '--is-bare-repository').strip() == b'true':

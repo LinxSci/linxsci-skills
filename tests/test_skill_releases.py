@@ -333,10 +333,26 @@ class ReleaseTests(unittest.TestCase):
 
     def test_file_url_does_not_bypass_dirty_check(self):
         repo = Path(self.sources['linxsci-base'])
+        relocated = self.root / 'base source % encoded'
+        repo.rename(relocated)
+        repo = relocated
+        index = (repo / '.git/index').read_bytes()
         (repo / 'uncommitted.txt').write_text('Keep me')
         self.sources['linxsci-base'] = repo.as_uri()
         with self.assertRaisesRegex(release.ReleaseError, 'uncommitted'):
             self.build()
+        self.assertEqual(index, (repo / '.git/index').read_bytes())
+        self.assertEqual((repo / 'uncommitted.txt').read_text(), 'Keep me')
+        self.assertFalse(self.output.exists())
+
+    def test_clean_file_url_with_escaped_path_fetches_fixed_commit(self):
+        repo = Path(self.sources['linxsci-base'])
+        relocated = self.root / 'base source % encoded'
+        repo.rename(relocated)
+        files = release.fetch_tree(relocated.as_uri(), self.commits['linxsci-base'],
+                                   self.root / 'clean-file-url-checkout')
+        self.assertEqual(files['LICENSE'][0], self.license_text.encode())
+        self.assertEqual(files['skills/linxsci-base/scripts/cli.py'][0], b'print("fixture help")\n')
 
     def test_checkout_line_endings_do_not_change_git_blob_inputs(self):
         git = release.git

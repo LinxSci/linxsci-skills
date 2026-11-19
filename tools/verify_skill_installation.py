@@ -47,7 +47,7 @@ class FixtureHandler(BaseHTTPRequestHandler):
         self.end_headers()
         try:
             self.wfile.write(data[:10] if mode == 'interrupted' else data)
-        except (BrokenPipeError, ConnectionResetError):
+        except ConnectionError:
             pass
 
     def do_POST(self):
