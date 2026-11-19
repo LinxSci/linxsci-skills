@@ -36,6 +36,7 @@ def smoke(directory):
         env = {key: value for key, value in os.environ.items()
                if not key.startswith(('LINXSCI_', 'PYTHON', 'PIP_'))}
         env.update({'PATH': str(binary), 'PYTHONDONTWRITEBYTECODE': '1', 'PYTHONNOUSERSITE': '1',
+                    'PYTHONUTF8': '1',
                     'PIP_CONFIG_FILE': os.devnull, 'PIP_DISABLE_PIP_VERSION_CHECK': '1',
                     'LINXSCI_CONFIG_FILE': str(root / 'unused-config.json'),
                     'LINXSCI_SKILLS_DIR': str(root / 'installed')})
@@ -45,7 +46,7 @@ def smoke(directory):
 
         def run(label, args):
             result = subprocess.run([str(arg) for arg in args], cwd=work, env=env,
-                                    capture_output=True, text=True, timeout=60)
+                                    capture_output=True, text=True, encoding='utf-8', timeout=60)
             require(result.returncode == 0, 'Smoke check failed: ' + label + '\n' + result.stderr[-1200:])
             checks.append(label)
             return result.stdout

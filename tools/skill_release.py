@@ -346,6 +346,7 @@ def package_note(name, version, entrypoint, license_spec=None):
             "The standard-library installer is bundled at scripts/linxsci_release_install.py. It installs one explicitly "
             "selected package, validates metadata, files, environment and help, and never invokes Git, installs Python dependencies "
             "or recursively installs collaborators. Prepare requirements in the same interpreter first.\n\n"
+            + windows_encoding_note() +
             "```bash\npython scripts/linxsci_release_install.py --help\n"
             f"python {entrypoint} --help\n```\n\n"
             "Use --skill NAME with --assets-dir PATH for a local asset directory, or --manifest-url URL and --suite-version VERSION "
@@ -373,6 +374,15 @@ def package_note(name, version, entrypoint, license_spec=None):
             "更新重新取得并核验包、保护已有修改；不用 git pull，不承诺本地 npx 自动更新。符号链接目标长期保留。"
             "测试需要源码快照或维护者源码，单项/完整包不含测试，也不包含第三方库、字体或外部制作环境。\n\n"
             "See [Skill instructions](SKILL.md).\n" + license_note(license_spec)).encode('utf-8')
+
+
+def windows_encoding_note():
+    return ("On Windows, enable Python UTF-8 before SDK/Skill commands: PowerShell `$env:PYTHONUTF8 = '1'`, "
+            "or Command Prompt `set PYTHONUTF8=1`. Agents capturing output should pass `PYTHONUTF8=1` "
+            "and decode it as UTF-8; this avoids legacy encoding errors for Chinese help/JSON with SDK 0.3.4.\n\n"
+            "Windows 执行 SDK/Skill 前启用 Python UTF-8：PowerShell 用 `$env:PYTHONUTF8 = '1'`，"
+            "命令提示符用 `set PYTHONUTF8=1`。Agent 捕获输出时传入 `PYTHONUTF8=1` 并按 UTF-8 解码，"
+            "避免 SDK 0.3.4 的中文帮助/JSON 遇到旧编码错误；无需修改全局配置。\n\n")
 
 
 def make_skill(name, tree, main_tree, commit, recipe, manifest_url, installer_data=None):
@@ -516,6 +526,7 @@ def build(lock_path, recipe_path, sources_path, base_commit, sdk_wheel, output, 
                  'promise remote updates; Symlink targets must persist. Help checks do not prove research completion.\n\n'
                  '平铺包无根目录 install.py；开发测试需源码快照或维护者源码。完整套件不是第三方依赖、字体和实验工具的离线环境。'
                  '更新重新核验包，不用 git pull，不承诺本地 npx 自动更新；链接目标长期保留，帮助通过不等于业务完成。\n').encode()
+        guide += windows_encoding_note().encode('utf-8')
         guide += license_note(recipe.get('license')).encode('utf-8')
         full = {'README.md': (guide, 0o644), 'README.zh-CN.md': (guide, 0o644),
                 'release-manifest.json': (manifest_data, 0o644),

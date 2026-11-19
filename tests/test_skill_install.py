@@ -142,6 +142,18 @@ class InstallTests(unittest.TestCase):
         self.assertFalse((self.target.parent / 'linxsci-paper').exists())
         self.assertEqual(list(self.target.parent.glob('.linxsci-package-*')), [])
 
+    def test_unicode_help_under_legacy_pipe_encoding(self):
+        folder = self.root / 'unicode-help'
+        folder.mkdir()
+        # Reproduce a Windows legacy pipe on every host, unless UTF-8 mode is enabled.
+        (folder / 'cli.py').write_text(
+            "import argparse, sys\n"
+            "assert sys.flags.isolated\n"
+            "if not sys.flags.utf8_mode: sys.stdout.reconfigure(encoding='cp1252')\n"
+            "argparse.ArgumentParser(description='中文帮助与安装').parse_args()\n", encoding='utf-8')
+        with patch.dict(os.environ, {'PYTHONUTF8': '0', 'PYTHONIOENCODING': 'cp1252'}):
+            install.validate_runtime(folder, {'name': 'linxsci-base', 'entrypoint': 'cli.py'})
+
     def test_same_suite_requester_is_required(self):
         requester = self.root / 'requester.json'
         identity = {k: v for k, v in self.manifest['skills']['linxsci-idea'].items() if k != 'artifact'}

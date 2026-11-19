@@ -34,6 +34,8 @@ python scripts/linxsci_release_install.py --skill linxsci-survey \
 
 维护者在主工程根目录使用相同参数，将入口换为 `python tools/skill_install.py`。若所选包没有随附模块，按该包 README 手动安装完整目录。Windows 可使用所选环境的 `python` 或明确的 Python 可执行文件；命令参数相同。
 
+Windows 在执行 SDK/Skill 命令前，应在当前终端或 Agent 子进程环境中启用 Python UTF-8，尤其是捕获或重定向包含中文的帮助、JSON 输出时。PowerShell 使用 `$env:PYTHONUTF8 = '1'`，命令提示符使用 `set PYTHONUTF8=1`。Agent 应向子进程传入 `PYTHONUTF8=1`，并按 UTF-8 解码捕获的文本。该设置适用于现有 SDK 0.3.4，无需修改全局配置。
+
 省略 `--destination` 时，目标为绝对 `LINXSCI_SKILLS_DIR` 下的 Skill 名称目录，未设置则为 `~/.agents/skills/<名称>`。它只控制 CLI 发现；助手的实际扫描位置需单独配置并刷新。不要把临时目录作为持久 Symlink 目标。
 
 ## Idea → Survey 与结果判断
@@ -61,6 +63,6 @@ python scripts/install_survey.py --assets-dir "/absolute/path/to/suite-assets" \
 
 安装器记录 `.linxsci-release-install.json`，保存固定清单和来源哈希；受管、未修改的同版本副本可离线复用。手动展开的包可提供原清单后核验复用。缺少元数据、内容有修改、文件残缺、版本不符或目标为符号链接时保留目录并停止，不提供强制覆盖参数。
 
-新装先验证临时目录，再排他预留目标；并发出现的目标不会被覆盖。POSIX 使用目录切换，Windows 使用排他文件写入并最后写入安装记录；失败清理自身创建的内容，保留其他进程新增的文件。Windows 分支有故障注入检查，尚需实际 Windows 平台验收。
+新装先验证临时目录，再排他预留目标；并发出现的目标不会被覆盖。POSIX 使用目录切换，Windows 使用排他文件写入并最后写入安装记录；失败清理自身创建的内容，保留其他进程新增的文件。原生平台验收须使用实际发行资产，包含安装、失败回退和本地修改保护检查。
 
 更新使用明确的新版本包和独立目标目录，核验后由使用者处理旧目录、本地修改与助手发现配置。备份放在助手扫描目录外；不对 Release 副本执行 git pull，不承诺本地 npx 安装自动跟踪远程更新。

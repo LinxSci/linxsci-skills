@@ -34,6 +34,8 @@ The asset directory must contain the same version's `release-manifest.json`, `SH
 
 Maintainers running from the main repository root use `python tools/skill_install.py` with the same arguments. If the selected package has no bundled module, follow its README to install the complete directory manually. Windows can use the selected environment’s `python` or an explicit interpreter path with the same arguments.
 
+On Windows, enable UTF-8 for Python in the shell or Agent child-process environment before running the SDK/Skill commands, especially when capturing or redirecting Chinese help or JSON output. In PowerShell use `$env:PYTHONUTF8 = '1'`; in Command Prompt use `set PYTHONUTF8=1`. Agents should pass `PYTHONUTF8=1` to child processes and decode captured text as UTF-8. This applies to the existing SDK 0.3.4 and requires no global settings change.
+
 Without `--destination`, the target is the Skill name under absolute `LINXSCI_SKILLS_DIR`, or `~/.agents/skills/<name>` by default. Configure and refresh the actual Agent separately; CLI discovery does not configure Agent discovery. Keep Symlink targets outside temporary directories.
 
 ## Idea → Survey and results
@@ -61,6 +63,6 @@ These are installer statuses. Idea's research command still prints guidance and 
 
 The installer writes `.linxsci-release-install.json` with the fixed manifest and provenance hash. An unchanged managed copy can be reused offline; a manually extracted package can be verified against its original manifest. Missing metadata, edits, incomplete files, version mismatch or a symlink destination cause a stop with existing files preserved. There is no force-overwrite option.
 
-New installation validates a temporary directory and reserves a new destination exclusively. Concurrently created targets are preserved. POSIX uses a directory switch; Windows uses exclusive file creation with the receipt written last. Failure removes the installer's own content and preserves files introduced by another writer. The Windows branch has fault-injection coverage but still needs native Windows acceptance.
+New installation validates a temporary directory and reserves a new destination exclusively. Concurrently created targets are preserved. POSIX uses a directory switch; Windows uses exclusive file creation with the receipt written last. Failure removes the installer's own content and preserves files introduced by another writer. Native platform acceptance must use the exact release assets, including installation, failure rollback and local-edit preservation checks.
 
 Updates use an explicit new version and a separate destination. After validation, the user handles the old copy, edits and Agent discovery configuration. Keep backups outside discovery directories. Release copies do not use git pull, and local npx installs do not promise remote updates.

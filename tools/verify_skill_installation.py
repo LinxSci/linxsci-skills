@@ -100,7 +100,7 @@ def verify(directory):
 
         def run(label, arguments, expected=0):
             result = subprocess.run([str(a) for a in arguments], cwd=work, env=env, stdin=subprocess.DEVNULL,
-                                    capture_output=True, text=True, timeout=60)
+                                    capture_output=True, text=True, encoding='utf-8', timeout=60)
             require(result.returncode == expected,
                     'Installation acceptance failed: ' + label + '\n' + (result.stdout + result.stderr)[-1500:])
             checks.append({'check': label, 'exit': result.returncode})

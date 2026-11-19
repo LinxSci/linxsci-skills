@@ -309,12 +309,13 @@ def directory_files(folder):
 def validate_runtime(folder, record, timeout=30):
     env = {k: v for k, v in os.environ.items() if not k.startswith('LINXSCI_') and k not in ('PYTHONPATH', 'PYTHONHOME')}
     env['PYTHONDONTWRITEBYTECODE'] = '1'
-    commands = [[sys.executable, '-B', '-I', '-c',
+    # Isolated mode ignores PYTHONUTF8; set it explicitly for captured Unicode help.
+    commands = [[sys.executable, '-B', '-I', '-X', 'utf8', '-c',
         "import runpy,sys; from pathlib import Path; p=Path(sys.argv[1]); "
         "sys.path.insert(0,str(p.parent)); sys.argv=[str(p),'--help']; runpy.run_path(str(p),run_name='__main__')",
         str(folder / record['entrypoint'])]]
     if record['name'] == 'linxsci-survey':
-        commands.append([sys.executable, '-B', '-I', '-c',
+        commands.append([sys.executable, '-B', '-I', '-X', 'utf8', '-c',
             "import importlib.util,sys; from pathlib import Path; p=Path(sys.argv[1])/'scripts/survey_workflow.py'; "
             "s=importlib.util.spec_from_file_location('survey_install_check',p); m=importlib.util.module_from_spec(s); "
             "s.loader.exec_module(m); assert all(callable(getattr(m,n,None)) for n in ('prepare_survey','record','paper_path'))", str(folder)])
