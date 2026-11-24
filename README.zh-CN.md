@@ -48,7 +48,7 @@ python3 install.py
 
 Windows 使用 `py -3 install.py`。安装器将完整 Skill 复制到 `~/.agents/skills/linxsci-base`，并引导你在本机隐藏输入 Key。其他助手目录可使用 `--skills-dir <父目录>` 指定。安装后刷新或重启助手。
 
-`v0.3.5` 安装包已包含本文的扩展指南与安装提示。已有旧版 base 的用户，使用新版安装包更新并刷新助手后，即可使用这些引导。
+已发布的 `v0.3.5` 安装包包含扩展安装引导，但包内指南仍描述当时的扩展 0.3.4 基线；安装时以目标仓库实际 requirements 为准。下方更新后的源码指南需要未来新的 base 版本才会进入下载包，已有 0.3.5 发布文件保持不变。
 
 ### 通过 Skills CLI 安装到 Codex 或其他 Agent
 
@@ -83,7 +83,7 @@ npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base -g
 请使用 npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base -g -a codex 安装基础 Skill。检查同名安装并保留已有修改；完成后使用 Skill 随附脚本检查配置，API Key 在本机交互输入。
 ```
 
-`linxsci-base` 使用随附脚本，不需要安装 Python 包；需要终端短命令时，按下方 CLI 部分安装 `linxsci==0.3.5`。扩展 Skill 按各自 requirements 准备环境；仍固定 SDK `0.3.4` 的扩展使用单独的兼容环境，详见[扩展指南](skills/linxsci-base/references/extensions.zh-CN.md)。安装后重新加载助手。
+`linxsci-base` 使用随附脚本，不需要安装 Python 包；需要终端短命令时，按下方 CLI 部分安装 `linxsci==0.3.5`。已适配的扩展源码锁定 SDK `0.3.5`，可共用符合依赖的环境（全部七个共用时为 Python 3.10+）。以下载仓库实际 requirements 为准：公开副本可能尚未包含本轮修改，仍固定 `0.3.4` 的旧副本使用独立兼容环境。源码和依赖的协调更新见[扩展指南](skills/linxsci-base/references/extensions.zh-CN.md)。安装后重新加载助手。
 
 克隆超时时可改用上方 ZIP。安装后向助手提出：
 

@@ -54,9 +54,9 @@
 
 ### Python 依赖与制作工具
 
-当前扩展依赖 `linxsci==0.3.4`。Survey、Idea、Paper QA、Paper、PPT 和 Reproduce 使用 Python 3.9+；小红书要求 Python 3.10+、PyMuPDF、Pillow 和支持内容语言的字体。实际操作先读目标仓库当时的 requirements。Word/LaTeX、演示文稿制作和复现实验的额外工具按各自 Skill 检查。
+已适配的扩展源码依赖 `linxsci==0.3.5`。Survey、Idea、Paper QA、Paper、PPT 和 Reproduce 使用 Python 3.9+；小红书要求 Python 3.10+、PyMuPDF、Pillow 和支持内容语言的字体。实际操作先读目标仓库当时的 requirements。Word/LaTeX、演示文稿制作和复现实验的额外工具按各自 Skill 检查。
 
-base `0.3.5` 的随附脚本可独立运行，不要求扩展同步升级 SDK。若已有 CLI/SDK 环境使用 `0.3.5`，为仍固定 `0.3.4` 的扩展复用或创建单独环境，使用该环境的 Python 和 CLI 执行扩展；不要直接在已有环境中安装这些 requirements 导致降级，也不要绕过依赖约束。
+base `0.3.5` 的随附脚本可独立运行，无需 SDK。已适配的扩展可复用符合依赖的 CLI/SDK 0.3.5 环境，七个扩展全部共用时使用 Python 3.10+。公开仓库副本可能尚未完成适配，以实际 requirements 为准；仍固定 0.3.4 的旧副本保留独立兼容环境。已发布 0.3.5 ZIP/wheel 仍包含原指南，本修订指南需未来新的 base 版本才会进入正式包。
 
 复用兼容环境，或在 Skill 目录之外创建虚拟环境。依赖安装与执行使用同一解释器，将路径换成实际位置：
 
@@ -94,4 +94,4 @@ Idea 只有新取证或补查才需要 Survey；沿用 Idea 已有的 `scripts/i
 
 ## 更新扩展
 
-先保留本地修改。Git 克隆使用 `git pull --ff-only`；Skills CLI 从仓库安装的用户级副本，例如使用 `npx skills update linxsci-paper -g`。本地目录安装先更新长期保留的源码，再重新执行安装；手动副本从同一仓库获取完整源码更新。同步 requirements、验证实际入口并刷新发现。Python 包更新和 base 更新不会更新扩展文件。
+先保留本地修改。Git 克隆使用 `git pull --ff-only`；Skills CLI 从仓库安装的用户级副本，例如使用 `npx skills update linxsci-paper -g`。本地目录安装先更新长期保留的源码，再重新执行安装；手动副本从同一仓库获取完整源码更新。协调更新共用环境的扩展源码，Idea 与 Survey 配对更新，并用同一解释器安装各自实际 requirements。保留配置及任务/证据文件。只更新 Python 包会留下旧 Skill 的检查，只更新源码则会留下旧依赖。核对 Python/CLI 路径、SDK 版本、发现目录和实际入口后刷新 Agent。base 更新不会更新扩展文件。

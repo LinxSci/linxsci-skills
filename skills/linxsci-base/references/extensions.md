@@ -54,9 +54,9 @@ Keep symlink targets in persistent locations. Git or Skills CLI is not required 
 
 ### Python dependencies and tools
 
-Current extensions require `linxsci==0.3.4`. Survey, Idea, Paper QA, Paper, PPT and Reproduce use Python 3.9+; Xiaohongshu requires Python 3.10+, PyMuPDF, Pillow and fonts supporting the content language. Read the current target requirements before acting. Word/LaTeX production, presentation production and reproduction experiments have additional tools described by their respective Skills.
+Adapted extension source requires `linxsci==0.3.5`. Survey, Idea, Paper QA, Paper, PPT and Reproduce use Python 3.9+; Xiaohongshu requires Python 3.10+, PyMuPDF, Pillow and fonts supporting the content language. Read the current target requirements before acting. Word/LaTeX production, presentation production and reproduction experiments have additional tools described by their respective Skills.
 
-Base `0.3.5` runs its bundled scripts independently and does not require extensions to upgrade their SDK. If an existing CLI/SDK environment uses `0.3.5`, reuse or create a separate environment for extensions still pinned to `0.3.4`, and run them with that environment's Python and CLI. Do not downgrade the existing environment by installing those requirements into it or bypass the dependency constraints.
+Base `0.3.5` runs its bundled scripts independently, without requiring the SDK. Adapted extensions can reuse a compatible CLI/SDK 0.3.5 environment; use Python 3.10+ for all seven together. Public repository copies may not yet include this adaptation: follow their actual requirements and keep old copies pinned to 0.3.4 in a separate compatible environment. The published 0.3.5 ZIP/wheel still contains the original guide. This revised guide will require a future base release to reach official bundles.
 
 Reuse a compatible environment or create a virtual environment outside Skill folders. Install dependencies with the same interpreter used for execution, substituting the real requirements path:
 
@@ -94,4 +94,4 @@ Idea needs Survey only for fresh retrieval or supplementary searches; use Idea's
 
 ## Update an extension
 
-Preserve local changes first. For Git clones use `git pull --ff-only`; for user-level Skills CLI repository installs use, for example, `npx skills update linxsci-paper -g`. Update persistent local sources before repeating local installation; update manual copies from complete source from the same repository. Recheck requirements and the actual Skill entrypoint, then refresh discovery. Python package updates and base updates do not update extension files.
+Preserve local changes first. For Git clones use `git pull --ff-only`; for user-level Skills CLI repository installs use, for example, `npx skills update linxsci-paper -g`. Update persistent local sources before repeating local installation; update manual copies from complete source from the same repository. Coordinate source updates for extensions sharing an environment, including Idea and Survey together, and install each actual requirements file with the same interpreter. Preserve configuration and task/evidence files. Updating only the Python package leaves old Skill checks, while updating only source leaves old dependencies. Recheck Python/CLI paths, SDK version, discovery and the actual Skill entrypoint, then refresh the Agent. Base updates do not update extension files.

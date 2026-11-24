@@ -48,7 +48,7 @@ python3 install.py
 
 On Windows use `py -3 install.py`. The installer copies the complete Skill to `~/.agents/skills/linxsci-base` and guides you through hidden-input key setup. Use `--skills-dir <parent-directory>` for another assistant location. Refresh or restart your assistant after installation.
 
-The `v0.3.5` bundle includes the extension guide and installation prompts described here. Update an older base installation using the new bundle and refresh your assistant to use this guidance.
+The published `v0.3.5` bundle includes extension onboarding, but its bundled guide still describes the earlier 0.3.4 extension baseline. Follow the target repository’s actual requirements. The revised source guidance below will reach download bundles in a future base release; existing 0.3.5 assets remain unchanged.
 
 ### Install into Codex or another agent with Skills CLI
 
@@ -83,7 +83,7 @@ For multiple agents, Symlink can share one Skill copy. Use the directories repor
 Install the base Skill using npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base -g -a codex. Check for an existing installation and preserve local changes. Then use the bundled scripts to check configuration; enter the API key interactively on this machine.
 ```
 
-`linxsci-base` runs its bundled scripts without installing the Python package. For terminal commands, install `linxsci==0.3.5` using the CLI instructions below. Prepare extension environments according to their requirements; use a separate compatible environment for extensions still pinned to SDK `0.3.4`, as described in the [extension guide](skills/linxsci-base/references/extensions.md). Reload the assistant after installation.
+`linxsci-base` runs its bundled scripts without installing the Python package. For terminal commands, install `linxsci==0.3.5` using the CLI instructions below. Adapted extension source pins SDK `0.3.5` and can share a compatible environment (Python 3.10+ for all seven). Read the downloaded repository’s actual requirements: public copies may not yet include these changes, and old copies pinned to `0.3.4` need their own compatible environment. See the [extension guide](skills/linxsci-base/references/extensions.md) for coordinated source and dependency updates. Reload the assistant after installation.
 
 If cloning times out, use the ZIP above. After installation, ask your assistant:
 

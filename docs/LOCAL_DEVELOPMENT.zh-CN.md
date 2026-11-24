@@ -38,6 +38,8 @@ linxsci --help
 linxsci skill survey --help
 ```
 
+上面的可编辑安装用于源码联调：主仓库版本 0.3.5 满足已适配扩展的 `linxsci==0.3.5` 精确约束。先检查各副本实际 requirements，此处不代表公开仓库已经更新。可编辑安装不能作为正式包兼容证据；独立验收应另建环境，使用正式 0.3.5 wheel 或 PyPI 包。仍需 0.3.4 的旧扩展保留独立兼容环境。
+
 仅使用基础工程不要求检出七个扩展，也不需要小红书的依赖文件。各扩展依赖应以其实际 requirements 和发布约束为准。
 
 已有工作区可使用本机 `.local/activate.sh` 和 `.local/linxsci-skills.code-workspace`。编辑器工作区显式列出七个独立仓库，便于分别提交。`.local/` 内配置不随主仓库提交。

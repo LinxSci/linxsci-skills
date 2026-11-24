@@ -38,6 +38,8 @@ linxsci --help
 linxsci skill survey --help
 ```
 
+The editable command above is for source development: main source version 0.3.5 satisfies the adapted extensions’ exact `linxsci==0.3.5` pin. Read each checkout’s actual requirements; this does not assert that public repositories already contain the adaptation. Editable installation is not release compatibility evidence: run independent acceptance in separate environments using the official 0.3.5 wheel or PyPI. Keep old extensions requiring 0.3.4 in their own compatible environments.
+
 The base project alone does not require extension checkouts or Xiaohongshu dependencies. Follow the actual requirements and published compatibility constraints of each extension.
 
 Existing local checkouts can use `.local/activate.sh` and `.local/linxsci-skills.code-workspace`. The editor workspace explicitly lists the seven independent repositories for separate commits. Files under `.local/` are not committed.
