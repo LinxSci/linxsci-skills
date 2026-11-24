@@ -1,6 +1,6 @@
 ---
 name: linxsci-base
-description: Use LinxSci OpenAPI v2 directly for paper discovery and resources, citations, recommendations, research entities, PDF parsing, and API/CLI diagnostics. Provides supporting API guidance for task Skills; use the matching task Skill for end-to-end research and content creation.
+description: Use LinxSci OpenAPI v2 for paper discovery and resources, citations, recommendations, research entities, PDF parsing, and API/CLI diagnostics. Discover and install optional LinxSci task Skills; use the matching task Skill for end-to-end research and content creation.
 ---
 
 # linxsci-base
@@ -15,7 +15,11 @@ For an end-to-end deliverable, load the matching available task Skill first: `li
 
 Paper discovery is a prerequisite when the requested deliverable concerns a paper identified only by research clues. After identifying it, resume the requested task; PPT and post requests remain with their production Skill. Survey and Idea can start from a topic or research goal without a seed paper or a mandatory QA step. Reuse already verified identities and sufficient evidence instead of repeating discovery.
 
-Use only Skills actually available in the current environment. If a needed extension is missing, report what is available and follow its existing installation instructions and the [extension discovery conventions](references/cli.md#discover-and-invoke-installed-skills). Reuse installation authorization already given in the session; otherwise obtain it before installing. Keep verified sources for continuation and do not claim a missing Skill ran. Base operations remain usable with this Skill alone; installing all extensions is not a prerequisite.
+Use only Skills actually available in the current environment. If a needed extension is missing, use the [extension guide](references/extensions.md) and the target's README. Reuse installation authorization already given in the session; an explicit request to install that Skill supplies it. Keep verified sources for continuation and do not claim a missing Skill ran. Base operations remain usable with this Skill alone; installing all extensions is not a prerequisite.
+
+## Discover and add task Skills
+
+When asked which LinxSci Skills are available, to install one, or to complete a task requiring a missing extension, read [Discover and add LinxSci Skills](references/extensions.md). List relevant capabilities and distinguish verified installation/discovery from unchecked status. The current Agent installs the selected complete GitHub source, its Python requirements and discovery configuration, verifies the actual entrypoint, then hands the original task to that Skill with its materials and working directory preserved. Base's `install-skill` command only copies base. Do not offer all extensions on every invocation or download them just to list capabilities.
 
 ## Install the skill independently
 

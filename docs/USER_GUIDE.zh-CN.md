@@ -8,17 +8,33 @@
 
 - Python 3.9 或更新版本。
 - 支持本地 Skill 和工具执行的 AI 助手。
-- LinxSci API Key：登录 [API Key 管理页](https://linxsci.com/open-api?tab=keys) 获取，在本机配置时输入；已有有效 Key 和配置可直接复用。
+- 调用服务时才需要 LinxSci API Key：登录 [API Key 管理页](https://linxsci.com/open-api?tab=keys) 获取，在本机输入并复用有效配置。安装 base 或查看扩展目录无需 Key，可用 `--no-config` 跳过配置。
 
 ## 安装 Skill
 
-### 基础 Skill 与扩展安装
+### 发现和选装任务 Skill
 
-`linxsci-base` 由本公开主仓库提供。七个扩展分别从自己的 GitHub 仓库安装，见 [GitHub 安装指南](https://github.com/LinxSci/linxsci-skills/blob/main/docs/SKILL_INSTALLATION.zh-CN.md)；克隆主仓库不会下载这些独立扩展。扩展的 Python 依赖、发现路径和协作要求以各自 README 为准。
+base 也能引导你像选装插件一样添加任务 Skill：文献综述、研究构思、论文问答、论文写作、演示文稿、代码复现和小红书图文。各扩展按需从自己的 GitHub 仓库安装；[扩展指南](../skills/linxsci-base/references/extensions.zh-CN.md) 提供能力目录、安装检查和任务续跑说明。
+
+复制下面任一请求给当前 Agent：
+
+```text
+使用 $linxsci-base 列出 LinxSci 可选扩展，说明各自用途，并检查哪些已安装、哪些还需要配置。
+```
+
+```text
+请使用 $linxsci-base 帮我从 https://github.com/LinxSci/linxsci-paper 安装 linxsci-paper。保留已有修改和配置，用兼容的 Python 环境实际安装 requirements.txt，配置 Agent 与 CLI 的发现路径，运行 linxsci skill paper --help 验证，并告诉我如何使用。
+```
+
+```text
+请使用 $linxsci-base 帮我把这些研究材料做成 PPT；如果缺少 linxsci-ppt，授权你按其 GitHub README 安装并验证，随后继续原任务，保留已有材料和输出位置。
+```
+
+列目录不需要 API Key 或下载扩展。Agent 检查真实可用状态，只安装选中的 Skill，验证后继续任务。克隆主仓库不会自动取得扩展，更新 base 也不会更新扩展文件。
 
 ### 方式一：下载安装包
 
-下载 [完整 Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.4/linxsci-base-0.3.4.zip)，完整解压后再操作。
+下载 [完整 Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.5/linxsci-base-0.3.5.zip)，完整解压后再操作。
 
 **macOS**：在解压目录双击 `Install.command`。如果无法双击运行，打开终端，进入解压目录后执行：
 
@@ -43,6 +59,8 @@ python3 install.py --skills-dir /path/to/assistant/skills
 ```
 
 `--skills-dir` 不包含末尾的 `linxsci-base`；安装器会自动追加目录名。只下载单个 `SKILL.md` 无法完成安装，请保留完整安装包内容。
+
+`v0.3.5` 安装包已包含本文的扩展指南与安装提示。已有旧版 base 的用户，使用新版安装包更新并刷新助手后，即可使用这些引导。
 
 ### 方式二：使用 Skill 安装器
 
@@ -69,6 +87,8 @@ npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base
 | `--base-url URL` | 已保存或发行默认地址 | 配置时建议使用指定服务根地址，优先于 `--online` |
 
 使用 `--no-config` 时，`--online` 和 `--base-url` 不生效。可用 `python3 install.py --help` 查看安装器帮助。Windows 将 `python3` 替换为 `py -3`。
+
+从 `0.3.5` 起，安装器在成功后给出本地扩展指南路径和后续提示，`--no-config` 与更新也适用。`install-skill` 的 stdout 保持 JSON，可读提示在 stderr；`install.py` 委托一次安装后按需启动 API 配置。配置失败会单独说明，已安装的 base 保留。Skills CLI 和手动复制通过包内指令获得引导，不执行这段 Python 安装提示。
 
 ## 配置与确认安装
 

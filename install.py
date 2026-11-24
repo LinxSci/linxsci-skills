@@ -29,7 +29,11 @@ def install(argv=None):
         command += ["--online"]
     if args.base_url:
         command += ["--base-url", args.base_url]
-    return main(command)
+    status = main(command)
+    if status:
+        print("linxsci-base 文件已安装；API 配置或连接检查尚未完成。"
+              "可以继续查看扩展指南，需要论文服务时再让助手协助配置。", file=sys.stderr)
+    return status
 
 
 if __name__ == "__main__":

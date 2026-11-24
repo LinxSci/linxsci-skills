@@ -203,6 +203,8 @@ python3 "<skill-dir>/scripts/cli.py" install-skill --update
 
 改名后的源码支持用 `--update` 将本工具管理的 `linxsci-skills` 迁移为 `linxsci-base`，旧目录备份到扫描目录之外，失败时恢复。新旧目录并存、旧版不受管理或为符号链接时停止并保留原文件，请按原安装方式迁移。配置仍使用原有路径。
 
+从 `0.3.5` 起，安装成功后，stdout 仍为一份 JSON，保留 `installed`、`skill` 和可选 `backup`，新增 `extension_guides`（`en` / `zh-CN` 的绝对路径）与 `next_steps`。stderr 显示简短的扩展选装提示。该命令仅安装 base，不配置 Key 或下载扩展；按[包内指南](extensions.zh-CN.md)让 Agent 安装所选扩展。
+
 ### read-output
 
 从已保存的响应文件进行本地筛选，不需要 Key、不联网，可避免为调整输出再次请求远程服务：

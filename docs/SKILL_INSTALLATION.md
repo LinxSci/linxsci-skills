@@ -16,6 +16,8 @@ The [main repository](https://github.com/LinxSci/linxsci-skills) provides `skill
 
 Cloning the main repository does not retrieve extensions. Download, install and update each independently, checking its README, requirements and workflow interfaces for compatibility.
 
+Already have base? Say “Use $linxsci-base to list optional extensions” or “Use $linxsci-base to install linxsci-paper.” Its [bundled extension guide](../skills/linxsci-base/references/extensions.md) explains uses, actual installation status, dependency setup and task continuation. Listing choices needs no key or downloads; the Agent installs only selected Skills. Base’s `install-skill` command continues to copy only base.
+
 ## Installation
 
 Give the one-paragraph installation request in the target repository’s README to the current Agent to install Skill files, Python dependencies and discovery configuration. For Skills CLI, install Idea for Codex with:
@@ -27,6 +29,8 @@ npx skills add https://github.com/LinxSci/linxsci-idea --skill linxsci-idea -g -
 This method needs Node.js 22.20+ and npx. Adjust `-a` for the current Agent and omit `-g` for project scope. Alternatively clone the target repository or download its source ZIP and put the complete directory in the Agent’s discovery location, with `SKILL.md` directly inside it. From a local source root, use `npx skills add . --skill linxsci-idea -g -a codex`; retain the source when using links.
 
 Create or reuse a Python environment that meets the target repository’s requirements: Python 3.9+ for most extensions, and Python 3.10+ for Xiaohongshu. Keep the environment outside the Skill directory and install that repository’s `requirements.txt` with the same interpreter used to run it. Current extensions require `linxsci==0.3.4`; Xiaohongshu also needs PyMuPDF, Pillow and fonts. Configure the current Agent’s discovery path and, when needed, set CLI `LINXSCI_SKILLS_DIR` to the absolute parent containing complete Skill folders. Check the SDK version and actual Skill help, and configure API access locally with `linxsci setup` when needed.
+
+Base `0.3.5` does not change those extension pins. If the existing CLI/SDK environment uses `0.3.5`, use a separate compatible environment for extensions still requiring `0.3.4`; run their Python and CLI from that environment to avoid downgrading the existing installation.
 
 On Windows, enable Python UTF-8 in the current shell or Agent subprocess environment before running SDK/Skill commands, especially when capturing or redirecting Chinese help or JSON output. In PowerShell use `$env:PYTHONUTF8 = '1'`; in Command Prompt use `set PYTHONUTF8=1`. Agents should pass `PYTHONUTF8=1` to child processes and decode captured text as UTF-8. This applies to SDK 0.3.4 and requires no global settings change.
 

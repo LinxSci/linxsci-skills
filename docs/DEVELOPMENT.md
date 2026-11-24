@@ -11,7 +11,7 @@ Requires Python 3.9+. Install in the environment used by your application. Activ
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -U linxsci==0.3.4
+python -m pip install -U linxsci==0.3.5
 python -c "import linxsci; print(linxsci.__version__)"
 ```
 
@@ -22,7 +22,7 @@ py -3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-Verification should print `0.3.4`. It requires no API key and makes no remote API call. `-U` is short for `--upgrade`.
+Verification should print `0.3.5`. It requires no API key and makes no remote API call. `-U` is short for `--upgrade`.
 
 PyPI installation works from any directory and does not require a source checkout. The selected `python` determines the installation environment; changing directories does not change virtual environments. Check the active interpreter:
 
@@ -30,7 +30,7 @@ PyPI installation works from any directory and does not require a source checkou
 python -c "import sys; print(sys.executable)"
 ```
 
-To explicitly use Python 3.10, replace `python` in the installation and verification commands with `python3.10`, for example `python3.10 -m pip install -U linxsci==0.3.4`. Use the same interpreter for installation and execution.
+To explicitly use Python 3.10, replace `python` in the installation and verification commands with `python3.10`, for example `python3.10 -m pip install -U linxsci==0.3.5`. Use the same interpreter for installation and execution.
 
 The one-line command above verifies the SDK import and version. CLI and SDK share the same `linxsci` package and need only one installation. There is no separate `linxsci sdk --version` subcommand.
 
@@ -48,10 +48,10 @@ python -c "import linxsci; print(linxsci.__version__)"
 To confirm that the package is downloaded from official PyPI, run in the active environment:
 
 ```bash
-python -m pip install --index-url https://pypi.org/simple --no-cache-dir --force-reinstall linxsci==0.3.4
+python -m pip install --index-url https://pypi.org/simple --no-cache-dir --force-reinstall linxsci==0.3.5
 ```
 
-`--no-cache-dir` disables pip's cache; `--force-reinstall` downloads and installs the package again even when the same version is already installed. After seeing `Downloading linxsci-0.3.4-py3-none-any.whl` and `Successfully installed linxsci-0.3.4`, repeat the version verification above. Use the shorter commands above for routine installation or upgrades.
+`--no-cache-dir` disables pip's cache; `--force-reinstall` downloads and installs the package again even when the same version is already installed. After seeing `Downloading linxsci-0.3.5-py3-none-any.whl` and `Successfully installed linxsci-0.3.5`, repeat the version verification above. Use the shorter commands above for routine installation or upgrades.
 
 ### SSL errors during installation
 
@@ -62,7 +62,7 @@ If a proxy connection is failing and your network allows direct access to offici
 ```bash
 export NO_PROXY="pypi.org,files.pythonhosted.org${NO_PROXY:+,$NO_PROXY}"
 export no_proxy="pypi.org,files.pythonhosted.org${no_proxy:+,$no_proxy}"
-python -m pip install -U linxsci==0.3.4
+python -m pip install -U linxsci==0.3.5
 ```
 
 The first two lines add the PyPI index and file download domains to the proxy bypass lists, preserving existing entries and HTTPS certificate verification. They apply only to the current terminal and its child processes; subsequent installations in that terminal can use the short command. To persist them, add both `export` lines to your shell's startup file, such as `~/.bash_profile` for a Bash login shell or `~/.zshrc` for Zsh. Normal installations do not require these variables. If your network requires a proxy to reach PyPI, repair that proxy connection.
@@ -70,23 +70,23 @@ The first two lines add the PyPI index and file download domains to the proxy by
 If the failure persists, continue checking the network, proxy and certificates; see [pip certificate documentation](https://pip.pypa.io/en/stable/topics/https-certificates/). Alternatively, download the wheel from the GitHub release linked below and install it offline in the activated environment:
 
 ```bash
-python -m pip install --no-index --no-deps ./linxsci-0.3.4-py3-none-any.whl
+python -m pip install --no-index --no-deps ./linxsci-0.3.5-py3-none-any.whl
 ```
 
 This wheel has no additional runtime dependencies. The relative path above requires running from the file's directory; an absolute wheel path works from any directory. Repeat the version verification after installation.
 
 ### pip version-check warnings
 
-If `Successfully installed linxsci-0.3.4` is followed by `WARNING: There was an error checking the latest version of pip.`, pip failed to check for its own updates. This does not undo the successful installation. Verify the CLI or SDK version with the commands above; this warning does not indicate a LinxSci API call failure.
+If `Successfully installed linxsci-0.3.5` is followed by `WARNING: There was an error checking the latest version of pip.`, pip failed to check for its own updates. This does not undo the successful installation. Verify the CLI or SDK version with the commands above; this warning does not indicate a LinxSci API call failure.
 
 ## Install from a wheel
 
-Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.4) and install it in the same Python environment that runs your application:
+Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.5) and install it in the same Python environment that runs your application:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install ./linxsci-0.3.4-py3-none-any.whl
+python -m pip install ./linxsci-0.3.5-py3-none-any.whl
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 
@@ -104,7 +104,7 @@ python -m pip install -e .
 python -c "from linxsci import LinxSciClient; print('SDK import OK')"
 ```
 
-On Windows activate with `.venv\Scripts\activate`. Use the same environment for installation and execution. For a release wheel, install `linxsci-0.3.4-py3-none-any.whl`.
+On Windows activate with `.venv\Scripts\activate`. Use the same environment for installation and execution. For a release wheel, install `linxsci-0.3.5-py3-none-any.whl`.
 
 The Python distribution and import name are both `linxsci`. Install it in the interpreter used by your application.
 

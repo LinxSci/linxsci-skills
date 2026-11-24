@@ -18,19 +18,37 @@ Sign in to the [LinxSci API key page](https://linxsci.com/open-api?tab=keys) to 
 
 The Skill runs its bundled Python scripts independently. Installing the `linxsci` Python package is optional.
 
-### Base Skill and extensions
+### Discover and add task Skills
 
-This public repository provides `linxsci-base`. Install the seven extensions from their own GitHub repositories; see the [GitHub installation guide](docs/SKILL_INSTALLATION.md). Cloning the main repository does not retrieve these independent extensions. Follow each extension README for Python dependencies, discovery and collaboration.
+Base also helps you discover and add task Skills: literature surveys, research ideas, paper Q&A, manuscript writing, presentations, reproduction and Xiaohongshu posts. Each is installed on demand from its own GitHub repository. The [extension guide](skills/linxsci-base/references/extensions.md) includes the capability directory, installation checks and task continuation.
+
+Copy one of these requests to your Agent:
+
+```text
+Use $linxsci-base to list optional LinxSci Skills, explain their uses, and check which are installed or still need configuration.
+```
+
+```text
+Use $linxsci-base to install linxsci-paper from https://github.com/LinxSci/linxsci-paper. Preserve existing edits and configuration, install requirements.txt in a compatible Python environment, configure Agent and CLI discovery, verify linxsci skill paper --help, and explain how to use it.
+```
+
+```text
+Use $linxsci-base to turn these research materials into a presentation. If linxsci-ppt is missing, you are authorized to install and verify it using its GitHub README, then continue the original task with its materials and output location.
+```
+
+Listing capabilities needs no API key or extension download. The Agent checks actual availability, installs only selected Skills and resumes the task after verification. Cloning the main repository does not retrieve extensions. Base updates do not update their files.
 
 ### Install and configure
 
-Download the [Skill installation bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.4/linxsci-base-0.3.4.zip), extract it fully, and double-click `Install.command` on macOS or `Install.bat` on Windows. In a terminal opened in the extracted directory, run:
+Download the [Skill installation bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.5/linxsci-base-0.3.5.zip), extract it fully, and double-click `Install.command` on macOS or `Install.bat` on Windows. In a terminal opened in the extracted directory, run:
 
 ```bash
 python3 install.py
 ```
 
 On Windows use `py -3 install.py`. The installer copies the complete Skill to `~/.agents/skills/linxsci-base` and guides you through hidden-input key setup. Use `--skills-dir <parent-directory>` for another assistant location. Refresh or restart your assistant after installation.
+
+The `v0.3.5` bundle includes the extension guide and installation prompts described here. Update an older base installation using the new bundle and refresh your assistant to use this guidance.
 
 ### Install into Codex or another agent with Skills CLI
 
@@ -65,7 +83,7 @@ For multiple agents, Symlink can share one Skill copy. Use the directories repor
 Install the base Skill using npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base -g -a codex. Check for an existing installation and preserve local changes. Then use the bundled scripts to check configuration; enter the API key interactively on this machine.
 ```
 
-`linxsci-base` runs its bundled scripts without installing the Python package. For terminal commands or extension Skills, install `linxsci==0.3.4` using the CLI instructions below. Reload the assistant after installation.
+`linxsci-base` runs its bundled scripts without installing the Python package. For terminal commands, install `linxsci==0.3.5` using the CLI instructions below. Prepare extension environments according to their requirements; use a separate compatible environment for extensions still pinned to SDK `0.3.4`, as described in the [extension guide](skills/linxsci-base/references/extensions.md). Reload the assistant after installation.
 
 If cloning times out, use the ZIP above. After installation, ask your assistant:
 
@@ -114,12 +132,12 @@ Requires Python 3.9+. Activate an existing virtual environment; run the creation
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -U linxsci==0.3.4
+python -m pip install -U linxsci==0.3.5
 linxsci --version
 linxsci setup
 ```
 
-`linxsci --version` should print `0.3.4`. It requires no API key and makes no API call. The same package installs both the CLI and SDK.
+`linxsci --version` should print `0.3.5`. It requires no API key and makes no API call. The same package installs both the CLI and SDK.
 
 PyPI installation works from any directory. The active `python` determines the installation environment; changing directories does not change virtual environments. Check the interpreter with `python -c "import sys; print(sys.executable)"`. To explicitly use Python 3.10, replace `python` in these commands with `python3.10`.
 
@@ -137,7 +155,7 @@ linxsci --version
 linxsci setup
 ```
 
-On Windows create the environment with `py -3 -m venv .venv` and activate it with `.venv\Scripts\activate.bat` in Command Prompt. You can instead install a downloaded wheel with `python -m pip install /path/to/linxsci-0.3.4-py3-none-any.whl`. With uv already installed, `uv tool install /path/to/linxsci-0.3.4-py3-none-any.whl` provides an isolated terminal installation.
+On Windows create the environment with `py -3 -m venv .venv` and activate it with `.venv\Scripts\activate.bat` in Command Prompt. You can instead install a downloaded wheel with `python -m pip install /path/to/linxsci-0.3.5-py3-none-any.whl`. With uv already installed, `uv tool install /path/to/linxsci-0.3.5-py3-none-any.whl` provides an isolated terminal installation.
 
 `linxsci setup` reads your API key using hidden input. The default service root is `https://linxsci.com`, without `/openapi/v2`. `LINXSCI_BASE_URL` and `LINXSCI_OPENAPI_KEY` override saved settings; `LINXSCI_CONFIG_FILE` selects another configuration file. Default settings are stored in `~/.config/linxsci-skills/config.json` on macOS/Linux or `%LOCALAPPDATA%\linxsci-skills\config.json` on Windows.
 
@@ -176,11 +194,11 @@ Install from PyPI in the same Python environment that runs your application:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -U linxsci==0.3.4
+python -m pip install -U linxsci==0.3.5
 python -c "import linxsci; print(linxsci.__version__)"
 ```
 
-If your application already has an environment, activate it and run only the installation and verification commands. Verification should print `0.3.4`, confirming that the SDK imports and reports the expected version. It requires no API key and makes no API call. See the [SDK installation guide](docs/DEVELOPMENT.md#install-from-pypi) for troubleshooting and remote download verification.
+If your application already has an environment, activate it and run only the installation and verification commands. Verification should print `0.3.5`, confirming that the SDK imports and reports the expected version. It requires no API key and makes no API call. See the [SDK installation guide](docs/DEVELOPMENT.md#install-from-pypi) for troubleshooting and remote download verification.
 
 On Windows use `py -3 -m venv .venv` and `.venv\Scripts\activate.bat` in Command Prompt. For a source installation, download or clone this repository and run `python -m pip install .` from its root in your application environment.
 

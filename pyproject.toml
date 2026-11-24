@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "linxsci"
-version = "0.3.4"
+version = "0.3.5"
 description = "LinxSci OpenAPI v2 CLI and Python client"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -31,4 +31,5 @@ linxsci = [
     "SKILL.md", "SKILL.zh-CN.md", "service.json", "agents/openai.yaml",
     "references/api.md", "references/api.zh-CN.md",
     "references/cli.md", "references/cli.zh-CN.md",
+    "references/extensions.md", "references/extensions.zh-CN.md",
 ]

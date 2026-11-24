@@ -1,8 +1,10 @@
 import contextlib
 import io
+import importlib.util
 import json
 import os
 import stat
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -17,6 +19,11 @@ from commands import main, doctor, error_info
 from client import LinxSciClient, LinxSciError, Response
 from config import config_path, load_config, resolve_settings, save_config
 from installer import LEGACY_SKILL_NAME, MARKER, SKILL_NAME, install_skill
+
+INSTALL_SCRIPT = SCRIPTS.parents[2] / "install.py"
+install_spec = importlib.util.spec_from_file_location("bundle_install", INSTALL_SCRIPT)
+bundle_install = importlib.util.module_from_spec(install_spec)
+install_spec.loader.exec_module(bundle_install)
 
 
 class OnboardingTests(unittest.TestCase):
@@ -120,6 +127,82 @@ class OnboardingTests(unittest.TestCase):
         self.assertEqual((backup / "custom-note.txt").read_text(), "keep me")
         self.assertNotEqual(backup.parent, parent)
         self.assertFalse((new / "custom-note.txt").exists())
+
+    def test_install_guides_are_local_and_configuration_is_preserved(self):
+        parent = self.root / "assistant 中文/skills"
+        save_config("https://saved.example", "keep-secret")
+        original_config = config_path().read_bytes()
+        for update in (False, True):
+            with self.subTest(update=update), \
+                    patch("commands.LinxSciClient", side_effect=AssertionError("No API during installation")), \
+                    patch("subprocess.run", side_effect=AssertionError("No downloads or pip during installation")):
+                status, out, err = self.invoke(["install-skill", "--skills-dir", str(parent)]
+                                               + (["--update"] if update else []))
+                self.assertEqual(status, 0, err)
+                report = json.loads(out)
+                destination = Path(report["installed"])
+                self.assertEqual(destination, (parent / SKILL_NAME).resolve())
+                self.assertEqual(report["skill"], SKILL_NAME)
+                self.assertEqual(set(report["extension_guides"]), {"en", "zh-CN"})
+                for location in report["extension_guides"].values():
+                    guide = Path(location)
+                    self.assertTrue(guide.is_file())
+                    self.assertEqual(guide.parent, destination / "references")
+                    self.assertEqual(guide.read_bytes(), (SCRIPTS.parent / "references" / guide.name).read_bytes())
+                    self.assertEqual(err.count(location), 1)
+                self.assertTrue(report["next_steps"])
+                self.assertEqual(config_path().read_bytes(), original_config)
+                self.assertEqual([p.name for p in parent.iterdir()], [SKILL_NAME])
+                self.assertNotIn("keep-secret", out + err)
+                if update:
+                    self.assertTrue(Path(report["backup"]).is_dir())
+
+    def test_failed_install_does_not_report_success_or_guides(self):
+        parent = self.root / "skills"
+        existing = parent / SKILL_NAME
+        existing.mkdir(parents=True)
+        note = existing / "user-note.txt"
+        note.write_text("keep", encoding="utf-8")
+        status, out, err = self.invoke(["install-skill", "--skills-dir", str(parent)])
+        self.assertEqual(status, 2)
+        self.assertEqual(out, "")
+        self.assertIn("error_code", json.loads(err))
+        self.assertEqual(list(existing.iterdir()), [note])
+        self.assertEqual(note.read_text(encoding="utf-8"), "keep")
+
+    def test_bundle_no_config_has_guidance_without_site_packages_or_tools(self):
+        parent = self.root / "bundle 中文/skills"
+        env = dict(os.environ, PATH="", PYTHONUTF8="1")
+        result = subprocess.run([sys.executable, "-S", str(INSTALL_SCRIPT), "--no-config",
+                                 "--skills-dir", str(parent)], cwd=self.root, env=env,
+                                capture_output=True, text=True, encoding="utf-8", timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        for location in report["extension_guides"].values():
+            self.assertTrue(Path(location).is_file())
+            self.assertEqual(result.stderr.count(location), 1)
+        self.assertFalse(config_path().exists())
+        self.assertEqual([p.name for p in parent.iterdir()], [SKILL_NAME])
+
+    def test_bundle_setup_failure_or_cancellation_preserves_install_and_config(self):
+        save_config("https://saved.example", "keep-secret")
+        original_config = config_path().read_bytes()
+        for index, exception in enumerate((ValueError("invalid setting"), EOFError(), KeyboardInterrupt())):
+            parent = self.root / str(index) / "skills"
+            out, err = io.StringIO(), io.StringIO()
+            with self.subTest(exception=type(exception).__name__), \
+                    contextlib.redirect_stdout(out), contextlib.redirect_stderr(err), \
+                    patch("sys.stdin.isatty", return_value=True), \
+                    patch("builtins.input", side_effect=exception):
+                status = bundle_install.install(["--skills-dir", str(parent)])
+                self.assertEqual(status, 2)  # Preserve the existing setup cancellation status.
+                report = json.loads(out.getvalue().splitlines()[0])
+                self.assertTrue((Path(report["installed"]) / "SKILL.md").is_file())
+                self.assertIn("API 配置或连接检查尚未完成", err.getvalue())
+                error = json.loads(err.getvalue().splitlines()[-2])
+                self.assertEqual(error["error_code"], "local_error" if isinstance(exception, ValueError) else "cancelled")
+                self.assertEqual(config_path().read_bytes(), original_config)
+                self.assertNotIn("keep-secret", out.getvalue() + err.getvalue())
 
     def legacy_install(self, parent):
         legacy = parent / LEGACY_SKILL_NAME

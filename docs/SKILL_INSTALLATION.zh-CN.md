@@ -16,6 +16,8 @@
 
 克隆主仓库不会自动取得扩展。每个扩展可独立下载、安装和更新，按自己的 README、requirements 和接口检查兼容性。
 
+已有 base 时，可以说“使用 $linxsci-base 列出可选扩展”或“使用 $linxsci-base 安装 linxsci-paper”。[包内扩展指南](../skills/linxsci-base/references/extensions.zh-CN.md)说明各项用途、真实安装状态、依赖准备及任务续跑。列目录无需 Key 或下载，Agent 只安装选中的 Skill；base 的 `install-skill` 命令继续只复制 base。
+
 ## 安装
 
 最便捷的方式是把目标仓库 README 中的“一段话安装”交给当前 Agent，实际完成 Skill 文件、Python 依赖和发现配置。使用 Skills CLI 时，例如安装 Idea 到 Codex：
@@ -27,6 +29,8 @@ npx skills add https://github.com/LinxSci/linxsci-idea --skill linxsci-idea -g -
 此方式需要 Node.js 22.20+ 和 npx。按当前 Agent 调整 `-a`；项目级安装省略 `-g`。也可 Git 克隆或下载目标仓库源码 ZIP，将完整目录放入当前 Agent 的发现位置，根目录直接包含 `SKILL.md`。本地 Skills CLI 安装可从该根目录运行 `npx skills add . --skill linxsci-idea -g -a codex`，使用链接时保留源目录。
 
 按目标仓库要求选择 Python：其他扩展为 Python 3.9+，小红书为 Python 3.10+。在 Skill 目录外创建或复用兼容虚拟环境，以同一解释器安装该仓库的 `requirements.txt`。当前扩展依赖 `linxsci==0.3.4`，小红书还有 PyMuPDF、Pillow 和字体要求。配置当前 Agent 的发现路径；CLI 需要时把 `LINXSCI_SKILLS_DIR` 设为包含完整 Skill 文件夹的绝对父目录。检查 SDK 版本和实际 Skill 帮助，按需在本机 `linxsci setup` 配置 API Key。
+
+base `0.3.5` 不改变这些扩展约束。若已有 CLI/SDK 环境使用 `0.3.5`，为仍要求 `0.3.4` 的扩展使用单独的兼容环境，并通过该环境的 Python 与 CLI 运行，避免降级已有安装。
 
 Windows 在执行 SDK/Skill 命令前，应在当前终端或 Agent 子进程环境中启用 Python UTF-8，尤其是捕获或重定向包含中文的帮助、JSON 输出时。PowerShell 使用 `$env:PYTHONUTF8 = '1'`，命令提示符使用 `set PYTHONUTF8=1`。Agent 应向子进程传入 `PYTHONUTF8=1`，并按 UTF-8 解码捕获的文本。该设置适用于现有 SDK 0.3.4，无需修改全局配置。
 

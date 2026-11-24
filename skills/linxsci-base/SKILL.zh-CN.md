@@ -1,6 +1,6 @@
 ---
 name: linxsci-base
-description: 直接使用 LinxSci OpenAPI v2 发现论文、获取论文资源与引用、查询推荐和学术实体、解析 PDF，以及诊断 API/CLI。为任务 Skill 提供基础接口指导；完整研究和内容制作由匹配的任务 Skill 负责。
+description: 直接使用 LinxSci OpenAPI v2 发现论文、获取论文资源与引用、查询推荐和学术实体、解析 PDF，以及诊断 API/CLI。发现和按需安装 LinxSci 任务 Skill；完整研究和内容制作由匹配的任务 Skill 负责。
 ---
 
 # linxsci-base
@@ -15,7 +15,11 @@ description: 直接使用 LinxSci OpenAPI v2 发现论文、获取论文资源�
 
 仅给研究线索、但交付物依赖某篇论文时，论文发现是前置阶段。确定论文后继续原任务；PPT 和图文请求仍由制作 Skill 主导。Survey 和 Idea 可从主题或研究目标开始，不默认要求种子论文或 Paper QA。已有核实身份和充分证据时直接复用，不重复发现。
 
-只使用当前环境中实际可用的 Skill。缺少所需扩展时，说明实际可用能力，沿用该扩展已有安装说明及[扩展发现约定](references/cli.zh-CN.md#自动发现与调用扩展-skill)。会话中已有安装授权则复用，否则安装前取得授权。保留已核实来源供续接，不声称调用了未安装的 Skill。仅安装本 Skill 仍可执行基础操作，不要求同时安装全部扩展。
+只使用当前环境中实际可用的 Skill。缺少所需扩展时，按[扩展指南](references/extensions.zh-CN.md)及目标 README 安装。复用会话已有授权，明确要求安装该 Skill 就是对应授权。保留已核实来源供续接，不声称调用了未安装的 Skill。仅安装本 Skill 仍可执行基础操作，不要求同时安装全部扩展。
+
+## 发现和选装任务 Skill
+
+用户询问有哪些 LinxSci Skill、要求安装某项，或任务需要缺少的扩展时，读取[发现和选装 LinxSci Skill](references/extensions.zh-CN.md)。展示相关能力，区分已验证的安装/发现状态和未检查状态。由当前 Agent 获取所选扩展的完整 GitHub 源码，实际安装 Python 依赖、配置发现并验证真实入口，再保留原材料和工作目录，将任务交给该 Skill 继续。base 的 `install-skill` 只复制 base；不要每次调用都推荐全套，也不为列目录下载扩展。
 
 ## 独立安装 Skill
 

@@ -203,6 +203,8 @@ This action uses local bundled files and needs no key or network. It also works 
 
 For the renamed source, `--update` also migrates a managed `linxsci-skills` directory to `linxsci-base`, keeping its backup outside the scan directory and restoring it if installation fails. Both names present or an unmanaged/symlinked old copy cause a refusal without mutation; migrate those through their original installation method. Configuration stays at its existing path.
 
+After a successful install with `0.3.5` or later, stdout remains one JSON document with `installed`, `skill`, optional `backup`, and new `extension_guides` (absolute `en` / `zh-CN` paths) and `next_steps` fields. A short optional-extension prompt goes to stderr. This command installs only base and does not configure a key or fetch extensions. Ask the Agent to install a selected extension using the [bundled guide](extensions.md).
+
 ### read-output
 
 Filter a saved original response locally, without a key or network request. Use it to fix a response view without calling the service again:

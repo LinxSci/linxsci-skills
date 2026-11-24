@@ -6,6 +6,7 @@ Choose the guide for the interface you use. In this `linxsci-openapi-skills` pro
 
 | Task | Guide |
 | --- | --- |
+| Discover optional Skills, install one through base and resume the task | [Base extension guide](../skills/linxsci-base/references/extensions.md) |
 | Install extensions from independent GitHub repositories, including Idea → Survey | [GitHub installation guide](SKILL_INSTALLATION.md) |
 | Install, configure, update and remove the standalone Skill | [Skill user guide](USER_GUIDE.md) |
 | Install the command-line tool and use its commands and parameters | [CLI guide](CLI_GUIDE.md) |
@@ -17,4 +18,6 @@ Choose the guide for the interface you use. In this `linxsci-openapi-skills` pro
 
 The Skill guide uses its standalone installer and assistant workflow. The CLI guide uses terminal commands. The SDK guide uses Python installation and code. Each user guide includes its own update instructions. Publishing credentials are needed only by maintainers, not by users installing packages.
 
-The release guide describes public file exclusions, package contents, build validation, GitHub publication and PyPI uploads. Installation examples use `0.3.4`, which includes the renamed `linxsci-base` Skill. CLI and SDK users upgrade the `linxsci` package; copied Skill installations require a separate update using their original installer.
+The release guide describes public file exclusions, package contents, build validation, GitHub publication and PyPI uploads. Installation examples use `0.3.5`, which includes the renamed `linxsci-base` Skill. CLI and SDK users upgrade the `linxsci` package; copied Skill installations require a separate update using their original installer.
+
+Current release: [0.3.5 — base extension discovery and installation](releases/v0.3.5.md).

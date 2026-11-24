@@ -6,6 +6,7 @@
 
 | 需求 | 文档 |
 | --- | --- |
+| 通过 base 了解、选装扩展并继续原任务 | [Base 扩展指南](../skills/linxsci-base/references/extensions.zh-CN.md) |
 | 从独立 GitHub 仓库安装扩展，处理 Idea → Survey | [GitHub 安装指南](SKILL_INSTALLATION.zh-CN.md) |
 | 安装、配置、更新和卸载独立 Skill | [Skill 用户指南](USER_GUIDE.zh-CN.md) |
 | 安装命令行工具，查询命令和参数 | [CLI 指南](CLI_GUIDE.zh-CN.md) |
@@ -17,4 +18,6 @@
 
 Skill 指南使用独立安装器和助手交互；CLI 指南使用终端命令；SDK 指南使用 Python 安装与代码。各使用指南均包含对应的更新步骤。发布凭据只用于维护者上传，用户安装不需要这些凭据。
 
-发布指南说明公开文件排除规则、安装包内容、构建校验、GitHub 发布和 PyPI 上传。安装示例使用 `0.3.4`，其中附带改名后的 `linxsci-base` Skill。CLI 与 SDK 用户升级 `linxsci` 包；已经复制安装的 Skill 需使用原安装器单独更新。
+发布指南说明公开文件排除规则、安装包内容、构建校验、GitHub 发布和 PyPI 上传。安装示例使用 `0.3.5`，其中附带改名后的 `linxsci-base` Skill。CLI 与 SDK 用户升级 `linxsci` 包；已经复制安装的 Skill 需使用原安装器单独更新。
+
+当前版本：[0.3.5 — base 扩展发现与安装引导](releases/v0.3.5.zh-CN.md)。

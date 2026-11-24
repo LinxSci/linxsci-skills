@@ -11,7 +11,7 @@ SDK 与 CLI 由同一个 `linxsci` Python 包提供。继续使用 `from linxsci
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -U linxsci==0.3.4
+python -m pip install -U linxsci==0.3.5
 python -c "import linxsci; print(linxsci.__version__)"
 ```
 
@@ -22,7 +22,7 @@ py -3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-验证应输出 `0.3.4`，此检查不需要 API Key，也不调用远程 API。`-U` 是 `--upgrade` 的简写。
+验证应输出 `0.3.5`，此检查不需要 API Key，也不调用远程 API。`-U` 是 `--upgrade` 的简写。
 
 从 PyPI 安装可在任意目录执行，无需进入源码仓库。安装目标由 `python` 对应的环境决定；切换目录不会切换虚拟环境。查看当前解释器：
 
@@ -30,7 +30,7 @@ py -3 -m venv .venv
 python -c "import sys; print(sys.executable)"
 ```
 
-要明确使用 Python 3.10，将安装和验证命令中的 `python` 替换为 `python3.10`，例如 `python3.10 -m pip install -U linxsci==0.3.4`。始终使用同一解释器安装和运行。
+要明确使用 Python 3.10，将安装和验证命令中的 `python` 替换为 `python3.10`，例如 `python3.10 -m pip install -U linxsci==0.3.5`。始终使用同一解释器安装和运行。
 
 上面的单行命令验证 SDK 导入和版本。CLI 与 SDK 共用一个 `linxsci` 包，无需分别安装，也没有单独的 `linxsci sdk --version` 子命令。
 
@@ -48,10 +48,10 @@ python -c "import linxsci; print(linxsci.__version__)"
 需要确认安装包确实从官方 PyPI 下载时，在当前环境执行：
 
 ```bash
-python -m pip install --index-url https://pypi.org/simple --no-cache-dir --force-reinstall linxsci==0.3.4
+python -m pip install --index-url https://pypi.org/simple --no-cache-dir --force-reinstall linxsci==0.3.5
 ```
 
-`--no-cache-dir` 禁用 pip 缓存；`--force-reinstall` 让已有相同版本的环境也重新下载安装。看到 `Downloading linxsci-0.3.4-py3-none-any.whl` 和 `Successfully installed linxsci-0.3.4` 后，运行上面的版本验证命令。日常安装或升级使用前面的简短命令即可。
+`--no-cache-dir` 禁用 pip 缓存；`--force-reinstall` 让已有相同版本的环境也重新下载安装。看到 `Downloading linxsci-0.3.5-py3-none-any.whl` 和 `Successfully installed linxsci-0.3.5` 后，运行上面的版本验证命令。日常安装或升级使用前面的简短命令即可。
 
 ### 安装时出现 SSL 错误
 
@@ -62,7 +62,7 @@ python -m pip install --index-url https://pypi.org/simple --no-cache-dir --force
 ```bash
 export NO_PROXY="pypi.org,files.pythonhosted.org${NO_PROXY:+,$NO_PROXY}"
 export no_proxy="pypi.org,files.pythonhosted.org${no_proxy:+,$no_proxy}"
-python -m pip install -U linxsci==0.3.4
+python -m pip install -U linxsci==0.3.5
 ```
 
 前两行将 PyPI 索引和文件下载域名加入代理绕过列表，保留已有条目及 HTTPS 证书验证。它们仅对当前终端及其子进程生效，后续在同一终端可直接使用简短安装命令。需要长期生效时，将两行 `export` 加入当前 shell 的启动文件，例如 Bash 登录 shell 的 `~/.bash_profile` 或 Zsh 的 `~/.zshrc`。普通安装无需默认配置这些变量；网络必须通过代理才能访问 PyPI 时，应修复代理连接。
@@ -70,14 +70,14 @@ python -m pip install -U linxsci==0.3.4
 若仍失败，继续检查网络、代理和证书，参考 [pip 证书说明](https://pip.pypa.io/en/stable/topics/https-certificates/)。也可从下文的 GitHub 发行附件下载 wheel，在已激活的环境中离线安装：
 
 ```bash
-python -m pip install --no-index --no-deps ./linxsci-0.3.4-py3-none-any.whl
+python -m pip install --no-index --no-deps ./linxsci-0.3.5-py3-none-any.whl
 ```
 
 此 wheel 没有额外运行时依赖。使用上方相对路径时，从文件所在目录执行；也可换成 wheel 的绝对路径，在任意目录执行。安装后运行上面的版本验证命令。
 
 ### pip 自身版本检查警告
 
-如果已经显示 `Successfully installed linxsci-0.3.4`，随后出现 `WARNING: There was an error checking the latest version of pip.`，表示 pip 检查自身更新失败，不会撤销已成功完成的安装。使用上面的命令确认 CLI 或 SDK 版本即可；这项警告不等于 LinxSci API 调用失败。
+如果已经显示 `Successfully installed linxsci-0.3.5`，随后出现 `WARNING: There was an error checking the latest version of pip.`，表示 pip 检查自身更新失败，不会撤销已成功完成的安装。使用上面的命令确认 CLI 或 SDK 版本即可；这项警告不等于 LinxSci API 调用失败。
 
 本文面向在 Python 程序中调用 LinxSci 的开发者，按当前项目的安装方式、SDK 入口和接口行为编写。首次使用按第 1 节、第 2.1 节和第 3 节操作，即可完成一次论文检索；其他章节按需阅读。
 
@@ -101,10 +101,10 @@ SDK 的公共 Python 入口为 `from linxsci import LinxSciClient`。SDK 将 Pyt
 
 ### 从安装包使用 SDK
 
-从 [GitHub 发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.4)下载 wheel，在自己的 Python 项目环境中安装：
+从 [GitHub 发行附件](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.5)下载 wheel，在自己的 Python 项目环境中安装：
 
 ```bash
-python -m pip install /path/to/linxsci-0.3.4-py3-none-any.whl
+python -m pip install /path/to/linxsci-0.3.5-py3-none-any.whl
 ```
 
 Python 安装包名和导入名均为 `linxsci`。将 SDK 安装到应用实际使用的解释器中。源码安装步骤如下。

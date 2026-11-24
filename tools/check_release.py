@@ -49,6 +49,7 @@ def check(directory):
         assert re.search(pattern, (ROOT / file).read_text(encoding='utf-8')).group(1) == version, 'Version mismatch: ' + file
     expected = {
         'SKILL.md', 'SKILL.zh-CN.md', 'references/api.zh-CN.md', 'references/cli.zh-CN.md', 'service.json', 'agents/openai.yaml', 'references/api.md', 'references/cli.md',
+        'references/extensions.md', 'references/extensions.zh-CN.md',
         '__init__.py', 'scripts/__init__.py', 'scripts/commands.py',
         'scripts/client.py', 'scripts/config.py', 'scripts/installer.py',
         'scripts/cli.py', 'scripts/output.py', 'scripts/skill_dispatch.py',
@@ -101,6 +102,7 @@ def check(directory):
             guide = (ROOT / ('docs/USER_GUIDE' + language + '.md')).read_text(encoding='utf-8')
             guide = guide.replace('(USER_GUIDE.md)', '(README.md)').replace(
                 '(USER_GUIDE.zh-CN.md)', '(README.zh-CN.md)')
+            guide = guide.replace('(../skills/linxsci-base/', '(skills/linxsci-base/')
             assert archive.read(prefix + 'README' + language + '.md').decode('utf-8') == guide, 'Stale bundled Skill guide'
         for name in expected:
             assert archive.read(prefix + 'skills/linxsci-base/' + name) == (ROOT / 'skills/linxsci-base' / name).read_bytes(), 'Stale bundled Skill file: ' + name

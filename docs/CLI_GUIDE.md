@@ -11,7 +11,7 @@ Requires Python 3.9+. Activate an existing virtual environment, or create a new 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -U linxsci==0.3.4
+python -m pip install -U linxsci==0.3.5
 linxsci --version
 ```
 
@@ -22,7 +22,7 @@ py -3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-Verification should print `0.3.4`. It requires no API key and makes no remote API call. `-U` is short for `--upgrade`.
+Verification should print `0.3.5`. It requires no API key and makes no remote API call. `-U` is short for `--upgrade`.
 
 PyPI installation works from any directory and does not require a source checkout. The selected `python` determines the installation environment; changing directories does not change virtual environments. Check the active interpreter:
 
@@ -30,11 +30,11 @@ PyPI installation works from any directory and does not require a source checkou
 python -c "import sys; print(sys.executable)"
 ```
 
-To explicitly use Python 3.10, replace `python` in the installation and verification commands with `python3.10`, for example `python3.10 -m pip install -U linxsci==0.3.4`. Use the same interpreter for installation and execution.
+To explicitly use Python 3.10, replace `python` in the installation and verification commands with `python3.10`, for example `python3.10 -m pip install -U linxsci==0.3.5`. Use the same interpreter for installation and execution.
 
 If `linxsci --version` is missing or reports a different version, check the same Python environment with `python -m linxsci.scripts.cli --version` and confirm that the terminal command belongs to that environment.
 
-Next, run `linxsci setup` to configure the service. With uv already installed, `uv tool install linxsci==0.3.4` is an alternative isolated installation; update that installation with `uv tool upgrade linxsci` instead of the virtual-environment pip command below.
+Next, run `linxsci setup` to configure the service. With uv already installed, `uv tool install linxsci==0.3.5` is an alternative isolated installation; update that installation with `uv tool upgrade linxsci` instead of the virtual-environment pip command below.
 
 For a pip installation, update in the original environment:
 
@@ -48,10 +48,10 @@ linxsci --version
 To confirm that the package is downloaded from official PyPI, run in the active environment:
 
 ```bash
-python -m pip install --index-url https://pypi.org/simple --no-cache-dir --force-reinstall linxsci==0.3.4
+python -m pip install --index-url https://pypi.org/simple --no-cache-dir --force-reinstall linxsci==0.3.5
 ```
 
-`--no-cache-dir` disables pip's cache; `--force-reinstall` downloads and installs the package again even when the same version is already installed. After seeing `Downloading linxsci-0.3.4-py3-none-any.whl` and `Successfully installed linxsci-0.3.4`, repeat the version verification above. Use the shorter commands above for routine installation or upgrades.
+`--no-cache-dir` disables pip's cache; `--force-reinstall` downloads and installs the package again even when the same version is already installed. After seeing `Downloading linxsci-0.3.5-py3-none-any.whl` and `Successfully installed linxsci-0.3.5`, repeat the version verification above. Use the shorter commands above for routine installation or upgrades.
 
 ### SSL errors during installation
 
@@ -62,7 +62,7 @@ If a proxy connection is failing and your network allows direct access to offici
 ```bash
 export NO_PROXY="pypi.org,files.pythonhosted.org${NO_PROXY:+,$NO_PROXY}"
 export no_proxy="pypi.org,files.pythonhosted.org${no_proxy:+,$no_proxy}"
-python -m pip install -U linxsci==0.3.4
+python -m pip install -U linxsci==0.3.5
 ```
 
 The first two lines add the PyPI index and file download domains to the proxy bypass lists, preserving existing entries and HTTPS certificate verification. They apply only to the current terminal and its child processes; subsequent installations in that terminal can use the short command. To persist them, add both `export` lines to your shell's startup file, such as `~/.bash_profile` for a Bash login shell or `~/.zshrc` for Zsh. Normal installations do not require these variables. If your network requires a proxy to reach PyPI, repair that proxy connection.
@@ -70,21 +70,21 @@ The first two lines add the PyPI index and file download domains to the proxy by
 If the failure persists, continue checking the network, proxy and certificates; see [pip certificate documentation](https://pip.pypa.io/en/stable/topics/https-certificates/). Alternatively, download the wheel from the GitHub release linked below and install it offline in the activated environment:
 
 ```bash
-python -m pip install --no-index --no-deps ./linxsci-0.3.4-py3-none-any.whl
+python -m pip install --no-index --no-deps ./linxsci-0.3.5-py3-none-any.whl
 ```
 
 This wheel has no additional runtime dependencies. The relative path above requires running from the file's directory; an absolute wheel path works from any directory. Repeat the version verification after installation.
 
 ### pip version-check warnings
 
-If `Successfully installed linxsci-0.3.4` is followed by `WARNING: There was an error checking the latest version of pip.`, pip failed to check for its own updates. This does not undo the successful installation. Verify the CLI or SDK version with the commands above; this warning does not indicate a LinxSci API call failure.
+If `Successfully installed linxsci-0.3.5` is followed by `WARNING: There was an error checking the latest version of pip.`, pip failed to check for its own updates. This does not undo the successful installation. Verify the CLI or SDK version with the commands above; this warning does not indicate a LinxSci API call failure.
 
 ## Install the CLI
 
-Requires Python 3.9+. Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.4) and run from its directory:
+Requires Python 3.9+. Download the wheel from the [release assets](https://github.com/LinxSci/linxsci-skills/releases/tag/v0.3.5) and run from its directory:
 
 ```bash
-uv tool install ./linxsci-0.3.4-py3-none-any.whl
+uv tool install ./linxsci-0.3.5-py3-none-any.whl
 linxsci --version
 ```
 
@@ -299,6 +299,8 @@ linxsci install-skill --update
 This action uses local bundled files and needs no key or network. Before using `--update`, upgrade the installed CLI so that it contains the new bundled files. The installer rejects symlink destinations and unmanaged or mismatched installation markers; use the original external installer for its copies. This action only copies the bundled assistant files; it does not configure an API key.
 
 For the renamed source, `--update` also migrates a managed `linxsci-skills` directory to `linxsci-base`, keeping its backup outside the scan directory and restoring it if installation fails. Both names present or an unmanaged/symlinked old copy cause a refusal without mutation; migrate those through their original installation method. Configuration stays at its existing path.
+
+After a successful install with `0.3.5` or later, stdout remains one JSON document with `installed`, `skill`, optional `backup`, and new `extension_guides` (absolute `en` / `zh-CN` paths) and `next_steps` fields. A short optional-extension prompt goes to stderr. This command installs only base and does not configure a key or fetch extensions. Ask the Agent to install a selected extension using the [bundled guide](../skills/linxsci-base/references/extensions.md).
 
 ### read-output
 

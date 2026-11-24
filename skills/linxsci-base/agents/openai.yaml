@@ -1,4 +1,4 @@
 interface:
   display_name: "linxsci-base"
-  short_description: "Search papers, read citations, and parse PDFs with LinxSci"
+  short_description: "Search papers, parse PDFs, and add LinxSci task Skills"
   default_prompt: "Use $linxsci-base to find papers on a topic, read relevant sections, and summarize the evidence with sources."

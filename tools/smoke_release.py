@@ -63,12 +63,28 @@ def check(directory, uv=None):
             for name in ("LINXSCI_BASE_URL", "LINXSCI_OPENAPI_KEY", "LINXSCI_MINERU_API_KEY", "LINXSCI_SKILLS_DIR", "PYTHONPATH"):
                 env.pop(name, None)
             env["LINXSCI_CONFIG_FILE"] = str(root / "config.json")
+            env["PYTHONUTF8"] = "1"
             def run(command, stdin=None):
-                result = subprocess.run(command, input=stdin, text=True, capture_output=True, env=env, cwd=root)
+                result = subprocess.run(command, input=stdin, text=True, encoding="utf-8",
+                                        capture_output=True, env=env, cwd=root)
                 if result.returncode:
                     raise RuntimeError("Release smoke failed: " + result.stdout + result.stderr)
                 assert "release-smoke-key" not in result.stdout + result.stderr
                 return result.stdout
+            def check_installed_guides(output):
+                report = json.loads(output)
+                destination = Path(report["installed"])
+                assert report["skill"] == "linxsci-base"
+                assert set(report["extension_guides"]) == {"en", "zh-CN"}
+                for location in report["extension_guides"].values():
+                    guide = Path(location)
+                    assert guide.is_file() and guide.parent == destination / "references"
+                    # Follow local links from the installed guide, outside the source tree.
+                    for target in re.findall(r"\]\(([^)]+)\)", guide.read_text(encoding="utf-8")):
+                        if "://" not in target and not target.startswith("#"):
+                            assert (guide.parent / target.split("#", 1)[0]).is_file()
+                assert report["next_steps"]
+                return report
             def check_all_routes(command):
                 identifiers = {"paper_id": "doi:10.1000/example", "task_id": "task/1",
                                "section_id": "section-1", "asset_id": "asset-1", "author_id": "author/1",
@@ -123,7 +139,7 @@ def check(directory, uv=None):
             summary = json.loads(run(cli[:1] + ["--output", str(saved_response), "--output-summary", "search", "test topic"]))
             assert summary["file"] == str(saved_response.resolve())
             assert json.loads(run(cli[:1] + ["--select", "/data/0/id", "read-output", str(saved_response)])) == "arxiv:2301.07041"
-            run(cli + ["install-skill", "--skills-dir", str(root / "wheel-skills")])
+            check_installed_guides(run(cli + ["install-skill", "--skills-dir", str(root / "wheel-skills")]))
             installed = root / "wheel-skills/linxsci-base/scripts/cli.py"
             run([str(python), str(installed), "doctor"])
             run([str(python), "-c", "from linxsci import LinxSciClient; print(LinxSciClient().request('GET','/meta').status)"])
@@ -138,7 +154,7 @@ def check(directory, uv=None):
                                      capture_output=True, text=True, env=env, cwd=root)
             assert refused.returncode == 2, 'Old-name copy must require --update'
             assert old_skill.is_dir() and not installed.exists()
-            migrated = json.loads(run(cli + ["install-skill", "--skills-dir", str(root / "wheel-skills"), "--update"]))
+            migrated = check_installed_guides(run(cli + ["install-skill", "--skills-dir", str(root / "wheel-skills"), "--update"]))
             assert migrated["skill"] == "linxsci-base"
             assert Path(migrated["installed"]) == installed.parent.parent.resolve()
             assert not old_skill.exists()
@@ -152,14 +168,16 @@ def check(directory, uv=None):
             with zipfile.ZipFile(bundle) as archive:
                 archive.extractall(root / "bundle")
             unpacked = next((root / "bundle").iterdir())
-            run([str(python), str(unpacked / "install.py"), "--no-config", "--skills-dir", str(root / "zip-skills")])
+            check_installed_guides(run([str(python), "-S", str(unpacked / "install.py"), "--no-config",
+                                       "--skills-dir", str(root / "zip-skills")]))
             installed = root / "zip-skills/linxsci-base/scripts/cli.py"
             check_skill_dispatch([str(python), str(installed)])
             check_all_routes([str(python), str(installed)])
             assert len(json.loads(run([str(python), str(installed), "routes"]))) == 34
             run([str(python), str(installed), "doctor"])
             run([str(python), str(installed), "paper", "doi:10.1000/example", "--resource", "toc"])
-            run([str(python), str(unpacked / "install.py"), "--no-config", "--update", "--skills-dir", str(root / "zip-skills")])
+            check_installed_guides(run([str(python), "-S", str(unpacked / "install.py"), "--no-config", "--update",
+                                       "--skills-dir", str(root / "zip-skills")]))
             assert list((root / "linxsci-skill-backups").iterdir())
             if uv:
                 env.update(UV_TOOL_DIR=str(root / "uv-tools"), UV_TOOL_BIN_DIR=str(root / "uv-bin"),
@@ -170,10 +188,10 @@ def check(directory, uv=None):
                 uv_cli = [str(uv_executable)]
                 check_skill_dispatch(uv_cli)
                 check_all_routes(uv_cli)
-                run(uv_cli + ["install-skill", "--skills-dir", str(root / "uv-skills")])
+                check_installed_guides(run(uv_cli + ["install-skill", "--skills-dir", str(root / "uv-skills")]))
                 uv_skill = root / "uv-skills/linxsci-base/scripts/cli.py"
                 assert json.loads(run([str(python), str(uv_skill), "search", "uv topic"]))["data"][0]["query"] == "uv topic"
-                run(uv_cli + ["install-skill", "--skills-dir", str(root / "uv-skills"), "--update"])
+                check_installed_guides(run(uv_cli + ["install-skill", "--skills-dir", str(root / "uv-skills"), "--update"]))
                 run([uv, "tool", "uninstall", "linxsci"])
                 assert not uv_executable.exists()
             run([str(python), str(installed), "config", "--clear"])
@@ -182,7 +200,7 @@ def check(directory, uv=None):
         server.shutdown()
         thread.join()
         server.server_close()
-    print("Fresh wheel and ZIP: Skill discovery/dispatch, all 34 convenience routes each, install, configure, connect, SDK, update, legacy migration and clear passed.")
+    print("Fresh wheel and ZIP: bundled extension guides, Skill discovery/dispatch, all 34 convenience routes each, install, configure, connect, SDK, update, legacy migration and clear passed.")
     if uv:
         print("uv tool install: all 34 convenience routes, bundled Skill install/update and tool uninstall passed in isolated directories.")
 

@@ -21,7 +21,7 @@ else:
     from output import ResponseOutputError, ResponseViewError, json_text, write_response
     from skill_dispatch import run_skill
 
-VERSION = "0.3.4"
+VERSION = "0.3.5"
 
 SEARCH_COMMANDS = {
     "search": ("/papers/search", "综合论文搜索"),
@@ -293,10 +293,23 @@ def main(argv=None, *, prog=None):
             return 0
         if args.command == "install-skill":
             destination, backup = install_skill(args.skills_dir, args.update)
-            report = {"installed": str(destination.resolve()), "skill": SKILL_NAME}
+            destination = destination.resolve()
+            guides = {language: str(destination / "references" / filename)
+                      for language, filename in (("en", "extensions.md"),
+                                                 ("zh-CN", "extensions.zh-CN.md"))}
+            prompt = "使用 $linxsci-base 列出可选扩展及其用途，检查哪些已安装、哪些需要配置。"
+            report = {"installed": str(destination), "skill": SKILL_NAME,
+                      "extension_guides": guides,
+                      "next_steps": ["刷新或重启助手，然后可以对助手说：" + prompt,
+                                     "按需选装，例如：帮我安装 linxsci-paper。"]}
             if backup:
                 report["backup"] = str(backup.resolve())
             print(json_text(report, args.pretty))
+            print("linxsci-base 已安装。可按需添加：文献综述、研究构思、论文问答、论文写作、"
+                  "演示文稿、代码复现和小红书图文。\n"
+                  + "刷新或重启助手后，对助手说：" + prompt + " 或：帮我安装 linxsci-paper。\n"
+                  + "扩展指南：" + guides["zh-CN"] + "\nEnglish guide: " + guides["en"],
+                  file=sys.stderr)
             return 0
         if args.command == "routes":
             print(json_text(ROUTES, args.pretty))

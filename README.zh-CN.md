@@ -18,19 +18,37 @@
 
 Skill 可独立运行随附的 Python 脚本，无需先安装 `linxsci` Python 包。
 
-### 基础 Skill 与扩展安装
+### 发现和选装任务 Skill
 
-`linxsci-base` 由本公开主仓库提供。七个扩展分别从自己的 GitHub 仓库安装，见 [GitHub 安装指南](docs/SKILL_INSTALLATION.zh-CN.md)；克隆主仓库不会下载这些独立扩展。扩展的 Python 依赖、发现路径和协作要求以各自 README 为准。
+base 也能引导你像选装插件一样添加任务 Skill：文献综述、研究构思、论文问答、论文写作、演示文稿、代码复现和小红书图文。各扩展按需从自己的 GitHub 仓库安装；[扩展指南](skills/linxsci-base/references/extensions.zh-CN.md) 提供能力目录、安装检查和任务续跑说明。
+
+复制下面任一请求给当前 Agent：
+
+```text
+使用 $linxsci-base 列出 LinxSci 可选扩展，说明各自用途，并检查哪些已安装、哪些还需要配置。
+```
+
+```text
+请使用 $linxsci-base 帮我从 https://github.com/LinxSci/linxsci-paper 安装 linxsci-paper。保留已有修改和配置，用兼容的 Python 环境实际安装 requirements.txt，配置 Agent 与 CLI 的发现路径，运行 linxsci skill paper --help 验证，并告诉我如何使用。
+```
+
+```text
+请使用 $linxsci-base 帮我把这些研究材料做成 PPT；如果缺少 linxsci-ppt，授权你按其 GitHub README 安装并验证，随后继续原任务，保留已有材料和输出位置。
+```
+
+列目录不需要 API Key 或下载扩展。Agent 检查真实可用状态，只安装选中的 Skill，验证后继续任务。克隆主仓库不会自动取得扩展，更新 base 也不会更新扩展文件。
 
 ### 安装与配置
 
-下载 [Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.4/linxsci-base-0.3.4.zip)，完整解压后，在 macOS 双击 `Install.command`，Windows 双击 `Install.bat`。也可以在解压目录打开终端并运行：
+下载 [Skill 安装包](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.5/linxsci-base-0.3.5.zip)，完整解压后，在 macOS 双击 `Install.command`，Windows 双击 `Install.bat`。也可以在解压目录打开终端并运行：
 
 ```bash
 python3 install.py
 ```
 
 Windows 使用 `py -3 install.py`。安装器将完整 Skill 复制到 `~/.agents/skills/linxsci-base`，并引导你在本机隐藏输入 Key。其他助手目录可使用 `--skills-dir <父目录>` 指定。安装后刷新或重启助手。
+
+`v0.3.5` 安装包已包含本文的扩展指南与安装提示。已有旧版 base 的用户，使用新版安装包更新并刷新助手后，即可使用这些引导。
 
 ### 通过 Skills CLI 安装到 Codex 或其他 Agent
 
@@ -65,7 +83,7 @@ npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base -g
 请使用 npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base -g -a codex 安装基础 Skill。检查同名安装并保留已有修改；完成后使用 Skill 随附脚本检查配置，API Key 在本机交互输入。
 ```
 
-`linxsci-base` 使用随附脚本，不需要安装 Python 包；需要终端短命令或扩展 Skill 时，再按下方 CLI 部分安装 `linxsci==0.3.4`。安装后重新加载助手。
+`linxsci-base` 使用随附脚本，不需要安装 Python 包；需要终端短命令时，按下方 CLI 部分安装 `linxsci==0.3.5`。扩展 Skill 按各自 requirements 准备环境；仍固定 SDK `0.3.4` 的扩展使用单独的兼容环境，详见[扩展指南](skills/linxsci-base/references/extensions.zh-CN.md)。安装后重新加载助手。
 
 克隆超时时可改用上方 ZIP。安装后向助手提出：
 
@@ -114,12 +132,12 @@ python3 install.py --update --no-config
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -U linxsci==0.3.4
+python -m pip install -U linxsci==0.3.5
 linxsci --version
 linxsci setup
 ```
 
-`linxsci --version` 应输出 `0.3.4`，不需要 API Key，也不调用 API。CLI 和 SDK 随同一个包安装。
+`linxsci --version` 应输出 `0.3.5`，不需要 API Key，也不调用 API。CLI 和 SDK 随同一个包安装。
 
 从 PyPI 安装可在任意目录执行，安装目标由当前 `python` 对应的环境决定，切换目录不会切换虚拟环境。使用 `python -c "import sys; print(sys.executable)"` 查看解释器；要明确使用 Python 3.10，可将命令中的 `python` 替换为 `python3.10`。
 
@@ -137,7 +155,7 @@ linxsci --version
 linxsci setup
 ```
 
-Windows 使用 `py -3 -m venv .venv` 创建环境，在命令提示符 CMD 中运行 `.venv\Scripts\activate.bat` 激活。也可通过 `python -m pip install /path/to/linxsci-0.3.4-py3-none-any.whl` 安装已下载的 wheel。已安装 uv 时，可用 `uv tool install /path/to/linxsci-0.3.4-py3-none-any.whl` 创建隔离的终端工具安装。
+Windows 使用 `py -3 -m venv .venv` 创建环境，在命令提示符 CMD 中运行 `.venv\Scripts\activate.bat` 激活。也可通过 `python -m pip install /path/to/linxsci-0.3.5-py3-none-any.whl` 安装已下载的 wheel。已安装 uv 时，可用 `uv tool install /path/to/linxsci-0.3.5-py3-none-any.whl` 创建隔离的终端工具安装。
 
 `linxsci setup` 通过隐藏输入读取 API Key。默认服务根地址为 `https://linxsci.com`，不添加 `/openapi/v2`。`LINXSCI_BASE_URL` 和 `LINXSCI_OPENAPI_KEY` 优先于保存的设置；`LINXSCI_CONFIG_FILE` 可指定其他配置文件。默认配置位于 macOS/Linux 的 `~/.config/linxsci-skills/config.json`，或 Windows 的 `%LOCALAPPDATA%\linxsci-skills\config.json`。
 
@@ -176,11 +194,11 @@ CLI 与 SDK 通过 `linxsci` 一起安装。应用环境中已有该包时，无
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -U linxsci==0.3.4
+python -m pip install -U linxsci==0.3.5
 python -c "import linxsci; print(linxsci.__version__)"
 ```
 
-已有应用环境时，激活后直接执行安装和验证两条命令。验证应输出 `0.3.4`，确认 SDK 可导入及其版本；此检查不需要 API Key，也不调用 API。安装排查与远程下载验证见 [SDK 安装指南](docs/DEVELOPMENT.zh-CN.md#从-pypi-安装)。
+已有应用环境时，激活后直接执行安装和验证两条命令。验证应输出 `0.3.5`，确认 SDK 可导入及其版本；此检查不需要 API Key，也不调用 API。安装排查与远程下载验证见 [SDK 安装指南](docs/DEVELOPMENT.zh-CN.md#从-pypi-安装)。
 
 Windows 使用 `py -3 -m venv .venv`，并在命令提示符 CMD 中运行 `.venv\Scripts\activate.bat`。从源码安装时，下载或克隆本仓库，在仓库根目录使用应用的 Python 环境执行 `python -m pip install .`。
 

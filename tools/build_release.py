@@ -22,7 +22,8 @@ def bundle(output):
     files += [skill / name for name in ("SKILL.md", "SKILL.zh-CN.md", "service.json", "__init__.py", "LICENSE")]
     for directory, names in (
         ("scripts", ("__init__.py", "cli.py", "client.py", "commands.py", "config.py", "installer.py", "output.py", "skill_dispatch.py")),
-        ("references", ("api.md", "api.zh-CN.md", "cli.md", "cli.zh-CN.md")),
+        ("references", ("api.md", "api.zh-CN.md", "cli.md", "cli.zh-CN.md",
+                        "extensions.md", "extensions.zh-CN.md")),
         ("agents", ("openai.yaml",)),
     ):
         files += [skill / directory / name for name in names]
@@ -33,6 +34,7 @@ def bundle(output):
             guide = (ROOT / ("docs/USER_GUIDE" + language + ".md")).read_text(encoding="utf-8")
             guide = guide.replace("(USER_GUIDE.md)", "(README.md)").replace(
                 "(USER_GUIDE.zh-CN.md)", "(README.zh-CN.md)")
+            guide = guide.replace("(../skills/linxsci-base/", "(skills/linxsci-base/")
             archive.writestr("linxsci-base-" + version + "/README" + language + ".md", guide)
         for source in sorted(files):
             name = "linxsci-base-" + version + "/" + source.relative_to(ROOT).as_posix()

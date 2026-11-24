@@ -8,17 +8,33 @@ The `linxsci-base` Skill lets you search, read and compare papers in an AI assis
 
 - Python 3.9 or newer.
 - An AI assistant that supports local skills and tool execution.
-- A LinxSci API key, available after signing in to the [API key page](https://linxsci.com/open-api?tab=keys). Enter it locally during setup; reuse an existing valid key and configuration.
+- A LinxSci API key only for service calls, available from the [API key page](https://linxsci.com/open-api?tab=keys). Enter it locally and reuse valid configuration. Installing base or viewing its extension directory needs no key; use `--no-config` to skip setup.
 
 ## Install the Skill
 
-### Base Skill and extensions
+### Discover and add task Skills
 
-This public repository provides `linxsci-base`. Install the seven extensions from their own GitHub repositories; see the [GitHub installation guide](https://github.com/LinxSci/linxsci-skills/blob/main/docs/SKILL_INSTALLATION.md). Cloning the main repository does not retrieve these independent extensions. Follow each extension README for Python dependencies, discovery and collaboration.
+Base also helps you discover and add task Skills: literature surveys, research ideas, paper Q&A, manuscript writing, presentations, reproduction and Xiaohongshu posts. Each is installed on demand from its own GitHub repository. The [extension guide](../skills/linxsci-base/references/extensions.md) includes the capability directory, installation checks and task continuation.
+
+Copy one of these requests to your Agent:
+
+```text
+Use $linxsci-base to list optional LinxSci Skills, explain their uses, and check which are installed or still need configuration.
+```
+
+```text
+Use $linxsci-base to install linxsci-paper from https://github.com/LinxSci/linxsci-paper. Preserve existing edits and configuration, install requirements.txt in a compatible Python environment, configure Agent and CLI discovery, verify linxsci skill paper --help, and explain how to use it.
+```
+
+```text
+Use $linxsci-base to turn these research materials into a presentation. If linxsci-ppt is missing, you are authorized to install and verify it using its GitHub README, then continue the original task with its materials and output location.
+```
+
+Listing capabilities needs no API key or extension download. The Agent checks actual availability, installs only selected Skills and resumes the task after verification. Cloning the main repository does not retrieve extensions. Base updates do not update their files.
 
 ### Option 1: Download the installation bundle
 
-Download the [complete Skill bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.4/linxsci-base-0.3.4.zip) and extract it fully before installing.
+Download the [complete Skill bundle](https://github.com/LinxSci/linxsci-skills/releases/download/v0.3.5/linxsci-base-0.3.5.zip) and extract it fully before installing.
 
 **macOS**: double-click `Install.command` in the extracted directory. If it cannot be opened that way, open a terminal in that directory and run:
 
@@ -43,6 +59,8 @@ python3 install.py --skills-dir /path/to/assistant/skills
 ```
 
 Do not include the final `linxsci-base` directory in `--skills-dir`; the installer appends it. Keep the complete installation bundle. Downloading only `SKILL.md` is insufficient.
+
+The `v0.3.5` bundle includes the extension guide and installation prompts described here. Update an older base installation using the new bundle and refresh your assistant to use this guidance.
 
 ### Option 2: Use a Skill installer
 
@@ -69,6 +87,8 @@ These options apply only to the bundle's `install.py`; place them after the file
 | `--base-url URL` | Saved or release default | Suggest a specific service root; takes precedence over `--online` |
 
 `--online` and `--base-url` have no effect with `--no-config`. Run `python3 install.py --help` for installer help. On Windows, replace `python3` with `py -3`.
+
+Starting with `0.3.5`, the installer reports local extension-guide paths and next-step prompts after success, including `--no-config` and updates. The `install-skill` stdout stays JSON; readable guidance goes to stderr. `install.py` delegates once, then optionally starts API setup. A setup failure leaves the installed base in place and is reported separately. Skills CLI and manual copies use the bundled instructions; they do not run this Python installation prompt.
 
 ## Configure and verify
 
