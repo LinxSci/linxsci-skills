@@ -12,29 +12,9 @@
 
 ## 安装 Skill
 
-### 包格式与扩展安装
+### 基础 Skill 与扩展安装
 
-下文 `install.py` 的步骤适用于旧基础安装器包。八个 Skill 的套件与 SDK/CLI `0.3.4` 分别管理版本。下表的 `<套件版本>` 以所选发行清单为准。
-
-| 包 | 内容与用途 |
-| --- | --- |
-| 旧 `linxsci-base-0.3.4.zip` | 基础 Skill 及根目录的 `install.py`、`Install.command`、`Install.bat`，使用下方安装器步骤 |
-| 平铺 `linxsci-base-skill-<套件版本>.zip` | 根目录为 `SKILL.md` 和 `scripts/` 等，没有根目录 `install.py` 或桌面启动器 |
-| 七个 `linxsci-<扩展名>-<套件版本>.zip` | 解压后为完整单项扩展，分别放入以 Skill 名称命名的目录 |
-| `linxsci-skills-<套件版本>-full.zip` | `skills/` 下八个真实目录、单项 ZIP 和 SDK wheel，按需安装所需 Skill |
-| `linxsci-skills-<套件版本>-source.zip` | 包含测试与开发工具的固定源码快照；开发验证使用此快照或维护者完整源码 |
-
-从 [LinxSci Releases](https://github.com/LinxSci/linxsci-skills/releases) 中实际存在的同一套件取得 `release-manifest.json`、`SHA256SUMS` 和所需资产。对照清单及校验和核对单项 ZIP 的身份、版本、大小与 SHA256；完整套件和源码快照的哈希在 `SHA256SUMS` 中。安全解压时拒绝越界路径或符号链接，再核对各 Skill 的 `release.json` 文件清单。这些元数据由构建生成，不是源码目录中必须存在的文件。不要把 SDK 的 `v0.3.4` 或仓库 latest 发行当成套件版本；也可使用同版本本地资产；清单或文件获取失败时，报告具体缺项。
-
-在已核验的基础平铺包中，进入包含 `SKILL.md` 的目录，使用 Python 3.9+：
-
-```bash
-python3 scripts/cli.py install-skill --skills-dir "/absolute/path/to/assistant/skills"
-```
-
-将路径换成当前助手实际使用的 Skill 父目录；Windows 可将 `python3` 换成 `py -3`。该命令只复制基础 Skill，不配置 API Key，随后按下文配置。也可将完整内容复制到该父目录下的 `linxsci-base/` 中。替换前保留已有文件、本地修改与来源，完成后刷新助手发现。
-
-七个扩展不在公开主仓库跟踪范围内，其 GitHub 自动 Source code ZIP 和主仓库 Skills CLI 命令都不能提供这些扩展。应获取单项 Release / 本地包，再按各自 README 准备 Python 依赖、发现路径与条件协作。单项包随附独立于 SDK 的共用安装器 `scripts/linxsci_release_install.py`，Idea 通过 `scripts/install_survey.py` 安装同套件 Survey。安装器只安装明确选择的目标，不升级 Python 环境或递归补装全部协作者。需要新取证时准备同一套件的 Survey，复用已有证据不强制安装它。完整套件不是第三方 Python 库、字体或外部工具的离线环境。单项包和完整套件目录均不包含 `tests/`。
+`linxsci-base` 由本公开主仓库提供。七个扩展分别从自己的 GitHub 仓库安装，见 [GitHub 安装指南](https://github.com/LinxSci/linxsci-skills/blob/main/docs/SKILL_INSTALLATION.zh-CN.md)；克隆主仓库不会下载这些独立扩展。扩展的 Python 依赖、发现路径和协作要求以各自 README 为准。
 
 ### 方式一：下载安装包
 
@@ -92,7 +72,7 @@ npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base
 
 ## 配置与确认安装
 
-旧基础 ZIP 安装器会引导配置。通过其他安装器安装，或安装时跳过配置的用户，可以在助手中输入：
+基础 ZIP 安装器会引导配置。通过其他安装器安装，或安装时跳过配置的用户，可以在助手中输入：
 
 > 使用 $linxsci-base 检查是否已配置。若缺少配置，请指导我在本机安全输入 API Key，不要让我将 Key 发到聊天中。
 
@@ -143,8 +123,6 @@ npx skills add https://github.com/LinxSci/linxsci-skills --skill linxsci-base
 可以直接说明语言、篇数、篇幅和呈现格式。助手负责检索和整理；较大的响应可能保存为本地文件，后续可以让助手读取相关部分。
 
 ## 更新 Skill
-
-平铺基础包更新时，在已核验的新版解压目录使用 `python3 scripts/cli.py install-skill --update --skills-dir "/absolute/path/to/assistant/skills"`，Windows 可用 `py -3`；仅适用于该安装器管理的副本，不配置 API Key。手动副本先备份和保留修改，再替换完整目录；扩展按各自 README 更新。Release 副本不使用 `git pull`，本地目录 npx 安装不承诺远程自动更新。
 
 **通过 ZIP 随附安装器安装**：下载并解压新版本，在**新版本解压目录**运行：
 

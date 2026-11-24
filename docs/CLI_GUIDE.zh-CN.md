@@ -283,9 +283,7 @@ linxsci routes
 
 ### install-skill
 
-扩展包使用独立的 [公共包安装器](SKILL_INSTALLATION.zh-CN.md)，不是 SDK 新命令。
-
-现有 `linxsci install-skill` 只复制当前 Python 包随附的 `linxsci-base`，不接受扩展名称参数，也不从 Release 下载扩展或自动补装依赖。扩展按其 README 从同版本 Release / 本地包安装；安装 SDK 不等于安装扩展。
+现有 `linxsci install-skill` 只复制当前 Python 包随附的 `linxsci-base`，不接受扩展名称，也不自动安装扩展或 Python 依赖。七个扩展从各自 GitHub 仓库安装，见 [GitHub 安装指南](SKILL_INSTALLATION.zh-CN.md)；安装 SDK 不等于安装扩展。
 
 ```bash
 linxsci install-skill

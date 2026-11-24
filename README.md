@@ -18,31 +18,9 @@ Sign in to the [LinxSci API key page](https://linxsci.com/open-api?tab=keys) to 
 
 The Skill runs its bundled Python scripts independently. Installing the `linxsci` Python package is optional.
 
-### Package formats and extension installation
+### Base Skill and extensions
 
-The instructions for `install.py` below apply to the legacy base installer bundle. The eight-Skill suite is versioned separately from SDK/CLI `0.3.4`. Replace `<suite-version>` below with the version in the selected manifest.
-
-| Package | Contents and use |
-| --- | --- |
-| Legacy `linxsci-base-0.3.4.zip` | Base Skill plus root `install.py`, `Install.command` and `Install.bat`; use the installer below |
-| Flat `linxsci-base-skill-<suite-version>.zip` | Root `SKILL.md` and `scripts/`; no root `install.py` or desktop launchers |
-| Seven `linxsci-<extension>-<suite-version>.zip` files | Complete individual extension directories after extraction; install each as its own named Skill |
-| `linxsci-skills-<suite-version>-full.zip` | Eight actual directories under `skills/`, individual ZIPs and SDK wheel; install only the Skills needed |
-| `linxsci-skills-<suite-version>-source.zip` | Fixed source snapshot including tests and development tools; use this or complete maintainer source for development checks |
-
-Obtain `release-manifest.json`, `SHA256SUMS` and the required assets from the same actual suite on [LinxSci Releases](https://github.com/LinxSci/linxsci-skills/releases). Check identity, version, file size and SHA256 for individual ZIPs against the manifest and checksums; full/source bundle checksums are in `SHA256SUMS`. Safely extract without escaping paths or symlinks and check each Skill's generated `release.json` inventory. These metadata files are generated during packaging, not required files in a source checkout. Do not infer a suite version from the SDK tag `v0.3.4` or the repository's latest release. A local asset directory for the same version is also supported; report the specific missing item if a manifest or file cannot be retrieved.
-
-From the verified flat base package's directory containing `SKILL.md`, use Python 3.9+:
-
-```bash
-python3 scripts/cli.py install-skill --skills-dir "/absolute/path/to/assistant/skills"
-```
-
-Replace the path with your assistant's actual Skill parent directory; Windows can use `py -3` instead of `python3`. This command copies only the base Skill and does not configure the API key. Follow the configuration instructions below afterward. Alternatively, copy the full contents into a directory named `linxsci-base/` under that parent. Preserve existing files, edits and provenance before replacing anything, and refresh assistant discovery.
-
-Seven extensions are not tracked in the public main repository: its GitHub automatic Source code ZIP and a main-repository Skills CLI command do not provide them. Obtain the individual Release/local packages and follow each included README for Python dependencies, discovery and conditional collaboration. Single packages bundle the SDK-independent installer at `scripts/linxsci_release_install.py`; Idea uses `scripts/install_survey.py` to install Survey from the same suite. The installer handles one explicitly selected target without upgrading Python environments or recursively installing collaborators. Prepare Survey from the same suite when fresh evidence is needed; existing evidence reuse does not require it. The full suite is not an offline third-party Python/font/tool environment. Single packages and full-suite directories omit `tests/`.
-
-See the [package installation guide](docs/SKILL_INSTALLATION.md) for local/fixed public sources, arguments and result statuses.
+This public repository provides `linxsci-base`. Install the seven extensions from their own GitHub repositories; see the [GitHub installation guide](docs/SKILL_INSTALLATION.md). Cloning the main repository does not retrieve these independent extensions. Follow each extension README for Python dependencies, discovery and collaboration.
 
 ### Install and configure
 
@@ -106,8 +84,6 @@ For a single-paper factual answer, the assistant hands the verified paper and or
 Replace the PDF path with an accessible local file. Parsing uploads it to your configured service. Ask for the number of papers, response length and language you need; the assistant handles retrieval and presentation.
 
 ### Update and uninstall
-
-To update a flat base package, run `python3 scripts/cli.py install-skill --update --skills-dir "/absolute/path/to/assistant/skills"` from the verified new extraction; Windows can use `py -3`. This applies only to copies managed by that installer and does not configure the API key. Back up manual copies and preserve edits before replacing the complete directory; follow each extension README for updates. Release copies do not use `git pull`, and local npx installation does not promise automatic remote updates.
 
 For a user installation managed by Skills CLI from the repository:
 

@@ -4,7 +4,7 @@
 
 本文说明源码构建、安装产物验证及包上传操作。用户安装与使用方法见 [README](../README.zh-CN.md)。
 
-本文仅说明 SDK/CLI `0.3.4` 及旧基础安装器 ZIP 的构建发布。八个 Skill 的独立版本套件见 [固定提交构建与套件发布指南](SKILL_RELEASES.zh-CN.md)；套件使用独立的 `suite-v<套件版本>` 标签与发行清单，不由本页的 SDK 标签流程发布。基础平铺 ZIP 没有根目录 `install.py`；完整套件和源码快照也与旧基础 ZIP 不同。
+本指南用于 CLI/SDK 和基础 Skill 安装包。七个扩展分别发布自己的 GitHub 源码仓库，用户安装见 [GitHub 安装指南](SKILL_INSTALLATION.zh-CN.md)；扩展安装方式调整不要求提升 SDK 版本。
 
 ## 版本与安装产物
 
