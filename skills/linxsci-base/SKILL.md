@@ -1,6 +1,6 @@
 ---
 name: linxsci-base
-description: Use LinxSci OpenAPI v2 for academic paper search, content and citations, recommendations, research entities, PDF parsing, and explicit API health or usage queries.
+description: Use LinxSci OpenAPI v2 directly for paper discovery and resources, citations, recommendations, research entities, PDF parsing, and API/CLI diagnostics. Provides supporting API guidance for task Skills; use the matching task Skill for end-to-end research and content creation.
 ---
 
 # linxsci-base
@@ -8,6 +8,14 @@ description: Use LinxSci OpenAPI v2 for academic paper search, content and citat
 [简体中文](SKILL.zh-CN.md)
 
 Use `scripts/cli.py` from `linxsci-base`. Replace `<skill-dir>` with the absolute directory containing this file: `skills/linxsci-base/` in the source repository, or `~/.agents/skills/linxsci-base` after default installation. Scripts require only Python 3.9+ and its standard library; no SDK installation is needed. The separately installable CLI/SDK package and its Python import remain `linxsci`.
+
+## Choose the task owner
+
+For an end-to-end deliverable, load the matching available task Skill first: `linxsci-paper-qa` for single-paper factual questions, `linxsci-survey` for topic surveys, `linxsci-idea` for research ideas, `linxsci-reproduce` for reproduction, `linxsci-paper` for manuscript writing, `linxsci-ppt` for presentations, and `linxsci-xiaohongshu` for posts. That Skill owns the workflow and may use this Skill's API guidance for individual steps. A direct search, resource, PDF or diagnostic request remains a base operation.
+
+Paper discovery is a prerequisite when the requested deliverable concerns a paper identified only by research clues. After identifying it, resume the requested task; PPT and post requests remain with their production Skill. Survey and Idea can start from a topic or research goal without a seed paper or a mandatory QA step. Reuse already verified identities and sufficient evidence instead of repeating discovery.
+
+Use only Skills actually available in the current environment. If a needed extension is missing, report what is available and follow its existing installation instructions and the [extension discovery conventions](references/cli.md#discover-and-invoke-installed-skills). Reuse installation authorization already given in the session; otherwise obtain it before installing. Keep verified sources for continuation and do not claim a missing Skill ran. Base operations remain usable with this Skill alone; installing all extensions is not a prerequisite.
 
 ## Install the skill independently
 
@@ -107,7 +115,16 @@ python3 <skill-dir>/scripts/cli.py paper "<returned-paper-id>" --resource sectio
 
 Use actual returned paper IDs with `local:`, `arxiv:`, `openalex:`, `s2:` or `doi:` prefixes. Convenience commands accept raw IDs, including DOI slashes, and encode them. Get section/asset IDs from responses. Read details and contents before relevant sections; fetch full content only when needed.
 
-Synthesize research answers from content actually read. Cite returned paper IDs, links and section evidence. Distinguish abstract evidence from full text, report missing content and avoid invented numbers. There is no documented server-side ask, trends or automatic-review endpoint.
+Summarize retrieved resources from content actually read. Cite returned paper IDs, links and section evidence. Distinguish abstract evidence from full text, report missing content and avoid invented numbers. There is no documented server-side ask, trends or automatic-review endpoint.
+
+### Identify a paper from research clues
+
+Use this flow when the user describes a specific study but has no title or identifier. A supplied paper ID, DOI/arXiv identifier, title, local material or sufficient existing evidence can use its appropriate identification or reading path without restarting this discovery flow.
+
+1. Use available web search to find candidates from distinctive experimental or methodological clues. Verify the exact title, authors/version and DOI or other available identifier against a primary bibliographic source such as the publisher, PubMed/PMC or the paper repository. Search snippets and model recall are leads, not evidence for the study's results. If several candidates still fit, ask only for the distinction needed to identify the target. In retrieval benchmarks, do not request a hidden title or DOI.
+2. When a LinxSci ID is needed, use the documented search routes with the verified title or identifier, inspect the actual response, and read paper details to check the match. If title search returns no match or unrelated records, try another supported route such as `search-openalex` with the verified title or DOI. Use returned, verified IDs; do not invent an ID or assume a route searches full text unless its contract says so.
+3. If web search is unavailable or unproductive, use the documented LinxSci discovery routes. If those also make no progress, another available, permitted method may propose a candidate for this stage; verify it by the same standard, then resume the original task. Preserve budget, scope, authentication, quota and error stopping rules. A service failure is not an empty search result and does not justify repeated calls. If the candidate or ID remains unresolved, name that stage and its limitation.
+4. For a single-paper factual question, pass the verified title, identifiers, source links, LinxSci `paper_id`, original question and any already-read evidence to the available `linxsci-paper-qa` Skill. It must inspect the passages, tables or captions supporting the answer before responding; a search hit, loaded Skill or successful command is not proof of reading. Reuse sufficient evidence without another request. If QA is unavailable, apply the missing-extension guidance above; direct base resource retrieval remains available, but do not claim QA completion or answer experimental facts from discovery snippets.
 
 When asked to select relevant papers:
 
